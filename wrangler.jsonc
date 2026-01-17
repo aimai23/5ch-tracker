@@ -1,5 +1,5 @@
 {
-  "name": "ticker-rank-worker",
+  "name": "5ch-tracker",
   "compatibility_date": "2026-01-17",
   "main": "src/index.ts"
 }
