@@ -1,18 +1,14 @@
 {
-  // Wrangler configuration for the 5ch ticker tracker
-  // See https://developers.cloudflare.com/workers/wrangler/configuration/
   "name": "5ch-tracker",
-  // Use the current date to set the compatibility date. Update this if you modify APIs.
   "compatibility_date": "2026-01-17",
-  // Entry point for the Worker script. This file exports both the fetch handler and scheduled handler.
   "main": "src/index.ts",
-    "kv_namespaces": [
+
+  "kv_namespaces": [
     {
       "binding": "KV",
       "id": "f9ae9908e08b4d899a1c786b9c3e4864"
-    },
-  // We intentionally omit the KV namespace ID here. The binding will be configured in the Cloudflare
-  // dashboard. Ensure a KV namespace named `SCTRACKER_KV` is bound to the variable `KV` in your Worker
-  // settings. See README for details.
+    }
+  ],
+
   "tsconfig": "./tsconfig.json"
 }
