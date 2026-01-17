@@ -1,0 +1,21 @@
+{
+  // A list of common words or abbreviations that should not be counted as tickers.
+  // Extend this list as you encounter false positives.
+  "exclude": [
+    "A",
+    "I",
+    "THE",
+    "USA",
+    "IT",
+    "YOU",
+    "AND",
+    "ETF",
+    "CEO",
+    "GO",
+    "UP",
+    "ALL",
+    "ONE",
+    "SEE",
+    "NEW"
+  ]
+}

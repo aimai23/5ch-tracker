@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    // Cloudflare Workers run in a web worker environment, so DOM types are not available.  
+    // If you need Node types, add "node" here and install @types/node.
+    "types": []
+  },
+  "include": ["src/**/*", "config/**/*"]
+}
