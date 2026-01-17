@@ -6,6 +6,11 @@
   "compatibility_date": "2026-01-17",
   // Entry point for the Worker script. This file exports both the fetch handler and scheduled handler.
   "main": "src/index.ts",
+    "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "f9ae9908e08b4d899a1c786b9c3e4864"
+    }
   // We intentionally omit the KV namespace ID here. The binding will be configured in the Cloudflare
   // dashboard. Ensure a KV namespace named `SCTRACKER_KV` is bound to the variable `KV` in your Worker
   // settings. See README for details.
