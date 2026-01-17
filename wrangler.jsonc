@@ -3,9 +3,7 @@
   "compatibility_date": "2026-01-17",
   "main": "src/index.ts",
   "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "f9ae9908e08b4d899a1c786b9c3e4864"
-    }
-  ]
+    { "binding": "KV", "id": "f9ae9908e08b4d899a1c786b9c3e4864" }
+  ],
+  "tsconfig": "./tsconfig.json"
 }
