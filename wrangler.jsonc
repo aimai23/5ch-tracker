@@ -5,5 +5,11 @@
   "kv_namespaces": [
     { "binding": "KV", "id": "f9ae9908e08b4d899a1c786b9c3e4864" }
   ],
-  "tsconfig": "./tsconfig.json"
+  "tsconfig": "./tsconfig.json",
+  "observability": {
+    "logs": {
+      "enabled": false,
+      "invocation_logs": true
+    }
+  }
 }
