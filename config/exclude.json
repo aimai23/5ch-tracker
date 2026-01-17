@@ -1,6 +1,4 @@
 {
-  // A list of common words or abbreviations that should not be counted as tickers.
-  // Extend this list as you encounter false positives.
   "exclude": [
     "A",
     "I",
