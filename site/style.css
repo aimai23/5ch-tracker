@@ -266,25 +266,30 @@ h1 {
   transition: width 1s ease-out;
 }
 
-/* CHART CELL */
-.chart-cell {
-  padding: 0.2rem 1rem !important;
-  text-align: center;
+/* LOGO & HEADER */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
 
-.mini-chart {
-  height: 40px;
-  width: auto;
-  border-radius: 4px;
-  filter: invert(1) hue-rotate(180deg) grayscale(0.5);
-  /* Dark mode adjustment */
-  transition: transform 0.2s;
+.title-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
-.ranking-row:hover .mini-chart {
-  transform: scale(1.1);
-  filter: invert(1) hue-rotate(180deg) grayscale(0);
-  /* Highlight on hover */
+/* TICKER ICON */
+.ticker-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #fff;
+  /* fallback for transparent logos */
+  object-fit: contain;
 }
 
 /* Rank Badges */
