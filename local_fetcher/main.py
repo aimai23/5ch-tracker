@@ -579,37 +579,7 @@ def run_analysis(debug_mode=False):
             "sentiment": round(avg_sent, 2)
         })
 
-    # --- WATCHLIST MERGE & PRICE FETCH START ---
-    watchlist_path = os.path.join(os.path.dirname(BASE_DIR), "site", "config", "watchlist.json")
-    watchlist_tickers = set()
-    if os.path.exists(watchlist_path):
-        try:
-            with open(watchlist_path, "r", encoding="utf-8") as f:
-                wl_data = json.load(f)
-                for cats in wl_data.values():
-                    for t in cats:
-                        watchlist_tickers.add(t)
-        except Exception as e:
-            logging.warning(f"Failed to load watchlist: {e}")
 
-    # Ensure watchlist items exist in final_items
-    existing_map = {i["ticker"]: i for i in final_items}
-    for t in watchlist_tickers:
-        if t not in existing_map:
-            new_item = {"ticker": t, "count": 0, "sentiment": 0.0}
-            final_items.append(new_item)
-            existing_map[t] = new_item
-            
-    # Fetch Prices for ALL items
-    all_tickers = list(existing_map.keys())
-    market_data = fetch_prices(all_tickers)
-    
-    for item in final_items:
-        t = item["ticker"]
-        if t in market_data:
-            item["price"] = market_data[t]["price"]
-            item["change_percent"] = market_data[t]["change_percent"]
-    # --- WATCHLIST MERGE & PRICE FETCH END ---
 
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
