@@ -80,7 +80,7 @@ def analyze_with_gemini(text, exclude_list):
     models = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-latest", "gemini-pro-latest"]
     
     for model_name in models:
-        url = f"{model_name}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
@@ -123,7 +123,12 @@ def send_to_worker(items, sources):
         "sources": sources
     }
     
-    url = f"{WORKER_URL}/internal/ingest"
+    # Ensure no double slashes
+    base_url = WORKER_URL.rstrip("/")
+    url = f"{base_url}/internal/ingest"
+    
+    print(f"DEBUG: Posting to {url}")
+    
     headers = {
         "Authorization": f"Bearer {INGEST_TOKEN}",
         "Content-Type": "application/json"
@@ -134,7 +139,8 @@ def send_to_worker(items, sources):
         if resp.status_code == 200:
             print("Success!")
         else:
-            print(f"Worker Error: {resp.status_code} {resp.text}")
+            print(f"Worker Error: {resp.status_code}")
+            # print(resp.text) # Uncomment for detailed html debug if needed
     except Exception as e:
         print(f"Upload failed: {e}")
 
