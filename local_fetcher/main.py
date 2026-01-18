@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import requests
@@ -17,9 +18,8 @@ if not GEMINI_API_KEY:
 
 def load_config():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    with open(os.path.join(base_dir, "config", "sources.json"), "r", encoding="utf-8") as f:
-        sources = json.load(f)
-    
+    # Keeping sources.json reader for back-compat or other threads if needed, 
+    # but main logic will use auto-discovery.
     exclude = []
     exclude_path = os.path.join(base_dir, "config", "exclude.json")
     if os.path.exists(exclude_path):
@@ -27,7 +27,42 @@ def load_config():
             data = json.load(f)
             exclude = data.get("tickers", []) + data.get("words", []) + data.get("exclude", [])
     
-    return sources["threads"], exclude
+    return [], exclude # Return empty threads as we will discover them dynamically
+
+def discover_threads():
+    print("Discovering latest threads from 5ch...")
+    subject_url = "https://egg.5ch.net/stock/subject.txt"
+    try:
+        resp = requests.get(subject_url, timeout=10)
+        resp.encoding = "CP932"
+        text = resp.text
+    except Exception as e:
+        print(f"Failed to fetch subject.txt: {e}")
+        return []
+
+    # Format: 1735832043.dat<>【まとめ】米国株やってる人の溜まり場8730【禁止】 (123)
+    # Regex to find title and extract number for sorting
+    pattern = re.compile(r"(\d+)\.dat<>(.*【まとめ】米国株やってる人の溜まり場(\d+)【禁止】.*)\s+\(\d+\)")
+    
+    candidates = []
+    for line in text.splitlines():
+        m = pattern.search(line)
+        if m:
+            dat_id = m.group(1)
+            title = m.group(2)
+            thread_num = int(m.group(3))
+            url = f"https://egg.5ch.net/test/read.cgi/stock/{dat_id}/"
+            candidates.append({"name": title, "url": url, "num": thread_num})
+    
+    # Sort by thread number descending (newest first)
+    candidates.sort(key=lambda x: x["num"], reverse=True)
+    
+    # Take top 3
+    top_threads = candidates[:3]
+    for t in top_threads:
+        print(f"Found: {t['name']} (No.{t['num']})")
+        
+    return top_threads
 
 def fetch_thread_text(url):
     print(f"Fetching {url}...")
@@ -77,7 +112,6 @@ def fetch_thread_text(url):
 def analyze_with_gemini(text, exclude_list):
     print("Analyzing with Gemini (via REST API)...")
     
-    prompt_text = f"You are a financial analyst. Analyze the following Japanese text... (Task: Identify US tickers, Count occurrences, Exclude: {json.dumps(exclude_list)}) Output JSON."
     # Simplified prompt for brevity in logs, strict JSON is key.
     prompt_text = f"""
     You are a financial analyst. Analyze the following text.
@@ -164,7 +198,16 @@ def send_to_worker(items, sources):
         print(f"Upload failed: {e}")
 
 def main():
-    threads, exclude = load_config()
+    # Load exclude config only
+    _, exclude = load_config()
+    
+    # Auto-discover threads
+    threads = discover_threads()
+    
+    if not threads:
+        print("No threads found. Exiting.")
+        return
+
     all_text = ""
     source_meta = []
     
