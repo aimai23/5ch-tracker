@@ -260,7 +260,7 @@ def analyze_with_gemini(text, exclude_list):
     """
 
     # Try models in order (Updated based on user's available models)
-    models = ["ggemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"]
+    models = ["ggemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
