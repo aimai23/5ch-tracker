@@ -42,7 +42,8 @@ def discover_threads():
 
     # Format: 1735832043.dat<>【まとめ】米国株やってる人の溜まり場8730【禁止】 (123)
     # Regex to find title and extract number for sorting
-    pattern = re.compile(r"(\d+)\.dat<>(.*【まとめ】米国株やってる人の溜まり場(\d+)【禁止】.*)\s+\(\d+\)")
+    # Updated to be more flexible for duplicates or suffixes (e.g. 8730★2)
+    pattern = re.compile(r"(\d+)\.dat<>(.*【まとめ】米国株やってる人の溜まり場\s*(\d+).*)\s+\(\d+\)")
     
     candidates = []
     for line in text.splitlines():
@@ -57,54 +58,94 @@ def discover_threads():
     # Sort by thread number descending (newest first)
     candidates.sort(key=lambda x: x["num"], reverse=True)
     
-    # Take top 3
-    top_threads = candidates[:3]
+    # Take top 4
+    top_threads = candidates[:4]
     for t in top_threads:
         print(f"Found: {t['name']} (No.{t['num']})")
         
     return top_threads
 
 def fetch_thread_text(url):
-    print(f"Fetching {url}...")
+    # Try using raw .dat access for robustness
+    # Convert https://egg.5ch.net/test/read.cgi/stock/1768658418/ 
+    # to      https://egg.5ch.net/stock/dat/1768658418.dat
+    
+    dat_url = None
+    # Flexible regex to capture host, board, and thread_id
+    m = re.match(r"https?://([^/]+)/test/read\.cgi/([^/]+)/(\d+)/?", url)
+    if m:
+        host, board, thread_id = m.groups()
+        dat_url = f"https://{host}/{board}/dat/{thread_id}.dat"
+        print(f"Fetching raw dat: {dat_url}")
+    else:
+        print(f"URL pattern not matched for .dat conversion: {url}")
+        print(f"Fetching HTML (legacy): {url}...")
+    
+    target_url = dat_url if dat_url else url
+    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
+    
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.encoding = "CP932" # 5ch usually uses Shift_JIS/CP932
+        resp = requests.get(target_url, headers=headers, timeout=10)
         
+        # DAT file handling
+        if dat_url and resp.status_code == 200:
+            resp.encoding = "CP932"
+            text_data = resp.text
+            comments = []
+            for line in text_data.splitlines():
+                parts = line.split("<>")
+                # Format: Name<>Email<>Date ID<>Message<>Title
+                if len(parts) >= 4:
+                    msg = parts[3]
+                    # Remove HTML tags (mostly <br>)
+                    # Simple regex replace for <br> and other tags
+                    clean_msg = re.sub(r"<[^>]+>", "\n", msg)
+                    comments.append(clean_msg.strip())
+            
+            if not comments:
+                print("Warning: Parsed .dat but found no comments.")
+                return ""
+                
+            full_text = "\n".join(comments)
+            if len(full_text) > 30000:
+                print(f"Truncating text (Length: {len(full_text)} > 30000)")
+                return full_text[:30000]
+            return full_text
+            
+        # Fallback to HTML handling if dat fails or not a dat url
+        resp.encoding = "CP932"
         soup = BeautifulSoup(resp.text, "html.parser")
         
-        # Extract comments specific to 5ch standard layout
         comments = []
-        # Support multiple standard 5ch viewer layouts
-        # Pattern A: <div class="post"> ... <div class="message"> ... </div> </div>
-        # Pattern B: <div class="thread"> ... <div class="res"> ... <div class="message"> ... </div> </div> </div>
         
-        # Try generic message class search first (most effective)
+        # Strategy 1: Standard Modern 5ch (div.message)
         msgs = soup.find_all("div", class_="message")
         
-        # If standard class not found, try data-id attribute (common in some views)
         if not msgs:
-             msgs = soup.find_all("dd", class_="thread_in") # Some older views
-             
+            msgs = soup.find_all("dd", class_="thread_in")
+
+        if not msgs:
+            msgs = soup.select("div.post > div.message")
+            
         for msg in msgs:
-            # strip=True removes extra newlines and spaces
             text = msg.get_text(strip=True)
             if text:
                 comments.append(text)
-        
+
         if not comments:
-             print(f"Warning: No comments parsed from {url}. Skipping to save tokens.")
+             print(f"Warning: No comments parsed from {url}.")
+             print("DEBUG: First 500 chars of HTML content:")
+             print(soup.prettify()[:500])
              return ""
              
-        # Limit total characters to avoid exceeding token limits (approx 30k chars ~ 7-8k tokens)
         full_text = "\n".join(comments)
         if len(full_text) > 30000:
-            print(f"Truncating text (Length: {len(full_text)} > 30000)")
             return full_text[:30000]
-            
         return full_text
+
     except Exception as e:
         print(f"Failed to fetch {url}: {e}")
         return ""
@@ -143,7 +184,7 @@ def analyze_with_gemini(text, exclude_list):
         
         try:
             # print(f"Trying model: {model_name}")
-            resp = requests.post(url, headers=headers, json=payload, timeout=180)
+            resp = requests.post(url, headers=headers, json=payload, timeout=300)
             
             if resp.status_code == 200:
                 result = resp.json()
