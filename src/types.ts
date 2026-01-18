@@ -4,5 +4,6 @@ export type Env = {
    * Secret token for /internal/ingest
    * Set this as a Worker secret: INGEST_TOKEN
    */
-  INGEST_TOKEN?: string;
+  INGEST_TOKEN: string;
+  GEMINI_API_KEY: string;
 };

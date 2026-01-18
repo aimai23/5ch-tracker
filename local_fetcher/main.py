@@ -453,7 +453,67 @@ def send_to_worker(items, topics, sources, overview=""):
     except Exception as e:
         logging.error(f"Upload failed: {e}")
 
-def main():
+def fetch_prices(tickers):
+    logging.info(f"Fetching market data for {len(tickers)} tickers...")
+    data = {}
+    try:
+        import yfinance as yf
+        import pandas as pd
+        
+        if not tickers: return {}
+        
+        # Download data (last 5 days to be safe for weekends/holidays)
+        # Using threads for speed
+        df = yf.download(tickers, period="5d", progress=False)
+        
+        if df.empty:
+            return {}
+
+        # Handle formatting differences (Single ticker vs Multiple)
+        is_multi = isinstance(df.columns, pd.MultiIndex)
+        
+        for t in tickers:
+            try:
+                if is_multi:
+                    # Access column level
+                    # Depending on yfinance version, structure might be [Price, Ticker] or [Ticker, Price]
+                    # Usually: df['Close'][ticker]
+                    if t in df['Close']:
+                        series = df['Close'][t].dropna()
+                    else:
+                        continue
+                else:
+                    # Single ticker case
+                    series = df['Close'].dropna()
+                
+                if len(series) >= 2:
+                    current = float(series.iloc[-1])
+                    prev = float(series.iloc[-2])
+                    change = ((current - prev) / prev) * 100
+                    
+                    data[t] = {
+                        "price": round(current, 2), 
+                        "change_percent": round(change, 2)
+                    }
+                elif len(series) == 1:
+                     # New listing? Just price
+                     data[t] = {
+                        "price": round(float(series.iloc[-1]), 2),
+                        "change_percent": 0.0
+                     }
+            except Exception as e:
+                # logging.debug(f"Error parsing {t}: {e}")
+                pass
+                
+    except ImportError:
+        logging.warning("yfinance/pandas not found. Install with: pip install yfinance pandas")
+        return {}
+    except Exception as e:
+        logging.error(f"Price fetch failed: {e}")
+        
+    return data
+
+def run_analysis(debug_mode=False):
     # Cleanup old logs and cache
     cleanup_old_files()
     
@@ -464,7 +524,7 @@ def main():
     threads = discover_threads()
     
     if not threads:
-        logging.info("No threads found. Exiting.")
+        logging.info("No threads found. Skipping cycle.")
         return
 
     all_text = ""
@@ -473,7 +533,7 @@ def main():
     for t in threads:
         text = fetch_thread_text(t["url"])
         if not text:
-            logging.info(f"Skipping {t['name']} (empty)")
+            # logging.info(f"Skipping {t['name']} (empty)")
             continue
             
         all_text += f"\n--- Thread: {t['name']} ---\n{text}"
@@ -488,7 +548,7 @@ def main():
     topics = analyze_topics(all_text)
 
     # DEBUG MODE CHECK
-    if len(sys.argv) > 1 and sys.argv[1] == "debug":
+    if debug_mode:
         logging.info("!!! DEBUG MODE: Skipping AI and Upload !!!")
         logging.info("--- Top 50 Topics (Debug) ---")
         for t in topics:
@@ -519,17 +579,67 @@ def main():
             "sentiment": round(avg_sent, 2)
         })
 
+    # --- WATCHLIST MERGE & PRICE FETCH START ---
+    watchlist_path = os.path.join(os.path.dirname(BASE_DIR), "site", "config", "watchlist.json")
+    watchlist_tickers = set()
+    if os.path.exists(watchlist_path):
+        try:
+            with open(watchlist_path, "r", encoding="utf-8") as f:
+                wl_data = json.load(f)
+                for cats in wl_data.values():
+                    for t in cats:
+                        watchlist_tickers.add(t)
+        except Exception as e:
+            logging.warning(f"Failed to load watchlist: {e}")
+
+    # Ensure watchlist items exist in final_items
+    existing_map = {i["ticker"]: i for i in final_items}
+    for t in watchlist_tickers:
+        if t not in existing_map:
+            new_item = {"ticker": t, "count": 0, "sentiment": 0.0}
+            final_items.append(new_item)
+            existing_map[t] = new_item
+            
+    # Fetch Prices for ALL items
+    all_tickers = list(existing_map.keys())
+    market_data = fetch_prices(all_tickers)
+    
+    for item in final_items:
+        t = item["ticker"]
+        if t in market_data:
+            item["price"] = market_data[t]["price"]
+            item["change_percent"] = market_data[t]["change_percent"]
+    # --- WATCHLIST MERGE & PRICE FETCH END ---
+
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
-    logging.info("--- Top 10 Tickers (with Sentiment) ---")
+    logging.info("--- Top 10 Tickers (with Sentiment & Price) ---")
     for i in final_items[:10]:
-        logging.info(f"{i['ticker']}: {i['count']} (Mood: {i['sentiment']})")
+        price_info = f"${i.get('price', '-')} ({i.get('change_percent', 0)}%)" if 'price' in i else "No Data"
+        logging.info(f"{i['ticker']}: {i['count']} (Mood: {i['sentiment']}, Price: {price_info})")
         
     # Generate Market Overview
     market_overview = generate_market_summary(final_items, topics)
     logging.info(f"Overview: {market_overview}")
 
     send_to_worker(final_items, topics, source_meta, overview=market_overview)
+
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    
+    if mode == "monitor":
+        logging.info("--- STARTING MONITOR MODE (Interval: 120s) ---")
+        try:
+            while True:
+                run_analysis(debug_mode=False)
+                logging.info("Waiting 120s for next cycle...")
+                time.sleep(120) 
+        except KeyboardInterrupt:
+            logging.info("Monitor stopped.")
+    elif mode == "debug":
+        run_analysis(debug_mode=True)
+    else:
+        run_analysis(debug_mode=False)
 
 if __name__ == "__main__":
     main()

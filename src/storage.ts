@@ -1,6 +1,12 @@
 import type { Env } from "./types";
 
-export type RankingItem = { ticker: string; count: number; sentiment: number };
+export interface RankingItem {
+  ticker: string;
+  count: number;
+  sentiment?: number;
+  price?: number;
+  change_percent?: number;
+};
 export type TopicItem = { word: string; count: number };
 export type RankingPayload = {
   updatedAt: string | null;
@@ -25,10 +31,10 @@ function rankingMetaKey(window: string): string {
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
   // 1. Get items
   const { results } = await env.DB.prepare(
-    "SELECT ticker, count, sentiment FROM rankings WHERE term = ? ORDER BY count DESC"
+    "SELECT ticker, count, sentiment, price, change_percent FROM rankings WHERE term = ? ORDER BY count DESC"
   )
     .bind(window)
-    .all<{ ticker: string; count: number; sentiment: number }>();
+    .all<RankingItem>();
 
   // 2. Get meta (sources, updatedAt)
   const metaRaw = await env.DB.prepare("SELECT value FROM meta WHERE key = ?")
@@ -64,8 +70,8 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   // 2. Insert new items
   for (const item of payload.items) {
     statements.push(
-      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment) VALUES (?, ?, ?, ?)")
-        .bind(window, item.ticker, item.count, item.sentiment ?? 0)
+      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment, price, change_percent) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(window, item.ticker, item.count, item.sentiment ?? 0, item.price ?? null, item.change_percent ?? null)
     );
   }
 

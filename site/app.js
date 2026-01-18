@@ -45,8 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadChart("SPX"); // Default
   fetchWatchlist();
   main();
-  // Refresh every 5 mins
-  setInterval(main, 300000);
+  // Refresh every 30s for Monitor Mode
+  setInterval(main, 30000);
 });
 
 
@@ -255,45 +255,71 @@ function renderHeatmap() {
 
     tickers.forEach(ticker => {
       const item = currentItems.find(i => i.ticker === ticker);
-      const count = item ? item.count : 0;
-      const sentiment = item ? (item.sentiment || 0) : 0;
 
-      // Sentiment Color
-      let bgStyle = "rgba(43, 43, 60, 0.8)"; // Default
+      let bgStyle = "rgba(43, 43, 60, 0.5)";
       let borderStyle = "1px solid #444";
-      let scoreColor = "#666";
+      let textColor = "#eee";
 
-      if (sentiment >= 0.1) {
-        bgStyle = `rgba(0, 255, 136, ${0.1 + Math.min(sentiment * 0.3, 0.4)})`;
-        borderStyle = "1px solid #00ff88";
-        scoreColor = "#00ff88";
-      } else if (sentiment <= -0.1) {
-        bgStyle = `rgba(255, 60, 60, ${0.1 + Math.min(Math.abs(sentiment) * 0.3, 0.4)})`;
-        borderStyle = "1px solid #ff3c3c";
-        scoreColor = "#ff3c3c";
+      // Display Values
+      let mainVal = "--%";
+      let subVal = "$--";
+
+      if (item) {
+        // Priority: Price Change
+        if (item.change_percent !== undefined && item.change_percent !== null) {
+          const chg = item.change_percent;
+          mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
+          subVal = `$${item.price}`;
+
+          // Color Logic (S&P 500 Style)
+          // -3% (Dark Red) ... 0 (Grey) ... +3% (Bright Green)
+          if (chg > 0) {
+            const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7); // Cap at 3%
+            bgStyle = `rgba(0, 160, 80, ${opacity})`;
+            borderStyle = "1px solid #4f4";
+          } else if (chg < 0) {
+            const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
+            bgStyle = `rgba(180, 40, 40, ${opacity})`;
+            borderStyle = "1px solid #f44";
+          } else {
+            bgStyle = "#444"; // Flat
+          }
+        } else {
+          // Fallback: Sentiment or Count
+          subVal = `${item.count} res`;
+          mainVal = "No Data";
+          bgStyle = "#2a2a2a";
+        }
+      } else {
+        bgStyle = "#222";
+        borderStyle = "1px dashed #444";
       }
 
       const card = document.createElement("div");
       card.className = "heatmap-card";
       card.style.background = bgStyle;
       card.style.border = borderStyle;
-      card.style.padding = "8px";
+      card.style.padding = "10px";
       card.style.borderRadius = "4px";
       card.style.cursor = "pointer";
       card.style.transition = "transform 0.1s";
+      card.style.display = "flex";
+      card.style.flexDirection = "column";
+      card.style.alignItems = "center";
+      card.style.justifyContent = "center";
+      card.style.minHeight = "80px";
 
       if (!item) {
-        card.style.opacity = "0.5";
-        card.style.filter = "grayscale(100%)";
+        card.style.opacity = "0.6";
       }
 
       card.innerHTML = `
-            <div style="font-weight:bold; color:white;">${ticker}</div>
-            <div style="font-size:0.8rem; color:#aaa;">${count} <span style="font-size:0.7rem">Comments</span></div>
-            <div style="font-size:0.7rem; font-weight:bold; color:${scoreColor}; text-align:right;">${sentiment > 0 ? '+' : ''}${sentiment}</div>
+            <div style="font-weight:bold; color:white; font-size:1.1rem; letter-spacing:1px;">${ticker}</div>
+            <div style="font-size:1rem; font-weight:bold; margin:4px 0; text-shadow:0 1px 2px rgba(0,0,0,0.5);">${mainVal}</div>
+            <div style="font-size:0.75rem; color:#ddd;">${subVal}</div>
         `;
 
-      card.addEventListener("mouseenter", () => card.style.transform = "scale(1.02)");
+      card.addEventListener("mouseenter", () => card.style.transform = "scale(1.05)");
       card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
 
       card.addEventListener("click", () => {

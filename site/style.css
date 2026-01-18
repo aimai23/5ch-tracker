@@ -465,10 +465,53 @@ h1 {
   }
 }
 
+/* Real-time Pulse Animations */
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7);
+    border-color: #fff;
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+    border-color: #00ff88;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7);
+    border-color: #fff;
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 60, 60, 0);
+    border-color: #ff3c3c;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+  }
+}
+
+.heatmap-card.updated-up {
+  animation: pulse-green 1.5s ease-out;
+  z-index: 10;
+}
+
+.heatmap-card.updated-down {
+  animation: pulse-red 1.5s ease-out;
+  z-index: 10;
+}
+
 footer {
   text-align: center;
   padding: 2rem;
-  color: var(--text-secondary);
+  color: #666;
   font-size: 0.8rem;
   margin-top: auto;
 }

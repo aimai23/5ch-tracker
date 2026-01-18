@@ -1,6 +1,9 @@
 name = "5ch-tracker"
-compatibility_date = "2026-01-17"
+compat_date = "2024-04-03"
 main = "src/index.ts"
+
+[triggers]
+crons = ["*/2 13-21 * * 1-5"]
 
 [[d1_databases]]
 binding = "DB"
