@@ -1,5 +1,5 @@
 name = "5ch-tracker"
-compat_date = "2024-04-03"
+compatibility_date = "2024-04-03"
 main = "src/index.ts"
 
 [triggers]
@@ -12,11 +12,3 @@ database_id = "621699fa-e616-44f1-a52b-2904a4ff069f"
 
 [observability]
 enabled = true
-
-[observability.logs]
-enabled = true
-head_sampling_rate = 1
-
-[observability.traces]
-enabled = true
-head_sampling_rate = 1
