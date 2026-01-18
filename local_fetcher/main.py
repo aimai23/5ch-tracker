@@ -65,23 +65,72 @@ def discover_threads():
         
     return top_threads
 
-def fetch_thread_text(url):
-    # Try using raw .dat access for robustness
-    # Convert https://egg.5ch.net/test/read.cgi/stock/1768658418/ 
-    # to      https://egg.5ch.net/stock/dat/1768658418.dat
+def cleanup_cache():
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dat_cache")
+    if not os.path.exists(cache_dir):
+        return
+        
+    files = [os.path.join(cache_dir, f) for f in os.listdir(cache_dir) if f.endswith(".dat")]
+    # Keep max 20 files, sort by mtime desc
+    if len(files) > 20:
+        files.sort(key=os.path.getmtime, reverse=True)
+        for f in files[20:]:
+            try:
+                os.remove(f)
+                print(f"Cleaned up old cache: {os.path.basename(f)}")
+            except:
+                pass
+
+def parse_dat_content(text_data):
+    comments = []
+    for line in text_data.splitlines():
+        parts = line.split("<>")
+        # Format: Name<>Email<>Date ID<>Message<>Title
+        if len(parts) >= 4:
+            msg = parts[3]
+            # Remove HTML tags (mostly <br>)
+            clean_msg = re.sub(r"<[^>]+>", "\n", msg)
+            comments.append(clean_msg.strip())
     
+    if not comments:
+        return ""
+        
+    full_text = "\n".join(comments)
+    if len(full_text) > 30000:
+        return full_text[:30000]
+    return full_text
+
+def fetch_thread_text(url):
+    # Setup Cache
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dat_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Convert to dat URL
     dat_url = None
-    # Flexible regex to capture host, board, and thread_id
+    thread_id = None
     m = re.match(r"https?://([^/]+)/test/read\.cgi/([^/]+)/(\d+)/?", url)
     if m:
-        host, board, thread_id = m.groups()
+        host, board, tid = m.groups()
+        thread_id = tid
         dat_url = f"https://{host}/{board}/dat/{thread_id}.dat"
-        print(f"Fetching raw dat: {dat_url}")
-    else:
-        print(f"URL pattern not matched for .dat conversion: {url}")
-        print(f"Fetching HTML (legacy): {url}...")
     
+    # 1. Check Cache
+    if thread_id:
+        cache_path = os.path.join(cache_dir, f"{thread_id}.dat")
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    # Check if thread is "finished" (approx 1000 lines)
+                    if content.count('\n') >= 995: 
+                        print(f"Using cached (finished): {thread_id}")
+                        return parse_dat_content(content)
+            except Exception as e:
+                print(f"Cache read error: {e}")
+
+    # 2. Fetch from Network
     target_url = dat_url if dat_url else url
+    print(f"Fetching {target_url}...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -90,30 +139,23 @@ def fetch_thread_text(url):
     try:
         resp = requests.get(target_url, headers=headers, timeout=10)
         
-        # DAT file handling
+        # Handling .dat (whether from conversion or direct)
         if dat_url and resp.status_code == 200:
             resp.encoding = "CP932"
             text_data = resp.text
-            comments = []
-            for line in text_data.splitlines():
-                parts = line.split("<>")
-                # Format: Name<>Email<>Date ID<>Message<>Title
-                if len(parts) >= 4:
-                    msg = parts[3]
-                    # Remove HTML tags (mostly <br>)
-                    # Simple regex replace for <br> and other tags
-                    clean_msg = re.sub(r"<[^>]+>", "\n", msg)
-                    comments.append(clean_msg.strip())
             
-            if not comments:
-                print("Warning: Parsed .dat but found no comments.")
-                return ""
+            # Save to cache if we have a thread_id
+            if thread_id:
+                cache_path = os.path.join(cache_dir, f"{thread_id}.dat")
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    f.write(text_data)
                 
-            full_text = "\n".join(comments)
-            if len(full_text) > 30000:
-                print(f"Truncating text (Length: {len(full_text)} > 30000)")
-                return full_text[:30000]
-            return full_text
+                cleanup_cache()
+
+            processed = parse_dat_content(text_data)
+            if not processed:
+                 print("Warning: Parsed .dat but found no comments.")
+            return processed
             
         # Fallback to HTML handling if dat fails or not a dat url
         resp.encoding = "CP932"
