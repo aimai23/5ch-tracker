@@ -1,7 +1,8 @@
+```typescript
 import { Env } from "./types";
 import { getRanking, putPricesBatch, PriceItem } from "./storage";
 
-const YAHOO_API_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
+const YAHOO_QUOTE_API = "https://query1.finance.yahoo.com/v7/finance/quote";
 // Hardcoded fallback or synced with watchlist.json manual entry
 const WATCHLIST_TICKERS = ["BETA", "ONDS", "ASTS", "IONQ", "LAES", "WULF", "CRWV", "POET", "OSCR", "TEM"];
 
@@ -25,13 +26,13 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         return;
     }
 
-    // 2. Fetch prices
+    // 2. Fetch prices (Batch)
     const priceItems = await fetchStockPrices(Array.from(tickersToUpdate));
 
     // 3. Save to Prices Table
     if (priceItems.length > 0) {
         await putPricesBatch(env, priceItems);
-        console.log(`Updated prices for ${priceItems.length} tickers.`);
+        console.log(`Updated prices for ${ priceItems.length } tickers.`);
     } else {
         console.log("No prices fetched.");
     }
@@ -39,38 +40,46 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
 async function fetchStockPrices(tickerList: string[]): Promise<PriceItem[]> {
     const now = new Date().toISOString();
+    if (tickerList.length === 0) return [];
 
-    // Parallel fetch
-    const results = await Promise.all(tickerList.map(async (ticker) => {
-        try {
-            const res = await fetch(`${YAHOO_API_BASE}/${ticker}?interval=1d&range=2d`);
-            if (res.ok) {
-                const data: any = await res.json();
-                const result = data?.chart?.result?.[0];
-                const quote = result?.indicators?.quote?.[0];
-                const closes = quote?.close;
-
-                if (closes && closes.length > 0) {
-                    const validCloses = closes.filter((c: any) => c !== null);
-                    if (validCloses.length >= 1) {
-                        const current = validCloses[validCloses.length - 1];
-                        const prev = result?.meta?.chartPreviousClose || validCloses[0];
-                        const changeConfig = prev ? ((current - prev) / prev) * 100 : 0;
-
-                        return {
-                            ticker: ticker,
-                            price: parseFloat(current.toFixed(2)),
-                            change_percent: parseFloat(changeConfig.toFixed(2)),
-                            updated_at: now
-                        } as PriceItem;
-                    }
-                }
-            }
-        } catch (e) {
-            // console.warn ...
+    try {
+        const symbols = tickerList.join(",");
+        const url = `${ YAHOO_QUOTE_API }?symbols = ${ symbols } `;
+        console.log(`Fetching batch quotes: ${ url } `);
+        
+        const res = await fetch(url);
+        if (!res.ok) {
+             console.error(`Yahoo Batch Error: ${ res.status } ${ res.statusText } `);
+             return [];
         }
-        return null;
-    }));
+        
+        const data: any = await res.json();
+        const quotes = data?.quoteResponse?.result;
+        
+        if (!quotes || !Array.isArray(quotes)) {
+            console.warn("No quoteResponse.result found in Yahoo API.");
+            return [];
+        }
 
-    return results.filter((i): i is PriceItem => i !== null);
+        return quotes.map((q: any) => {
+            const price = q.regularMarketPrice;
+            const changeP = q.regularMarketChangePercent;
+            const symbol = q.symbol;
+            
+            if (typeof price === 'number' && typeof changeP === 'number') {
+                 return {
+                    ticker: symbol,
+                    price: parseFloat(price.toFixed(2)),
+                    change_percent: parseFloat(changeP.toFixed(2)),
+                    updated_at: now
+                 } as PriceItem;
+            }
+            return null;
+        }).filter((i): i is PriceItem => i !== null);
+
+    } catch (e) {
+        console.error("Batch fetch failed", e);
+        return [];
+    }
 }
+```
