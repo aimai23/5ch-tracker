@@ -3,16 +3,7 @@ let chartWidget = null;
 let currentTicker = null;
 let currentTopics = []; // NEW: Store topics globally
 let currentItems = []; // Global for heatmap
-
-const watchlistData = {
-  "Aviation": ["BETA"],
-  "Drones": ["ONDS"],
-  "Space": ["ASTS"],
-  "Quantum": ["IONQ", "LAES"],
-  "AI/Compute": ["WULF", "CRWV"],
-  "Photonics": ["POET"],
-  "Healthcare": ["OSCR", "TEM"]
-};
+let watchlistData = {};
 
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
@@ -52,11 +43,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadChart("SPX"); // Default
+  fetchWatchlist();
   main();
   // Refresh every 5 mins
   setInterval(main, 300000);
 });
 
+
+async function fetchWatchlist() {
+  try {
+    const res = await fetch("config/watchlist.json");
+    if (res.ok) {
+      watchlistData = await res.json();
+    }
+  } catch (e) {
+    console.error("Failed to load watchlist config", e);
+  }
+}
 
 async function main() {
   const loadingEl = document.getElementById("loading");
@@ -83,8 +86,6 @@ async function main() {
     if (overviewEl) {
       if (data.overview) {
         overviewEl.style.display = "block";
-        // Simple typing effect simulation via textContent updates could be done here,
-        // but strict replacement is safer for now.
         overviewText.textContent = data.overview;
       } else {
         overviewEl.style.display = "none";
@@ -99,9 +100,6 @@ async function main() {
 
     loadingEl.style.display = "none";
     tableEl.style.display = "table";
-
-    // Initial Render if needed (but Dashboard is default)
-    // renderWordCloud();
 
     const maxCount = items.length > 0 ? items[0].count : 1;
 
@@ -205,7 +203,6 @@ function renderWordCloud() {
   canvas.height = container.offsetHeight;
 
   // Calculate scaling factor
-  // We want the largest word to be ~80px (desktop) or ~50px (mobile)
   const maxCount = Math.max(...currentTopics.map(t => t[1]));
   const baseSize = canvas.width > 600 ? 60 : 30; // Base font size
   const scale = baseSize / maxCount;
@@ -218,7 +215,6 @@ function renderWordCloud() {
     },
     fontFamily: '"Inter", "JetBrains Mono", sans-serif',
     color: function (word, weight) {
-      // Cyberpunk Palette
       const colors = ['#00f0ff', '#ffd700', '#ffffff', '#ff003c', '#adff00'];
       return colors[Math.floor(Math.random() * colors.length)];
     },
@@ -230,6 +226,88 @@ function renderWordCloud() {
   });
 
   loading.style.display = 'none';
+}
+
+function renderHeatmap() {
+  const container = document.getElementById("heatmap-container");
+  container.innerHTML = "";
+
+  // Grid for Categories using flex/grid
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(250px, 1fr))";
+  container.style.gap = "1rem";
+
+  Object.entries(watchlistData).forEach(([category, tickers]) => {
+    const catEl = document.createElement("div");
+    catEl.className = "heatmap-category";
+    catEl.style.background = "rgba(255, 255, 255, 0.05)";
+    catEl.style.padding = "1rem";
+    catEl.style.borderRadius = "8px";
+    catEl.style.border = "1px solid #333";
+
+    catEl.innerHTML = `<h3 style="color:var(--accent-cyan); font-size:0.9rem; margin-bottom:0.5rem; text-transform:uppercase;">${category}</h3>`;
+
+    const grid = document.createElement("div");
+    grid.className = "heatmap-grid";
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(2, 1fr)";
+    grid.style.gap = "8px";
+
+    tickers.forEach(ticker => {
+      const item = currentItems.find(i => i.ticker === ticker);
+      const count = item ? item.count : 0;
+      const sentiment = item ? (item.sentiment || 0) : 0;
+
+      // Sentiment Color
+      let bgStyle = "rgba(43, 43, 60, 0.8)"; // Default
+      let borderStyle = "1px solid #444";
+      let scoreColor = "#666";
+
+      if (sentiment >= 0.1) {
+        bgStyle = `rgba(0, 255, 136, ${0.1 + Math.min(sentiment * 0.3, 0.4)})`;
+        borderStyle = "1px solid #00ff88";
+        scoreColor = "#00ff88";
+      } else if (sentiment <= -0.1) {
+        bgStyle = `rgba(255, 60, 60, ${0.1 + Math.min(Math.abs(sentiment) * 0.3, 0.4)})`;
+        borderStyle = "1px solid #ff3c3c";
+        scoreColor = "#ff3c3c";
+      }
+
+      const card = document.createElement("div");
+      card.className = "heatmap-card";
+      card.style.background = bgStyle;
+      card.style.border = borderStyle;
+      card.style.padding = "8px";
+      card.style.borderRadius = "4px";
+      card.style.cursor = "pointer";
+      card.style.transition = "transform 0.1s";
+
+      if (!item) {
+        card.style.opacity = "0.5";
+        card.style.filter = "grayscale(100%)";
+      }
+
+      card.innerHTML = `
+            <div style="font-weight:bold; color:white;">${ticker}</div>
+            <div style="font-size:0.8rem; color:#aaa;">${count} <span style="font-size:0.7rem">Comments</span></div>
+            <div style="font-size:0.7rem; font-weight:bold; color:${scoreColor}; text-align:right;">${sentiment > 0 ? '+' : ''}${sentiment}</div>
+        `;
+
+      card.addEventListener("mouseenter", () => card.style.transform = "scale(1.02)");
+      card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
+
+      card.addEventListener("click", () => {
+        // Switch to Dashboard
+        document.querySelector('[data-tab="dashboard"]').click();
+        loadChart(ticker);
+      });
+
+      grid.appendChild(card);
+    });
+
+    catEl.appendChild(grid);
+    container.appendChild(catEl);
+  });
 }
 
 function loadChart(ticker) {

@@ -1,0 +1,26 @@
+{
+    "Aviation": [
+        "BETA"
+    ],
+    "Drones": [
+        "ONDS"
+    ],
+    "Space": [
+        "ASTS"
+    ],
+    "Quantum Computing": [
+        "IONQ",
+        "LAES"
+    ],
+    "AI & Compute": [
+        "WULF",
+        "CRWV"
+    ],
+    "Photonics/Semis": [
+        "POET"
+    ],
+    "Healthcare": [
+        "OSCR",
+        "TEM"
+    ]
+}
