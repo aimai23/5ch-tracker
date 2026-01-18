@@ -50,6 +50,9 @@ async function main() {
             <span class="ticker-name">${item.ticker}</span>
           </div>
         </td>
+        <td class="chart-cell">
+          <img class="mini-chart" src="https://finviz.com/chart.ashx?t=${item.ticker}&ty=c&ta=0&p=d&s=l" alt="${item.ticker} chart" loading="lazy">
+        </td>
         <td>
           <div class="count-cell">
             <div class="count-val">${item.count}</div>

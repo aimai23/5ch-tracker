@@ -266,6 +266,27 @@ h1 {
   transition: width 1s ease-out;
 }
 
+/* CHART CELL */
+.chart-cell {
+  padding: 0.2rem 1rem !important;
+  text-align: center;
+}
+
+.mini-chart {
+  height: 40px;
+  width: auto;
+  border-radius: 4px;
+  filter: invert(1) hue-rotate(180deg) grayscale(0.5);
+  /* Dark mode adjustment */
+  transition: transform 0.2s;
+}
+
+.ranking-row:hover .mini-chart {
+  transform: scale(1.1);
+  filter: invert(1) hue-rotate(180deg) grayscale(0);
+  /* Highlight on hover */
+}
+
 /* Rank Badges */
 .rank-1 td:first-child {
   color: var(--accent-gold);
