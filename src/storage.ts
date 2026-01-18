@@ -1,10 +1,12 @@
 import type { Env } from "./types";
 
 export type RankingItem = { ticker: string; count: number };
+export type TopicItem = { word: string; count: number };
 export type RankingPayload = {
   updatedAt: string | null;
   window: string;
   items: RankingItem[];
+  topics: TopicItem[];
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -45,6 +47,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     window,
     updatedAt: meta.updatedAt ?? null,
     items: results || [],
+    topics: meta.topics || [],
     sources: meta.sources || [],
   };
 }
@@ -68,6 +71,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   const meta: Partial<RankingPayload> = {
     updatedAt: payload.updatedAt,
     sources: payload.sources,
+    topics: payload.topics,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

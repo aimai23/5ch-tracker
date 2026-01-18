@@ -44,7 +44,7 @@ export default {
       const window = url.searchParams.get("window") ?? "24h";
       const ranking = await getRanking(env, window);
       return json(
-        ranking ?? { updatedAt: null, window, items: [], sources: [] },
+        ranking ?? { updatedAt: null, window, items: [], topics: [], sources: [] },
         200,
         corsHeaders(origin)
       );
@@ -74,6 +74,7 @@ export default {
         updatedAt: body.updatedAt ?? new Date().toISOString(),
         window,
         items: Array.isArray(body.items) ? body.items : [],
+        topics: Array.isArray(body.topics) ? body.topics : [],
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 
