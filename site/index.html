@@ -61,15 +61,18 @@
 
     <!-- Topic View -->
     <div id="view-topics" style="display: none;">
-      <section class="panel">
+      <section class="panel" style="height: 600px; display: flex; flex-direction: column;">
         <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
-        <div id="topic-container" class="topic-grid">
-          <!-- Topics injected here -->
-          <div class="loading-text">Loading trends...</div>
+        <div id="wordcloud-container"
+          style="flex: 1; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
+          <canvas id="topic-canvas"></canvas>
+          <div id="topic-loading" class="loading-text">Loading trends...</div>
         </div>
       </section>
     </div>
 
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 

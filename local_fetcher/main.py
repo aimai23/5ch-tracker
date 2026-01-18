@@ -1,5 +1,6 @@
 import re
 import os
+import sys
 import json
 import requests
 import time
@@ -114,6 +115,7 @@ def discover_threads():
     return top_threads
 
 def parse_dat_content(text_data):
+    import html
     comments = []
     # Skip the first post (1レス目) as requested
     for line in text_data.splitlines()[1:]:
@@ -121,8 +123,12 @@ def parse_dat_content(text_data):
         # Format: Name<>Email<>Date ID<>Message<>Title
         if len(parts) >= 4:
             msg = parts[3]
-            # Remove HTML tags (mostly <br>)
-            clean_msg = re.sub(r"<[^>]+>", "\n", msg)
+            # Remove URLs first
+            msg = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", msg)
+            # Remove HTML tags (mostly <br> becomes space)
+            msg = re.sub(r"<[^>]+>", " ", msg)
+            # Unescape entities (e.g. &gt; -> >)
+            clean_msg = html.unescape(msg)
             comments.append(clean_msg.strip())
     
     if not comments:
@@ -291,7 +297,12 @@ def analyze_topics(text):
         'よう', 'そう', 'はず', 'まま', 'ため', 'だけ', 'ばっ',
         'どこ', 'そこ', 'あそこ', 'いま', 'いつ', 'なん',
         'の', 'し', 'て', 'いる', 'ある', 'する', 'なる', 
-        'ない', 'いい', 'も', 'な', 'だ', 'ん', 'ー', 'www', 'w'
+        'ない', 'いい', 'も', 'な', 'だ', 'ん', 'ー', 'www', 'w',
+        'gt', 'amp', 'nbsp', 'http', 'https', 'com', 'co', 'jp',
+        # User Feedback Additions
+        'みたい', 'ども', 'やつ', 'わけ', 'ほう', 'スレ', 'レス', 'マジ', 
+        'バカ', 'マン', 'おじ', '本当', '以上', '一つ', '我々', '自分', '何処',
+        'ここ', 'たち', 'とも', '的', '化', '明日', '今日', '昨日', '今回', '前回'
     }
     
     words = []
@@ -302,23 +313,37 @@ def analyze_topics(text):
         t = Tokenizer()
         tokens = t.tokenize(text)
         for token in tokens:
-            part_of_speech = token.part_of_speech.split(',')[0]
-            if part_of_speech in ['名詞']:
+            # part_of_speech looks like "名詞,一般,*,*,..."
+            pos_parts = token.part_of_speech.split(',')
+            main_pos = pos_parts[0]
+            sub_pos = pos_parts[1] if len(pos_parts) > 1 else '*'
+            
+            # Select Nouns, but exclude Dependent/Pronoun/Suffix/Number
+            if main_pos == '名詞' and sub_pos not in ['非自立', '代名詞', '数', '接尾']:
                 word = token.surface
-                if len(word) > 1 and word not in stop_words and not word.isdigit():
-                    words.append(word)
+                
+                # Filter Garbage
+                # 1. Skip if digits only
+                if word.isdigit(): continue
+                # 2. Skip single char (except Kanji? No, skip all single usually safe for trends)
+                if len(word) < 2: continue
+                # 3. Skip known stop words
+                if word in stop_words: continue
+                # 4. Skip specific symbol noise common in 5ch (e.g. gt, ;&)
+                if re.search(r'[;&=<>\(\)\{\}\[\]]', word): continue
+                # 5. Skip URLs or path-like (should be cleaned in parse, but double check)
+                if 'http' in word or '.com' in word: continue
+                
+                words.append(word)
+
     except ImportError:
         logging.warning("Janome not found. Falling back to simple Regex extraction.")
         logging.info("To improve accuracy, please install janome: python3 -m pip install janome")
-        # Extract contiguous Kanji, Katakana, or Alphanumeric blocks (2+ chars)
-        # Kanji: \u4e00-\u9faf
-        # Katakana: \u30a0-\u30ff
-        # Alphanum: a-zA-Z0-9
-        # Regex: ([一-龠ァ-ヶa-zA-Z0-9]{2,})
-        pattern = re.compile(r"([一-龠ァ-ヶa-zA-Z]{2,})") # Exclude pure numbers which are usually prices
+        pattern = re.compile(r"([一-龠ァ-ヶa-zA-Z]{2,})") 
         matches = pattern.findall(text)
         for w in matches:
-             if w not in stop_words and not w.isdigit():
+             if w not in stop_words and not w.isdigit() and len(w) > 1:
+                 if 'http' in w or 'gt' == w: continue
                  words.append(w)
 
     # Count frequency
@@ -326,7 +351,6 @@ def analyze_topics(text):
     counter = Counter(words)
     
     # Format top 50
-    # Output: [{"word": "BTC", "count": 120}, ...]
     top_words = [{"word": k, "count": v} for k, v in counter.most_common(50)]
     
     logging.info("--- Top Topics ---")
@@ -402,6 +426,14 @@ def main():
 
     # Analyze Topics (No AI)
     topics = analyze_topics(all_text)
+
+    # DEBUG MODE CHECK
+    if len(sys.argv) > 1 and sys.argv[1] == "debug":
+        logging.info("!!! DEBUG MODE: Skipping AI and Upload !!!")
+        logging.info("--- Top 50 Topics (Debug) ---")
+        for t in topics:
+            logging.info(f"{t['word']}: {t['count']}")
+        return
 
     # Analyze Tickers (AI)
     tickers = analyze_with_gemini(all_text, exclude)

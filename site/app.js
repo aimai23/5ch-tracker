@@ -1,6 +1,7 @@
 const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 let chartWidget = null;
 let currentTicker = null;
+let currentTopics = []; // NEW: Store topics globally
 
 // Tab Switching
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -16,6 +17,8 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     } else {
       document.getElementById("view-dashboard").style.display = "none";
       document.getElementById("view-topics").style.display = "block";
+      // Render WordCloud when tab becomes visible
+      setTimeout(renderWordCloud, 50);
     }
   });
 });
@@ -32,7 +35,11 @@ async function main() {
 
     const data = await res.json();
     const items = data.items || [];
-    const topics = data.topics || []; // NEW
+
+    // Store topics
+    if (data.topics) {
+      currentTopics = data.topics.map(t => [t.word, t.count]);
+    }
 
     // Update timestamp
     if (data.updatedAt) {
@@ -43,8 +50,8 @@ async function main() {
     loadingEl.style.display = "none";
     tableEl.style.display = "table";
 
-    // Render Topics
-    renderTopics(topics);
+    // Initial Render if needed (but Dashboard is default)
+    // renderWordCloud(); 
 
     const maxCount = items.length > 0 ? items[0].count : 1;
 
@@ -112,24 +119,46 @@ async function main() {
   }
 }
 
-function renderTopics(topics) {
-  const container = document.getElementById("topic-container");
-  container.innerHTML = "";
+function renderWordCloud() {
+  const canvas = document.getElementById("topic-canvas");
+  const container = document.getElementById("wordcloud-container");
+  const loading = document.getElementById("topic-loading");
 
-  if (!topics || topics.length === 0) {
-    container.innerHTML = "<div class='no-data' style='padding:1rem; color:#888;'>No trending keywords found.</div>";
+  if (!currentTopics || currentTopics.length === 0) {
+    loading.textContent = "No trending keywords found.";
     return;
   }
 
-  topics.forEach(t => {
-    const el = document.createElement("div");
-    el.className = "topic-item";
-    el.innerHTML = `
-      <span class="topic-word">${t.word}</span>
-      <span class="topic-count">${t.count}</span>
-    `;
-    container.appendChild(el);
+  // Resize canvas to fit container
+  canvas.width = container.offsetWidth;
+  canvas.height = container.offsetHeight;
+
+  // Calculate scaling factor
+  // We want the largest word to be ~80px (desktop) or ~50px (mobile)
+  const maxCount = Math.max(...currentTopics.map(t => t[1]));
+  const baseSize = canvas.width > 600 ? 60 : 30; // Base font size
+  const scale = baseSize / maxCount;
+
+  WordCloud(canvas, {
+    list: currentTopics,
+    gridSize: 10,
+    weightFactor: function (size) {
+      return Math.max((size * scale) * 1.5, 10); // Minimum 10px
+    },
+    fontFamily: '"Inter", "JetBrains Mono", sans-serif',
+    color: function (word, weight) {
+      // Cyberpunk Palette
+      const colors = ['#00f0ff', '#ffd700', '#ffffff', '#ff003c', '#adff00'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    },
+    rotateRatio: 0.5,
+    rotationSteps: 2,
+    backgroundColor: 'transparent',
+    shrinkToFit: true,
+    drawOutOfBound: false
   });
+
+  loading.style.display = 'none';
 }
 
 function loadChart(ticker) {
