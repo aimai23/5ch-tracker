@@ -17,7 +17,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: var(--font-main);
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 20%),
     radial-gradient(circle at 90% 80%, rgba(255, 100, 100, 0.05) 0%, transparent 20%);
   min-height: 100vh;
@@ -26,10 +26,12 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 1400px;
+  /* Wider for charts */
   margin: 0 auto;
   padding: 2rem 1rem;
   width: 100%;
+  box-sizing: border-box;
 }
 
 header {
@@ -44,7 +46,7 @@ h1 {
   background: linear-gradient(135deg, #fff 0%, #aaa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .subtitle {
@@ -68,20 +70,85 @@ h1 {
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.7; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
 }
 
-.dashboard-card {
+/* DASHBOARD GRID LAYOUT */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-panel {
+    min-height: 500px;
+    order: -1;
+    /* Chart on top on mobile/tablet */
+  }
+
+  /* Sticky header for ranking list on mobile */
+  .ranking-panel {
+    max-height: 500px;
+    overflow-y: auto;
+  }
+}
+
+.panel {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 1.5rem;
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  height: 100%;
 }
 
+.ranking-panel {
+  padding: 1rem;
+  /* Make ranking scrollable if too long */
+  max-height: 80vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.chart-panel {
+  position: relative;
+  min-height: 600px;
+  /* Fixed height for chart */
+  padding: 0;
+  border: 1px solid var(--border-color);
+}
+
+#tradingview_widget {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* TABLE STYLES */
 .ranking-table {
   width: 100%;
   border-collapse: separate;
@@ -94,32 +161,44 @@ h1 {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
   padding-bottom: 0.5rem;
   font-weight: 600;
+  position: sticky;
+  top: 0;
+  background-color: var(--card-bg);
+  /* Opaque for stickiness */
+  z-index: 10;
 }
 
 .ranking-row {
-  cursor: default;
+  cursor: pointer;
+  /* Clickable */
   transition: transform 0.2s, background-color 0.2s;
 }
 
-.ranking-row:hover {
+.ranking-row:hover,
+.ranking-row.selected {
   transform: translateX(4px);
 }
 
+.ranking-row.selected td {
+  background-color: rgba(88, 166, 255, 0.15);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+}
+
 .ranking-row td {
-  background-color: rgba(255,255,255,0.03);
-  padding: 1rem;
-  first-child-radius: 8px 0 0 8px;
-  last-child-radius: 0 8px 8px 0;
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 0.8rem 0.5rem;
+  border: 1px solid transparent;
+  /* Prevent layout shift on select */
 }
 
 .ranking-row td:first-child {
   border-radius: 8px 0 0 8px;
   font-weight: bold;
   font-family: var(--font-mono);
-  width: 40px;
+  width: 30px;
   text-align: center;
 }
 
@@ -130,31 +209,31 @@ h1 {
 .ticker-cell {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .ticker-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--text-primary);
 }
 
 .count-cell {
   text-align: right;
-  width: 120px;
+  width: 100px;
 }
 
 .count-val {
   font-family: var(--font-mono);
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: var(--accent-cyan);
 }
 
 .bar-container {
   width: 100%;
   height: 4px;
-  background-color: rgba(255,255,255,0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   margin-top: 6px;
   overflow: hidden;
@@ -169,9 +248,21 @@ h1 {
 }
 
 /* Rank Badges */
-.rank-1 td:first-child { color: var(--accent-gold); font-size: 1.4rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-.rank-2 td:first-child { color: var(--accent-silver); font-size: 1.3rem; }
-.rank-3 td:first-child { color: var(--accent-bronze); font-size: 1.2rem; }
+.rank-1 td:first-child {
+  color: var(--accent-gold);
+  font-size: 1.2rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.rank-2 td:first-child {
+  color: var(--accent-silver);
+  font-size: 1.1rem;
+}
+
+.rank-3 td:first-child {
+  color: var(--accent-bronze);
+  font-size: 1.0rem;
+}
 
 footer {
   text-align: center;

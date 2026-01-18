@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>5ch Market Sentiment</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
 
   <div class="container">
@@ -21,28 +25,41 @@
       </div>
     </header>
 
-    <main class="dashboard-card">
-      <div id="loading">Scanning Market Data...</div>
-      <table class="ranking-table" id="ranking-table" style="display: none;">
-        <thead>
-          <tr>
-            <th>RANK</th>
-            <th>TICKER</th>
-            <th style="text-align: right;">VOLUME</th>
-          </tr>
-        </thead>
-        <tbody id="ranking-body">
-          <!-- Rows injected by JS -->
-        </tbody>
-      </table>
+    <main class="dashboard-grid">
+      <!-- Left Panel: Ranking -->
+      <section class="panel ranking-panel">
+        <div id="loading">Scanning Market Data...</div>
+        <table class="ranking-table" id="ranking-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>RK</th>
+              <th>TICKER</th>
+              <th style="text-align: right;">VOL</th>
+            </tr>
+          </thead>
+          <tbody id="ranking-body">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Right Panel: Chart -->
+      <section class="panel chart-panel">
+        <div id="tradingview_widget"></div>
+        <div class="chart-placeholder">Select a ticker to view chart</div>
+      </section>
     </main>
 
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <footer>
-      <p>Powered by <a href="https://target-url.com" target="_blank">Gemini 1.5 & Cloudflare D1</a></p>
+      <p>Powered by <a href="https://target-url.com" target="_blank">Gemini 3 Pro & Cloudflare</a></p>
       <p style="opacity: 0.5; margin-top: 0.5rem;">Data is aggregated from public forums. Not financial advice.</p>
     </footer>
   </div>
 
   <script src="./app.js"></script>
 </body>
+
 </html>

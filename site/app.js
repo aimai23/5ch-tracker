@@ -1,4 +1,6 @@
-const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev"; // Updated to real endpoint
+const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
+let chartWidget = null;
+let currentTicker = null;
 
 async function main() {
   const loadingEl = document.getElementById("loading");
@@ -22,13 +24,20 @@ async function main() {
     loadingEl.style.display = "none";
     tableEl.style.display = "table";
 
-    // Find max count for bar scaling
     const maxCount = items.length > 0 ? items[0].count : 1;
+
+    // Set initial ticker (first item or default)
+    if (items.length > 0) {
+      loadChart(items[0].ticker);
+    } else {
+      loadChart("SPX");
+    }
 
     items.forEach((item, index) => {
       const rank = index + 1;
       const row = document.createElement("tr");
       row.className = "ranking-row";
+      if (index === 0) row.classList.add("selected"); // Select first by default
       if (rank <= 3) row.classList.add(`rank-${rank}`);
 
       // Calculate bar width percentage
@@ -50,6 +59,17 @@ async function main() {
           </div>
         </td>
       `;
+
+      // Click event to update chart
+      row.addEventListener("click", () => {
+        // Remove select from all
+        document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
+        // Add to current
+        row.classList.add("selected");
+        // Update chart
+        loadChart(item.ticker);
+      });
+
       tbody.appendChild(row);
     });
 
@@ -64,6 +84,28 @@ async function main() {
     loadingEl.textContent = "System Offline";
     loadingEl.style.color = "#ff6b6b";
   }
+}
+
+function loadChart(ticker) {
+  if (currentTicker === ticker) return;
+  currentTicker = ticker;
+
+  // Cleanup if needed (TradingView widget replaces content, so mostly safe)
+  // Re-render widget
+  new TradingView.widget({
+    "autosize": true,
+    "symbol": ticker,
+    "interval": "D",
+    "timezone": "Asia/Tokyo",
+    "theme": "dark",
+    "style": "1",
+    "locale": "ja",
+    "toolbar_bg": "#f1f3f6",
+    "enable_publishing": false,
+    "allow_symbol_change": true,
+    "container_id": "tradingview_widget",
+    "hide_side_toolbar": false
+  });
 }
 
 main();
