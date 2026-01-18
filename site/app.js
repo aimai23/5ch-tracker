@@ -1,4 +1,4 @@
-const WORKER_URL = "https://5ch-tracker.tentendao.workers.dev";
+const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 
 async function main() {
   const res = await fetch(`${WORKER_URL}/api/ranking?window=24h`, { cache: "no-store" });
