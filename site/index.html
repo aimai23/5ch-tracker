@@ -28,7 +28,13 @@
       </div>
     </header>
 
-    <main class="dashboard-grid">
+    <!-- Navigation Tabs -->
+    <div class="tab-container">
+      <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
+      <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
+    </div>
+
+    <main class="dashboard-grid" id="view-dashboard">
       <!-- Left Panel: Ranking -->
       <section class="panel ranking-panel">
         <div id="loading">Scanning Market Data...</div>
@@ -52,6 +58,17 @@
         <div class="chart-placeholder">Select a ticker to view chart</div>
       </section>
     </main>
+
+    <!-- Topic View -->
+    <div id="view-topics" style="display: none;">
+      <section class="panel">
+        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+        <div id="topic-container" class="topic-grid">
+          <!-- Topics injected here -->
+          <div class="loading-text">Loading trends...</div>
+        </div>
+      </section>
+    </div>
 
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>

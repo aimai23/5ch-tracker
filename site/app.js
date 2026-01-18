@@ -2,6 +2,24 @@ const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 let chartWidget = null;
 let currentTicker = null;
 
+// Tab Switching
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    // Remove active class
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tab = btn.dataset.tab;
+    if (tab === "dashboard") {
+      document.getElementById("view-dashboard").style.display = "grid";
+      document.getElementById("view-topics").style.display = "none";
+    } else {
+      document.getElementById("view-dashboard").style.display = "none";
+      document.getElementById("view-topics").style.display = "block";
+    }
+  });
+});
+
 async function main() {
   const loadingEl = document.getElementById("loading");
   const tableEl = document.getElementById("ranking-table");
@@ -14,6 +32,7 @@ async function main() {
 
     const data = await res.json();
     const items = data.items || [];
+    const topics = data.topics || []; // NEW
 
     // Update timestamp
     if (data.updatedAt) {
@@ -23,6 +42,9 @@ async function main() {
 
     loadingEl.style.display = "none";
     tableEl.style.display = "table";
+
+    // Render Topics
+    renderTopics(topics);
 
     const maxCount = items.length > 0 ? items[0].count : 1;
 
@@ -88,6 +110,26 @@ async function main() {
     loadingEl.textContent = "System Offline";
     loadingEl.style.color = "#ff6b6b";
   }
+}
+
+function renderTopics(topics) {
+  const container = document.getElementById("topic-container");
+  container.innerHTML = "";
+
+  if (!topics || topics.length === 0) {
+    container.innerHTML = "<div class='no-data' style='padding:1rem; color:#888;'>No trending keywords found.</div>";
+    return;
+  }
+
+  topics.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "topic-item";
+    el.innerHTML = `
+      <span class="topic-word">${t.word}</span>
+      <span class="topic-count">${t.count}</span>
+    `;
+    container.appendChild(el);
+  });
 }
 
 function loadChart(ticker) {
