@@ -388,14 +388,33 @@ def generate_market_summary(tickers, topics):
     Output (Text only):
     """
     
-    try:
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
-        resp = model.generate_content(prompt)
-        text = resp.text.strip()
-        return text
-    except Exception as e:
-        logging.error(f"Summary generation failed: {e}")
-        return "相場は混沌としているようだ..."
+    # Use the same simplified HTTP request approach
+    # Fallback models if one fails
+    models = ["gemini-2.0-flash-exp", "gemini-1.5-flash"]
+    
+    for model_name in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}]
+        }
+        
+        try:
+            resp = requests.post(url, headers=headers, json=payload, timeout=30)
+            if resp.status_code == 200:
+                result = resp.json()
+                try:
+                    content = result["candidates"][0]["content"]["parts"][0]["text"]
+                    return content.strip()
+                except KeyError:
+                    logging.warning(f"Unexpected response format from {model_name}")
+            else:
+                logging.warning(f"Model {model_name} failed with {resp.status_code}")
+                
+        except Exception as e:
+            logging.error(f"Request error for {model_name}: {e}")
+            
+    return "相場は混沌としているようだ..."
 
 def send_to_worker(items, topics, sources, overview=""):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, and overview to Worker...")
