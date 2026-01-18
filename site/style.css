@@ -1,0 +1,194 @@
+:root {
+  --bg-color: #0d1117;
+  --card-bg: rgba(22, 27, 34, 0.8);
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --accent-cyan: #58a6ff;
+  --accent-gold: #ffd700;
+  --accent-silver: #c0c0c0;
+  --accent-bronze: #cd7f32;
+  --border-color: #30363d;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(255, 100, 100, 0.05) 0%, transparent 20%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  align-items: center;
+}
+
+.live-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #2ea043;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #2ea043;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.dashboard-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.ranking-table th {
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 1rem;
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.ranking-row {
+  cursor: default;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.ranking-row:hover {
+  transform: translateX(4px);
+}
+
+.ranking-row td {
+  background-color: rgba(255,255,255,0.03);
+  padding: 1rem;
+  first-child-radius: 8px 0 0 8px;
+  last-child-radius: 0 8px 8px 0;
+}
+
+.ranking-row td:first-child {
+  border-radius: 8px 0 0 8px;
+  font-weight: bold;
+  font-family: var(--font-mono);
+  width: 40px;
+  text-align: center;
+}
+
+.ranking-row td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.ticker-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ticker-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.count-cell {
+  text-align: right;
+  width: 120px;
+}
+
+.count-val {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--accent-cyan);
+}
+
+.bar-container {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), #a2d2ff);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 1s ease-out;
+}
+
+/* Rank Badges */
+.rank-1 td:first-child { color: var(--accent-gold); font-size: 1.4rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+.rank-2 td:first-child { color: var(--accent-silver); font-size: 1.3rem; }
+.rank-3 td:first-child { color: var(--accent-bronze); font-size: 1.2rem; }
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-top: auto;
+}
+
+footer a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+#loading {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}

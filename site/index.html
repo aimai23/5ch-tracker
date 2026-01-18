@@ -3,11 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>5ch Ticker Rank</title>
+  <title>5ch Market Sentiment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <h1>5ch Ticker Rank (24h)</h1>
-  <pre id="out">loading...</pre>
+
+  <div class="container">
+    <header>
+      <h1>MARKET SENTIMENT</h1>
+      <div class="subtitle">
+        <span class="live-indicator"></span>
+        <span>5CH US STOCK BOARD (24H)</span>
+        <span id="last-updated">Updating...</span>
+      </div>
+    </header>
+
+    <main class="dashboard-card">
+      <div id="loading">Scanning Market Data...</div>
+      <table class="ranking-table" id="ranking-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>RANK</th>
+            <th>TICKER</th>
+            <th style="text-align: right;">VOLUME</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-body">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
+    </main>
+
+    <footer>
+      <p>Powered by <a href="https://target-url.com" target="_blank">Gemini 1.5 & Cloudflare D1</a></p>
+      <p style="opacity: 0.5; margin-top: 0.5rem;">Data is aggregated from public forums. Not financial advice.</p>
+    </footer>
+  </div>
+
   <script src="./app.js"></script>
 </body>
 </html>

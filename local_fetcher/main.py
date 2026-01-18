@@ -40,17 +40,36 @@ def fetch_thread_text(url):
         
         soup = BeautifulSoup(resp.text, "html.parser")
         
-        # Extract comments
+        # Extract comments specific to 5ch standard layout
         comments = []
-        for div in soup.find_all("div", class_="post"):
-            msg = div.find("div", class_="message")
-            if msg:
-                comments.append(msg.get_text())
+        # Support multiple standard 5ch viewer layouts
+        # Pattern A: <div class="post"> ... <div class="message"> ... </div> </div>
+        # Pattern B: <div class="thread"> ... <div class="res"> ... <div class="message"> ... </div> </div> </div>
+        
+        # Try generic message class search first (most effective)
+        msgs = soup.find_all("div", class_="message")
+        
+        # If standard class not found, try data-id attribute (common in some views)
+        if not msgs:
+             msgs = soup.find_all("dd", class_="thread_in") # Some older views
+             
+        for msg in msgs:
+            # strip=True removes extra newlines and spaces
+            text = msg.get_text(strip=True)
+            if text:
+                comments.append(text)
         
         if not comments:
-             return soup.get_text()
+             print(f"Warning: No comments parsed from {url}. Skipping to save tokens.")
+             return ""
              
-        return "\n".join(comments)
+        # Limit total characters to avoid exceeding token limits (approx 30k chars ~ 7-8k tokens)
+        full_text = "\n".join(comments)
+        if len(full_text) > 30000:
+            print(f"Truncating text (Length: {len(full_text)} > 30000)")
+            return full_text[:30000]
+            
+        return full_text
     except Exception as e:
         print(f"Failed to fetch {url}: {e}")
         return ""
@@ -90,7 +109,7 @@ def analyze_with_gemini(text, exclude_list):
         
         try:
             # print(f"Trying model: {model_name}")
-            resp = requests.post(url, headers=headers, json=payload, timeout=120)
+            resp = requests.post(url, headers=headers, json=payload, timeout=180)
             
             if resp.status_code == 200:
                 result = resp.json()
