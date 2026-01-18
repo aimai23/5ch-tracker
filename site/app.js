@@ -2,26 +2,61 @@ const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 let chartWidget = null;
 let currentTicker = null;
 let currentTopics = []; // NEW: Store topics globally
+let currentItems = []; // Global for heatmap
+
+const watchlistData = {
+  "Aviation": ["BETA"],
+  "Drones": ["ONDS"],
+  "Space": ["ASTS"],
+  "Quantum": ["IONQ", "LAES"],
+  "AI/Compute": ["WULF", "CRWV"],
+  "Photonics": ["POET"],
+  "Healthcare": ["OSCR", "TEM"]
+};
 
 // Tab Switching
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    // Remove active class
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+document.addEventListener("DOMContentLoaded", () => {
+  const tabBtns = document.querySelectorAll(".tab-btn");
 
-    const tab = btn.dataset.tab;
-    if (tab === "dashboard") {
-      document.getElementById("view-dashboard").style.display = "grid";
-      document.getElementById("view-topics").style.display = "none";
-    } else {
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const tabId = btn.getAttribute("data-tab");
+
+      // Hide all
       document.getElementById("view-dashboard").style.display = "none";
-      document.getElementById("view-topics").style.display = "block";
-      // Render WordCloud when tab becomes visible
-      setTimeout(renderWordCloud, 50);
-    }
+      document.getElementById("view-topics").style.display = "none";
+      document.getElementById("view-heatmap").style.display = "none";
+
+      // Show selected
+      if (tabId === 'dashboard') {
+        document.getElementById("view-dashboard").style.display = "grid";
+      } else if (tabId === 'topics') {
+        document.getElementById("view-topics").style.display = "block";
+        // Trigger render after display is handled to ensure canvas sizing works
+        setTimeout(renderWordCloud, 100);
+      } else if (tabId === 'heatmap') {
+        document.getElementById("view-heatmap").style.display = "block";
+        renderHeatmap();
+      }
+    });
   });
+
+  // Set initial active tab (dashboard by default)
+  const initialTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (initialTabBtn) {
+    initialTabBtn.classList.add('active');
+    document.getElementById("view-dashboard").style.display = "grid";
+  }
+
+  loadChart("SPX"); // Default
+  main();
+  // Refresh every 5 mins
+  setInterval(main, 300000);
 });
+
 
 async function main() {
   const loadingEl = document.getElementById("loading");
@@ -35,6 +70,7 @@ async function main() {
 
     const data = await res.json();
     const items = data.items || [];
+    currentItems = items; // Store global
 
     // Store topics
     if (data.topics) {
@@ -47,7 +83,7 @@ async function main() {
     if (overviewEl) {
       if (data.overview) {
         overviewEl.style.display = "block";
-        // Simple typing effect simulation via textContent updates could be done here, 
+        // Simple typing effect simulation via textContent updates could be done here,
         // but strict replacement is safer for now.
         overviewText.textContent = data.overview;
       } else {
@@ -65,7 +101,7 @@ async function main() {
     tableEl.style.display = "table";
 
     // Initial Render if needed (but Dashboard is default)
-    // renderWordCloud(); 
+    // renderWordCloud();
 
     const maxCount = items.length > 0 ? items[0].count : 1;
 
@@ -75,6 +111,8 @@ async function main() {
     } else {
       loadChart("SPX");
     }
+
+    tbody.innerHTML = ""; // Clear existing
 
     items.forEach((item, index) => {
       const rank = index + 1;

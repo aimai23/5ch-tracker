@@ -31,6 +31,7 @@
     <!-- Navigation Tabs -->
     <div class="tab-container">
       <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
+      <button class="tab-btn" data-tab="heatmap">WATCHLIST</button>
       <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
     </div>
 
@@ -58,6 +59,16 @@
         <div class="chart-placeholder">Select a ticker to view chart</div>
       </section>
     </main>
+
+    <!-- Heatmap View -->
+    <div id="view-heatmap" style="display: none;">
+      <section class="panel">
+        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🚀 Sector Watchlist</h2>
+        <div id="heatmap-container" class="heatmap-container">
+          <!-- Injected by JS -->
+        </div>
+      </section>
+    </div>
 
     <!-- Topic View -->
     <div id="view-topics" style="display: none;">

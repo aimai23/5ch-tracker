@@ -260,7 +260,7 @@ def analyze_with_gemini(text, exclude_list):
     """
 
     # Try models in order (Updated based on user's available models)
-    models = ["ggemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
@@ -276,6 +276,7 @@ def analyze_with_gemini(text, exclude_list):
             resp = requests.post(url, headers=headers, json=payload, timeout=300)
             
             if resp.status_code == 200:
+                logging.info(f"Success with model: {model_name}")
                 result = resp.json()
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
@@ -301,8 +302,8 @@ def analyze_topics(text):
     stop_words = {
         'こと', 'もの', 'さん', 'これ', 'それ', 'あれ', 'どれ', 
         'よう', 'そう', 'はず', 'まま', 'ため', 'だけ', 'ばっ',
-        'どこ', 'そこ', 'あそこ', 'いま', 'いつ', 'なん',
-        'の', 'し', 'て', 'いる', 'ある', 'する', 'なる', 
+        'どこ', 'そこ', 'あそこ', 'いま', 'いつ', 'なん','明らか', 
+        'の', 'し', 'て', 'いる', 'ある', 'する', 'なる', 'あと', 
         'ない', 'いい', 'も', 'な', 'だ', 'ん', 'ー', 'www', 'w',
         'gt', 'amp', 'nbsp', 'http', 'https', 'com', 'co', 'jp',
         # User Feedback Additions
@@ -390,7 +391,7 @@ def generate_market_summary(tickers, topics):
     
     # Use the same simplified HTTP request approach
     # Fallback models if one fails
-    models = ["gemini-2.0-flash-exp", "gemini-1.5-flash"]
+    models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
@@ -402,6 +403,7 @@ def generate_market_summary(tickers, topics):
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=30)
             if resp.status_code == 200:
+                logging.info(f"Summary generated with model: {model_name}")
                 result = resp.json()
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
