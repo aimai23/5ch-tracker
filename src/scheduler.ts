@@ -1,4 +1,3 @@
-```typescript
 import { Env } from "./types";
 import { getRanking, putPricesBatch, PriceItem } from "./storage";
 
@@ -32,7 +31,7 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     // 3. Save to Prices Table
     if (priceItems.length > 0) {
         await putPricesBatch(env, priceItems);
-        console.log(`Updated prices for ${ priceItems.length } tickers.`);
+        console.log(`Updated prices for ${priceItems.length} tickers.`);
     } else {
         console.log("No prices fetched.");
     }
@@ -44,18 +43,18 @@ async function fetchStockPrices(tickerList: string[]): Promise<PriceItem[]> {
 
     try {
         const symbols = tickerList.join(",");
-        const url = `${ YAHOO_QUOTE_API }?symbols = ${ symbols } `;
-        console.log(`Fetching batch quotes: ${ url } `);
-        
+        const url = `${YAHOO_QUOTE_API}?symbols=${symbols}`;
+        console.log(`Fetching batch quotes: ${url}`);
+
         const res = await fetch(url);
         if (!res.ok) {
-             console.error(`Yahoo Batch Error: ${ res.status } ${ res.statusText } `);
-             return [];
+            console.error(`Yahoo Batch Error: ${res.status} ${res.statusText}`);
+            return [];
         }
-        
+
         const data: any = await res.json();
         const quotes = data?.quoteResponse?.result;
-        
+
         if (!quotes || !Array.isArray(quotes)) {
             console.warn("No quoteResponse.result found in Yahoo API.");
             return [];
@@ -65,14 +64,14 @@ async function fetchStockPrices(tickerList: string[]): Promise<PriceItem[]> {
             const price = q.regularMarketPrice;
             const changeP = q.regularMarketChangePercent;
             const symbol = q.symbol;
-            
+
             if (typeof price === 'number' && typeof changeP === 'number') {
-                 return {
+                return {
                     ticker: symbol,
                     price: parseFloat(price.toFixed(2)),
                     change_percent: parseFloat(changeP.toFixed(2)),
                     updated_at: now
-                 } as PriceItem;
+                } as PriceItem;
             }
             return null;
         }).filter((i): i is PriceItem => i !== null);
@@ -82,4 +81,3 @@ async function fetchStockPrices(tickerList: string[]): Promise<PriceItem[]> {
         return [];
     }
 }
-```
