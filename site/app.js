@@ -238,105 +238,94 @@ function renderHeatmap() {
   const container = document.getElementById("heatmap-container");
   container.innerHTML = "";
 
-  // Grid for Categories using flex/grid
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(250px, 1fr))";
-  container.style.gap = "1rem";
+  // Flatten tickers unique
+  const allTickers = new Set();
 
-  Object.entries(watchlistData).forEach(([category, tickers]) => {
-    const catEl = document.createElement("div");
-    catEl.className = "heatmap-category";
-    catEl.style.background = "rgba(255, 255, 255, 0.05)";
-    catEl.style.padding = "1rem";
-    catEl.style.borderRadius = "8px";
-    catEl.style.border = "1px solid #333";
+  // 1. Add Watchlist
+  Object.values(watchlistData).flat().forEach(t => allTickers.add(t));
 
-    catEl.innerHTML = `<h3 style="color:var(--accent-cyan); font-size:0.9rem; margin-bottom:0.5rem; text-transform:uppercase;">${category}</h3>`;
+  // 2. Add Ranked items
+  currentItems.forEach(i => allTickers.add(i.ticker));
 
-    const grid = document.createElement("div");
-    grid.className = "heatmap-grid";
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(2, 1fr)";
-    grid.style.gap = "8px";
+  // Sort alphabetical for stability, or by change% if we want "Heat" map style
+  const tickerList = Array.from(allTickers).sort();
 
-    tickers.forEach(ticker => {
-      const item = currentItems.find(i => i.ticker === ticker);
-      const priceData = currentPrices[ticker]; // LOOKUP PRICE
+  const grid = document.createElement("div");
+  grid.className = "heatmap-grid single-grid"; // Added specialized class
 
-      let bgStyle = "rgba(43, 43, 60, 0.5)";
-      let borderStyle = "1px solid #444";
+  tickerList.forEach(ticker => {
+    const item = currentItems.find(i => i.ticker === ticker);
+    const priceData = currentPrices[ticker];
 
-      // Display Values
-      let mainVal = "--%";
-      let subVal = "$--";
+    let bgStyle = "rgba(43, 43, 60, 0.5)";
+    let borderStyle = "1px solid #444";
 
-      // Use Price Data if available
-      if (priceData) {
-        const chg = priceData.change_percent;
-        mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
-        subVal = `$${priceData.price}`;
+    // Display Values
+    let mainVal = "--%";
+    let subVal = "$--";
 
-        // Color Logic (S&P 500 Style)
-        if (chg > 0) {
-          const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
-          bgStyle = `rgba(0, 160, 80, ${opacity})`;
-          borderStyle = "1px solid #4f4";
-        } else if (chg < 0) {
-          const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
-          bgStyle = `rgba(180, 40, 40, ${opacity})`;
-          borderStyle = "1px solid #f44";
-        } else {
-          bgStyle = "#444";
-        }
+    // Use Price Data if available
+    if (priceData) {
+      const chg = priceData.change_percent;
+      mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
+      subVal = `$${priceData.price}`;
+
+      // Color Logic
+      if (chg > 0) {
+        const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
+        bgStyle = `rgba(0, 160, 80, ${opacity})`;
+        borderStyle = "1px solid #4f4";
+      } else if (chg < 0) {
+        const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
+        bgStyle = `rgba(180, 40, 40, ${opacity})`;
+        borderStyle = "1px solid #f44";
       } else {
-        // No price data
-        if (item) {
-          subVal = `${item.count} res`;
-          mainVal = "No Price";
-        } else {
-          bgStyle = "#222";
-          borderStyle = "1px dashed #444";
-        }
+        bgStyle = "#444";
       }
-
-      const card = document.createElement("div");
-      card.className = "heatmap-card";
-      card.style.background = bgStyle;
-      card.style.border = borderStyle;
-      card.style.padding = "10px";
-      card.style.borderRadius = "4px";
-      card.style.cursor = "pointer";
-      card.style.transition = "transform 0.1s";
-      card.style.display = "flex";
-      card.style.flexDirection = "column";
-      card.style.alignItems = "center";
-      card.style.justifyContent = "center";
-      card.style.minHeight = "80px";
-
-      if (!priceData && !item) {
-        card.style.opacity = "0.6";
+    } else {
+      // No price data
+      if (item) {
+        subVal = `${item.count} res`;
+        mainVal = "No Price";
+      } else {
+        bgStyle = "#222";
+        borderStyle = "1px dashed #444";
       }
+    }
 
-      card.innerHTML = `
-            <div style="font-weight:bold; color:white; font-size:1.1rem; letter-spacing:1px;">${ticker}</div>
-            <div style="font-size:1rem; font-weight:bold; margin:4px 0; text-shadow:0 1px 2px rgba(0,0,0,0.5);">${mainVal}</div>
-            <div style="font-size:0.75rem; color:#ddd;">${subVal}</div>
-        `;
+    const card = document.createElement("div");
+    card.className = "heatmap-card compact"; // Added compact class
+    card.style.background = bgStyle;
+    card.style.border = borderStyle;
 
-      card.addEventListener("mouseenter", () => card.style.transform = "scale(1.05)");
-      card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
+    // Styling moved to CSS mostly, but dynamic BG/Border remains here
 
-      card.addEventListener("click", () => {
-        document.querySelector('[data-tab="dashboard"]').click();
-        loadChart(ticker);
-      });
+    if (!priceData && !item) {
+      card.style.opacity = "0.6";
+    }
 
-      grid.appendChild(card);
+    card.innerHTML = `
+          <div class="hm-ticker">${ticker}</div>
+          <div class="hm-val">${mainVal}</div>
+      `;
+    // Removed subVal for "Smart/Compact" look unless huge change? 
+    // User said "Smart small". Maybe just Ticker + % is enough.
+    // Let's keep Ticker + %.
+
+    card.title = `${ticker}: ${subVal}`; // Tooltip for price
+
+    card.addEventListener("mouseenter", () => card.style.transform = "scale(1.05)");
+    card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
+
+    card.addEventListener("click", () => {
+      document.querySelector('[data-tab="dashboard"]').click();
+      loadChart(ticker);
     });
 
-    catEl.appendChild(grid);
-    container.appendChild(catEl);
+    grid.appendChild(card);
   });
+
+  container.appendChild(grid);
 }
 
 function loadChart(ticker) {
