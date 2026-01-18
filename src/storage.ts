@@ -4,9 +4,15 @@ export interface RankingItem {
   ticker: string;
   count: number;
   sentiment?: number;
-  price?: number;
-  change_percent?: number;
-};
+}
+
+export interface PriceItem {
+  ticker: string;
+  price: number;
+  change_percent: number;
+  updated_at: string;
+}
+
 export type TopicItem = { word: string; count: number };
 export type RankingPayload = {
   updatedAt: string | null;
@@ -31,10 +37,10 @@ function rankingMetaKey(window: string): string {
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
   // 1. Get items
   const { results } = await env.DB.prepare(
-    "SELECT ticker, count, sentiment, price, change_percent FROM rankings WHERE term = ? ORDER BY count DESC"
+    "SELECT ticker, count, sentiment FROM rankings WHERE term = ? ORDER BY count DESC"
   )
     .bind(window)
-    .all<RankingItem>();
+    .all<{ ticker: string; count: number; sentiment: number }>();
 
   // 2. Get meta (sources, updatedAt)
   const metaRaw = await env.DB.prepare("SELECT value FROM meta WHERE key = ?")
@@ -70,8 +76,8 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   // 2. Insert new items
   for (const item of payload.items) {
     statements.push(
-      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment, price, change_percent) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind(window, item.ticker, item.count, item.sentiment ?? 0, item.price ?? null, item.change_percent ?? null)
+      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment) VALUES (?, ?, ?, ?)")
+        .bind(window, item.ticker, item.count, item.sentiment ?? 0)
     );
   }
 
@@ -88,6 +94,34 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   );
 
   await env.DB.batch(statements);
+}
+
+// --- Price Functions ---
+
+export async function getAllPrices(env: Env): Promise<Record<string, PriceItem>> {
+  const { results } = await env.DB.prepare("SELECT * FROM prices").all<PriceItem>();
+  const map: Record<string, PriceItem> = {};
+  if (results) {
+    for (const p of results) {
+      map[p.ticker] = p;
+    }
+  }
+  return map;
+}
+
+export async function putPricesBatch(env: Env, items: PriceItem[]): Promise<void> {
+  const statements: D1PreparedStatement[] = [];
+  for (const item of items) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR REPLACE INTO prices (ticker, price, change_percent, updated_at) VALUES (?, ?, ?, ?)"
+      ).bind(item.ticker, item.price, item.change_percent, item.updated_at)
+    );
+  }
+  if (statements.length > 0) {
+    // Batch limit is usually higher, but let's be safe.
+    await env.DB.batch(statements);
+  }
 }
 
 export async function getMeta(env: Env): Promise<MetaPayload | null> {

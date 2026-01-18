@@ -61,6 +61,8 @@ async function fetchWatchlist() {
   }
 }
 
+let currentPrices = {}; // Global for prices
+
 async function main() {
   const loadingEl = document.getElementById("loading");
   const tableEl = document.getElementById("ranking-table");
@@ -74,6 +76,7 @@ async function main() {
     const data = await res.json();
     const items = data.items || [];
     currentItems = items; // Store global
+    currentPrices = data.prices || {}; // Store prices global
 
     // Store topics
     if (data.topics) {
@@ -137,6 +140,9 @@ async function main() {
         moodIcon = "🐻";
         moodText = "BEAR";
       }
+
+      // Price Info for Table (Optional, tiny)
+      // const pInfo = currentPrices[item.ticker];
 
       row.innerHTML = `
         <td>${rank}</td>
@@ -255,44 +261,42 @@ function renderHeatmap() {
 
     tickers.forEach(ticker => {
       const item = currentItems.find(i => i.ticker === ticker);
+      const priceData = currentPrices[ticker]; // LOOKUP PRICE
 
       let bgStyle = "rgba(43, 43, 60, 0.5)";
       let borderStyle = "1px solid #444";
-      let textColor = "#eee";
 
       // Display Values
       let mainVal = "--%";
       let subVal = "$--";
 
-      if (item) {
-        // Priority: Price Change
-        if (item.change_percent !== undefined && item.change_percent !== null) {
-          const chg = item.change_percent;
-          mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
-          subVal = `$${item.price}`;
+      // Use Price Data if available
+      if (priceData) {
+        const chg = priceData.change_percent;
+        mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
+        subVal = `$${priceData.price}`;
 
-          // Color Logic (S&P 500 Style)
-          // -3% (Dark Red) ... 0 (Grey) ... +3% (Bright Green)
-          if (chg > 0) {
-            const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7); // Cap at 3%
-            bgStyle = `rgba(0, 160, 80, ${opacity})`;
-            borderStyle = "1px solid #4f4";
-          } else if (chg < 0) {
-            const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
-            bgStyle = `rgba(180, 40, 40, ${opacity})`;
-            borderStyle = "1px solid #f44";
-          } else {
-            bgStyle = "#444"; // Flat
-          }
+        // Color Logic (S&P 500 Style)
+        if (chg > 0) {
+          const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
+          bgStyle = `rgba(0, 160, 80, ${opacity})`;
+          borderStyle = "1px solid #4f4";
+        } else if (chg < 0) {
+          const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
+          bgStyle = `rgba(180, 40, 40, ${opacity})`;
+          borderStyle = "1px solid #f44";
         } else {
-          // Fallback: Sentiment or Count
-          subVal = `${item.count} res`;
-          mainVal = "No Data";
-          bgStyle = "#2a2a2a";
+          bgStyle = "#444";
         }
       } else {
-        bgStyle = "#222";
-        borderStyle = "1px dashed #444";
+        // No price data
+        if (item) {
+          subVal = `${item.count} res`;
+          mainVal = "No Price";
+        } else {
+          bgStyle = "#222";
+          borderStyle = "1px dashed #444";
+        }
       }
 
       const card = document.createElement("div");
@@ -309,7 +313,7 @@ function renderHeatmap() {
       card.style.justifyContent = "center";
       card.style.minHeight = "80px";
 
-      if (!item) {
+      if (!priceData && !item) {
         card.style.opacity = "0.6";
       }
 
@@ -323,7 +327,6 @@ function renderHeatmap() {
       card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
 
       card.addEventListener("click", () => {
-        // Switch to Dashboard
         document.querySelector('[data-tab="dashboard"]').click();
         loadChart(ticker);
       });

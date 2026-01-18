@@ -1,37 +1,49 @@
 import { Env } from "./types";
-import { getRanking, putRanking, RankingItem } from "./storage";
+import { getRanking, putPricesBatch, PriceItem } from "./storage";
 
 const YAHOO_API_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
+// Hardcoded fallback or synced with watchlist.json manual entry
+const WATCHLIST_TICKERS = ["BETA", "ONDS", "ASTS", "IONQ", "LAES", "WULF", "CRWV", "POET", "OSCR", "TEM"];
 
 export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     console.log("--- Scheduled Price Update Started ---");
 
-    // 1. Load current ranking
-    const currentData = await getRanking(env, "24h");
-    if (!currentData || currentData.items.length === 0) {
-        console.log("No data to update.");
+    const tickersToUpdate = new Set<string>(WATCHLIST_TICKERS);
+
+    // 1. Load current ranking to get trending tickers
+    try {
+        const currentData = await getRanking(env, "24h");
+        if (currentData && currentData.items) {
+            currentData.items.forEach(i => tickersToUpdate.add(i.ticker));
+        }
+    } catch (e) {
+        console.error("Failed to load rankings", e);
+    }
+
+    if (tickersToUpdate.size === 0) {
+        console.log("No tickers to update.");
         return;
     }
 
-    // 2. Fetch updated prices
-    const updatedItems = await fetchStockPrices(currentData.items);
+    // 2. Fetch prices
+    const priceItems = await fetchStockPrices(Array.from(tickersToUpdate));
 
-    // 3. Save back (Preserve other metadata)
-    await putRanking(env, "24h", {
-        ...currentData,
-        updatedAt: new Date().toISOString(), // Update timestamp so frontend sees change
-        items: updatedItems
-    });
-
-    console.log(`Updated prices for ${updatedItems.length} items.`);
+    // 3. Save to Prices Table
+    if (priceItems.length > 0) {
+        await putPricesBatch(env, priceItems);
+        console.log(`Updated prices for ${priceItems.length} tickers.`);
+    } else {
+        console.log("No prices fetched.");
+    }
 }
 
-async function fetchStockPrices(items: RankingItem[]): Promise<RankingItem[]> {
+async function fetchStockPrices(tickerList: string[]): Promise<PriceItem[]> {
+    const now = new Date().toISOString();
+
     // Parallel fetch
-    const updated = await Promise.all(items.map(async (item) => {
+    const results = await Promise.all(tickerList.map(async (ticker) => {
         try {
-            // Using query1 chart endpoint
-            const res = await fetch(`${YAHOO_API_BASE}/${item.ticker}?interval=1d&range=2d`);
+            const res = await fetch(`${YAHOO_API_BASE}/${ticker}?interval=1d&range=2d`);
             if (res.ok) {
                 const data: any = await res.json();
                 const result = data?.chart?.result?.[0];
@@ -39,28 +51,26 @@ async function fetchStockPrices(items: RankingItem[]): Promise<RankingItem[]> {
                 const closes = quote?.close;
 
                 if (closes && closes.length > 0) {
-                    // Get last valid
                     const validCloses = closes.filter((c: any) => c !== null);
                     if (validCloses.length >= 1) {
                         const current = validCloses[validCloses.length - 1];
-                        // Calculate change vs previous close (chart.result[0].meta.chartPreviousClose)
                         const prev = result?.meta?.chartPreviousClose || validCloses[0];
-
                         const changeConfig = prev ? ((current - prev) / prev) * 100 : 0;
 
                         return {
-                            ...item,
+                            ticker: ticker,
                             price: parseFloat(current.toFixed(2)),
-                            change_percent: parseFloat(changeConfig.toFixed(2))
-                        };
+                            change_percent: parseFloat(changeConfig.toFixed(2)),
+                            updated_at: now
+                        } as PriceItem;
                     }
                 }
             }
         } catch (e) {
-            // console.warn(`Price fetch failed for ${item.ticker}`);
+            // console.warn ...
         }
-        return item;
+        return null;
     }));
 
-    return updated;
+    return results.filter((i): i is PriceItem => i !== null);
 }

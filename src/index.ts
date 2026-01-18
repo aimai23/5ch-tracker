@@ -12,6 +12,8 @@ function json(data: unknown, status = 200, extraHeaders?: Record<string, string>
   });
 }
 
+// The original corsHeaders function is no longer used directly in the new logic,
+// but keeping it for other potential uses or if the new logic is not fully applied everywhere.
 function corsHeaders(origin: string | null): Record<string, string> {
   // If you later serve a Pages frontend, you can tighten this.
   return {
@@ -22,13 +24,20 @@ function corsHeaders(origin: string | null): Record<string, string> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname;
     const origin = request.headers.get("origin");
 
+    // New CORS headers constant for direct use in the new /api/ranking logic
+    const commonCorsHeaders = {
+      "Access-Control-Allow-Origin": "*", // Or origin ?? "*" if you want to respect the request origin
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    };
+
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+      return new Response(null, { status: 204, headers: commonCorsHeaders });
     }
 
     if (request.method === "GET" && pathname === "/health") {
@@ -37,17 +46,35 @@ export default {
 
     if (request.method === "GET" && pathname === "/api/meta") {
       const meta = await getMeta(env);
-      return json(meta ?? { lastRunAt: null, lastStatus: null, lastError: null }, 200, corsHeaders(origin));
+      return json(meta ?? { lastRunAt: null, lastStatus: null, lastError: null }, 200, commonCorsHeaders);
     }
 
-    if (request.method === "GET" && pathname === "/api/ranking") {
-      const window = url.searchParams.get("window") ?? "24h";
+    if (url.pathname.startsWith("/api/ranking")) {
+      const window = url.searchParams.get("window") || "24h";
       const ranking = await getRanking(env, window);
-      return json(
-        ranking ?? { updatedAt: null, window, items: [], topics: [], overview: null, sources: [] },
-        200,
-        corsHeaders(origin)
-      );
+
+      // Always return valid JSON structure even if empty
+      const safeRanking = ranking || {
+        updatedAt: null,
+        window: "24h",
+        items: [],
+        topics: [],
+        overview: null, // Added overview to match original structure
+        sources: []
+      };
+
+      // Fetch Prices
+      const priceMap = await getAllPrices(env);
+
+      // Merge for convenience
+      const responseData = {
+        ...safeRanking,
+        prices: priceMap
+      };
+
+      return new Response(JSON.stringify(responseData), {
+        headers: { ...commonCorsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     // Internal endpoint for GitHub Actions (or other fetchers)
