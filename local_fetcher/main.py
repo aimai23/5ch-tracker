@@ -77,7 +77,7 @@ def analyze_with_gemini(text, exclude_list):
     """
 
     # Try models in order (Updated based on user's available models)
-    models = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-latest", "gemini-pro-latest"]
+    models = ["gemini-2.5-flash", "gemini-flash-latest"]
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
@@ -90,7 +90,7 @@ def analyze_with_gemini(text, exclude_list):
         
         try:
             # print(f"Trying model: {model_name}")
-            resp = requests.post(url, headers=headers, json=payload, timeout=60)
+            resp = requests.post(url, headers=headers, json=payload, timeout=120)
             
             if resp.status_code == 200:
                 result = resp.json()
