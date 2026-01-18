@@ -4,7 +4,7 @@ main = "src/index.ts"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "5ch-tracker-db"
+database_name = "stock-rankings"
 database_id = "621699fa-e616-44f1-a52b-2904a4ff069f"
 
 [observability]
