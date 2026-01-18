@@ -1,39 +1,49 @@
 import type { Env } from "./types";
 
-/**
- * Retrieve a ranking object for a given window from KV. Returns null if not found.
- */
-export async function getRanking(env: Env, window: string): Promise<any | null> {
-  const key = `ranking:${window}`;
+export type RankingItem = { ticker: string; count: number };
+export type RankingPayload = {
+  updatedAt: string | null;
+  window: string;
+  items: RankingItem[];
+  sources: Array<{ name: string; url: string }>;
+};
+
+export type MetaPayload = {
+  lastRunAt: string | null;
+  lastStatus: "success" | "error" | "noop" | null;
+  lastError: string | null;
+};
+
+export function rankingKey(window: string): string {
+  // allow: 24h, 1h
+  const w = (window || "24h").toLowerCase();
+  return `ranking:${w}`;
+}
+
+export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
+  const raw = await env.KV.get(rankingKey(window));
+  if (!raw) return null;
   try {
-    return await env.KV.get(key, { type: "json" });
+    return JSON.parse(raw) as RankingPayload;
   } catch {
     return null;
   }
 }
 
-/**
- * Persist a ranking object for a given window to KV.
- */
-export async function putRanking(env: Env, window: string, data: unknown): Promise<void> {
-  const key = `ranking:${window}`;
-  await env.KV.put(key, JSON.stringify(data));
+export async function putRanking(env: Env, window: string, payload: RankingPayload): Promise<void> {
+  await env.KV.put(rankingKey(window), JSON.stringify(payload));
 }
 
-/**
- * Retrieve metadata about the last cron run.
- */
-export async function getMeta(env: Env): Promise<any | null> {
+export async function getMeta(env: Env): Promise<MetaPayload | null> {
+  const raw = await env.KV.get("meta");
+  if (!raw) return null;
   try {
-    return await env.KV.get("meta", { type: "json" });
+    return JSON.parse(raw) as MetaPayload;
   } catch {
     return null;
   }
 }
 
-/**
- * Persist metadata about the cron run.
- */
-export async function putMeta(env: Env, meta: unknown): Promise<void> {
-  await env.KV.put("meta", JSON.stringify(meta));
+export async function putMeta(env: Env, payload: MetaPayload): Promise<void> {
+  await env.KV.put("meta", JSON.stringify(payload));
 }

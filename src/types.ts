@@ -1,8 +1,8 @@
-/**
- * Environment bindings available to the Worker. At runtime the `KV` binding
- * should be configured to point at your Cloudflare KV namespace. See README
- * and wrangler.jsonc for setup details.
- */
-export interface Env {
+export type Env = {
   KV: KVNamespace;
-}
+  /**
+   * Secret token for /internal/ingest
+   * Set this as a Worker secret: INGEST_TOKEN
+   */
+  INGEST_TOKEN?: string;
+};
