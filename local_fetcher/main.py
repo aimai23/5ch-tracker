@@ -365,8 +365,40 @@ def analyze_topics(text):
         
     return top_words
 
-def send_to_worker(items, topics, sources):
-    logging.info(f"Sending {len(items)} tickers and {len(topics)} topics to Worker...")
+def generate_market_summary(tickers, topics):
+    logging.info("Generating Market Overview with Gemini...")
+    
+    top_tickers = [f"{t['ticker']} ({t['sentiment']})" for t in tickers[:15]]
+    top_topics = [t['word'] for t in topics[:20]]
+    
+    prompt = f"""
+    You are a cynical 5ch Market AI.
+    Based on the trending US stocks and keywords below, write a SHORT market overview (max 100 characters).
+    
+    Style:
+    - Casual, slang-heavy Japanese (5ch style).
+    - Cynical, sharp, or hype-driven depending on the data.
+    - Focus on the biggest movers or sentiment.
+    - NO polite language.
+    
+    Data:
+    Stocks (Sentiment -1 to 1): {", ".join(top_tickers)}
+    Keywords: {", ".join(top_topics)}
+    
+    Output (Text only):
+    """
+    
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        resp = model.generate_content(prompt)
+        text = resp.text.strip()
+        return text
+    except Exception as e:
+        logging.error(f"Summary generation failed: {e}")
+        return "相場は混沌としているようだ..."
+
+def send_to_worker(items, topics, sources, overview=""):
+    logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, and overview to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing (WORKER_URL or INGEST_TOKEN). Skipping upload.")
         return
@@ -375,7 +407,8 @@ def send_to_worker(items, topics, sources):
         "window": "24h",
         "items": items,
         "topics": topics,
-        "sources": sources
+        "sources": sources,
+        "overview": overview
     }
     
     # Ensure no double slashes
@@ -471,7 +504,11 @@ def main():
     for i in final_items[:10]:
         logging.info(f"{i['ticker']}: {i['count']} (Mood: {i['sentiment']})")
         
-    send_to_worker(final_items, topics, source_meta)
+    # Generate Market Overview
+    market_overview = generate_market_summary(final_items, topics)
+    logging.info(f"Overview: {market_overview}")
+
+    send_to_worker(final_items, topics, source_meta, overview=market_overview)
 
 if __name__ == "__main__":
     main()

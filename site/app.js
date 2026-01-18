@@ -41,6 +41,20 @@ async function main() {
       currentTopics = data.topics.map(t => [t.word, t.count]);
     }
 
+    // AI Overview
+    const overviewEl = document.getElementById("market-overview");
+    const overviewText = document.getElementById("overview-text");
+    if (overviewEl) {
+      if (data.overview) {
+        overviewEl.style.display = "block";
+        // Simple typing effect simulation via textContent updates could be done here, 
+        // but strict replacement is safer for now.
+        overviewText.textContent = data.overview;
+      } else {
+        overviewEl.style.display = "none";
+      }
+    }
+
     // Update timestamp
     if (data.updatedAt) {
       const date = new Date(data.updatedAt);

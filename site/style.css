@@ -416,6 +416,55 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Market Overview */
+.market-overview {
+  background: rgba(0, 20, 40, 0.6);
+  border: 1px solid var(--accent-cyan);
+  border-left: 4px solid var(--accent-cyan);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.3s ease;
+}
+
+.market-overview:hover {
+  background: rgba(0, 20, 40, 0.8);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.overview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 4px;
+}
+
+.overview-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #e0f7ff;
+  margin: 0;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.overview-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 footer {
   text-align: center;
   padding: 2rem;

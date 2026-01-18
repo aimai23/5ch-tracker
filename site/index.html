@@ -63,6 +63,14 @@
     <div id="view-topics" style="display: none;">
       <section class="panel" style="height: 600px; display: flex; flex-direction: column;">
         <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+
+        <div id="market-overview" class="market-overview" style="display: none;">
+          <div class="overview-header">
+            <span class="overview-title">🤖 AI MARKET INSIGHT</span>
+            <span class="overview-blink">_</span>
+          </div>
+          <p id="overview-text" class="overview-text">Loading analysis...</p>
+        </div>
         <div id="wordcloud-container"
           style="flex: 1; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
           <canvas id="topic-canvas"></canvas>
