@@ -98,18 +98,37 @@ h1 {
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 0;
   }
 
+  /* Mobile Chart: Bottom Sheet Modal */
   .chart-panel {
-    min-height: 500px;
-    order: -1;
-    /* Chart on top on mobile/tablet */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-height: 50vh;
+    /* Half screen */
+    border-radius: 16px 16px 0 0;
+    z-index: 1000;
+    border: 1px solid var(--accent-cyan);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+    transform: translateY(110%);
+    /* Hidden by default */
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .chart-panel.active {
+    transform: translateY(0);
   }
 
   /* Sticky header for ranking list on mobile */
   .ranking-panel {
-    max-height: 500px;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 200px;
+    /* Space for chart */
   }
 }
 
@@ -126,7 +145,6 @@ h1 {
 .ranking-panel {
   padding: 1rem;
   /* Make ranking scrollable if too long */
-  max-height: 80vh;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
@@ -134,10 +152,11 @@ h1 {
 
 .chart-panel {
   position: relative;
+  /* Desktop defaults */
   min-height: 600px;
-  /* Fixed height for chart */
   padding: 0;
   border: 1px solid var(--border-color);
+  background-color: #000;
 }
 
 #tradingview_widget {

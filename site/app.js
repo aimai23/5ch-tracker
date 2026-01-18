@@ -68,6 +68,9 @@ async function main() {
         row.classList.add("selected");
         // Update chart
         loadChart(item.ticker);
+
+        // Mobile: Show chart panel
+        document.querySelector(".chart-panel").classList.add("active");
       });
 
       tbody.appendChild(row);
@@ -107,5 +110,19 @@ function loadChart(ticker) {
     "hide_side_toolbar": false
   });
 }
+
+// Add global click handler to close chart on mobile when clicking outside
+document.addEventListener('click', (e) => {
+  const chartPanel = document.querySelector(".chart-panel");
+  const isRow = e.target.closest(".ranking-row");
+  const isChart = e.target.closest(".chart-panel");
+
+  // If clicking outside chart AND outside a row, close chart
+  if (!isRow && !isChart && chartPanel.classList.contains("active")) {
+    chartPanel.classList.remove("active");
+    // Deselect rows
+    document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
+  }
+});
 
 main();
