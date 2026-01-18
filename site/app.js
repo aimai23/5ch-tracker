@@ -241,11 +241,10 @@ function renderHeatmap() {
   // Flatten tickers unique
   const allTickers = new Set();
 
-  // 1. Add Watchlist
+  // 1. Add Watchlist Only (Strict Separation)
   Object.values(watchlistData).flat().forEach(t => allTickers.add(t));
 
-  // 2. Add Ranked items
-  currentItems.forEach(i => allTickers.add(i.ticker));
+  // Note: Rankings are NOT added here. Heatmap is strictly for the Fixed Watchlist.
 
   // Sort alphabetical for stability, or by change% if we want "Heat" map style
   const tickerList = Array.from(allTickers).sort();
