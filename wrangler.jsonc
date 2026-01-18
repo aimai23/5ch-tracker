@@ -2,8 +2,12 @@
   "name": "5ch-tracker",
   "compatibility_date": "2026-01-17",
   "main": "src/index.ts",
-  "kv_namespaces": [
-    { "binding": "KV", "id": "f9ae9908e08b4d899a1c786b9c3e4864" }
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "5ch-tracker-db",
+      "database_id": "621699fa-e616-44f1-a52b-2904a4ff069f"
+    }
   ],
   "tsconfig": "./tsconfig.json",
   "observability": {
@@ -22,4 +26,3 @@
     }
   }
 }
-

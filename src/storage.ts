@@ -14,36 +14,82 @@ export type MetaPayload = {
   lastError: string | null;
 };
 
-export function rankingKey(window: string): string {
-  // allow: 24h, 1h
-  const w = (window || "24h").toLowerCase();
-  return `ranking:${w}`;
+// Helper to get meta key for ranking aux data
+function rankingMetaKey(window: string): string {
+  return `ranking_meta_${window}`;
 }
 
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
-  const raw = await env.KV.get(rankingKey(window));
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as RankingPayload;
-  } catch {
-    return null;
+  // 1. Get items
+  const { results } = await env.DB.prepare(
+    "SELECT ticker, count FROM rankings WHERE window = ? ORDER BY count DESC"
+  )
+    .bind(window)
+    .all<{ ticker: string; count: number }>();
+
+  // 2. Get meta (sources, updatedAt)
+  const metaRaw = await env.DB.prepare("SELECT value FROM meta WHERE key = ?")
+    .bind(rankingMetaKey(window))
+    .first<string>("value");
+
+  if (!results && !metaRaw) return null;
+
+  let meta: Partial<RankingPayload> = {};
+  if (metaRaw) {
+    try {
+      meta = JSON.parse(metaRaw);
+    } catch { }
   }
+
+  return {
+    window,
+    updatedAt: meta.updatedAt ?? null,
+    items: results || [],
+    sources: meta.sources || [],
+  };
 }
 
 export async function putRanking(env: Env, window: string, payload: RankingPayload): Promise<void> {
-  await env.KV.put(rankingKey(window), JSON.stringify(payload));
+  const statements: D1PreparedStatement[] = [];
+
+  // 1. Delete old ranking for window
+  statements.push(env.DB.prepare("DELETE FROM rankings WHERE window = ?").bind(window));
+
+  // 2. Insert new items
+  for (const item of payload.items) {
+    statements.push(
+      env.DB.prepare("INSERT INTO rankings (window, ticker, count) VALUES (?, ?, ?)")
+        .bind(window, item.ticker, item.count)
+    );
+  }
+
+  // 3. Save meta
+  const meta: Partial<RankingPayload> = {
+    updatedAt: payload.updatedAt,
+    sources: payload.sources,
+  };
+  statements.push(
+    env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
+      .bind(rankingMetaKey(window), JSON.stringify(meta))
+  );
+
+  await env.DB.batch(statements);
 }
 
 export async function getMeta(env: Env): Promise<MetaPayload | null> {
-  const raw = await env.KV.get("meta");
-  if (!raw) return null;
+  const val = await env.DB.prepare("SELECT value FROM meta WHERE key = 'global_meta'")
+    .first<string>("value");
+
+  if (!val) return null;
   try {
-    return JSON.parse(raw) as MetaPayload;
+    return JSON.parse(val) as MetaPayload;
   } catch {
     return null;
   }
 }
 
 export async function putMeta(env: Env, payload: MetaPayload): Promise<void> {
-  await env.KV.put("meta", JSON.stringify(payload));
+  await env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('global_meta', ?)")
+    .bind(JSON.stringify(payload))
+    .run();
 }
