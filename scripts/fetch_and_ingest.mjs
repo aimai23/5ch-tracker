@@ -13,15 +13,77 @@ const sources = JSON.parse(await fs.readFile("config/sources.json", "utf8"));
 const excludeJson = JSON.parse(await fs.readFile("config/exclude.json", "utf8"));
 const EX = new Set((excludeJson.exclude ?? []).map((s) => String(s).toUpperCase()));
 
+// --- Ticker extraction ("B" = accuracy-first) ---
+// - Counts "$NVDA" and "NVDA" as the same ticker "NVDA".
+// - Ignores 1-letter tokens unless they are explicitly prefixed with '$' (e.g. $C).
+// - For 2-letter tickers (e.g. "GM"), requires "stock-ish" context nearby to reduce false positives.
+// - Strips HTML before extraction to avoid counting tag/attribute noise.
+
+function decodeHtmlEntities(s) {
+  // Minimal, dependency-free decoder (enough for 5ch HTML)
+  const named = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&nbsp;": " ",
+  };
+  let out = s.replace(/&(amp|lt|gt|quot|nbsp);|&#39;/g, (m) => named[m] ?? m);
+  out = out.replace(/&#(\d+);/g, (_m, n) => {
+    const code = Number(n);
+    if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return " ";
+    try {
+      return String.fromCodePoint(code);
+    } catch {
+      return " ";
+    }
+  });
+  return out;
+}
+
+function htmlToText(html) {
+  // Remove scripts/styles, turn some breaks into newlines, then strip tags.
+  const noScript = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ");
+  const withBreaks = noScript
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|tr|h\d)>/gi, "\n");
+  const noTags = withBreaks.replace(/<[^>]+>/g, " ");
+  return decodeHtmlEntities(noTags).replace(/[\t\f\r]+/g, " ");
+}
+
+function hasStockContext(text, start, len) {
+  const L = 24;
+  const a = Math.max(0, start - L);
+  const b = Math.min(text.length, start + len + L);
+  const around = text.slice(a, b);
+  // Japanese + common trading terms + "$" nearby
+  return /(\$|株|買|売|利確|損切|決算|PTS|チャート|上げ|下げ|ショート|ロング|ETF|NASDAQ|NYSE)/.test(around);
+}
+
 function extractTickers(text) {
-  // Match $NVDA or NVDA, 1-5 uppercase letters, word-boundary aware.
-  // Uses a non-letter boundary on the left, and non-letter boundary on the right.
-  const re = /(^|[^A-Z])\$?([A-Z]{1,5})(?=[^A-Z]|$)/g;
+  const plain = htmlToText(text);
+  // Lookaround-based boundaries: avoid matching inside words like "FOOBAR" or "NVDA123".
+  // Node 20 supports lookbehind.
+  const re = /(?<![A-Z0-9$])(\$?[A-Z]{1,5})(?![A-Z0-9])/g;
   const m = new Map();
-  let r;
-  while ((r = re.exec(text)) !== null) {
-    const t = r[2];
+  for (const match of plain.matchAll(re)) {
+    const raw = match[1];
+    const hasDollar = raw.startsWith("$");
+    const t = (hasDollar ? raw.slice(1) : raw).toUpperCase();
+
+    if (!t) continue;
     if (EX.has(t)) continue;
+
+    // Accuracy-first filters
+    if (!hasDollar && t.length === 1) continue;
+    if (!hasDollar && t.length === 2) {
+      const idx = match.index ?? 0;
+      if (!hasStockContext(plain, idx, raw.length)) continue;
+    }
+
     m.set(t, (m.get(t) ?? 0) + 1);
   }
   return m;
