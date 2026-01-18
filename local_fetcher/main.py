@@ -3,8 +3,30 @@ import os
 import json
 import requests
 import time
+import logging
+import datetime
+import glob
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
+# Base Directory Setup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+CACHE_DIR = os.path.join(BASE_DIR, "dat_cache")
+
+# Setup Logging
+os.makedirs(LOG_DIR, exist_ok=True)
+current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+log_file = os.path.join(LOG_DIR, f"{current_date}.log")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file, encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 # Load params
 load_dotenv()
@@ -13,15 +35,41 @@ WORKER_URL = os.getenv("WORKER_URL") # e.g. https://5ch-tracker.foo.workers.dev
 INGEST_TOKEN = os.getenv("INGEST_TOKEN")
 
 if not GEMINI_API_KEY:
-    print("Error: GEMINI_API_KEY is not set.")
+    logging.error("GEMINI_API_KEY is not set.")
     exit(1)
 
+def cleanup_old_files():
+    # Cleanup Cache (Keep top 20)
+    if os.path.exists(CACHE_DIR):
+        files = [os.path.join(CACHE_DIR, f) for f in os.listdir(CACHE_DIR) if f.endswith(".dat")]
+        if len(files) > 20:
+            files.sort(key=os.path.getmtime, reverse=True)
+            for f in files[20:]:
+                try:
+                    os.remove(f)
+                    logging.info(f"Cleaned up old cache: {os.path.basename(f)}")
+                except Exception as e:
+                    logging.warning(f"Failed to remove cache {f}: {e}")
+
+    # Cleanup Logs (Keep 30 days)
+    now = time.time()
+    retention_days = 30
+    cutoff = now - (retention_days * 86400)
+    
+    log_files = glob.glob(os.path.join(LOG_DIR, "*.log"))
+    for f in log_files:
+        if os.path.getmtime(f) < cutoff:
+            try:
+                os.remove(f)
+                logging.info(f"Cleaned up old log: {os.path.basename(f)}")
+            except Exception as e:
+                logging.warning(f"Failed to remove log {f}: {e}")
+
 def load_config():
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # Keeping sources.json reader for back-compat or other threads if needed, 
     # but main logic will use auto-discovery.
     exclude = []
-    exclude_path = os.path.join(base_dir, "config", "exclude.json")
+    exclude_path = os.path.join(os.path.dirname(BASE_DIR), "config", "exclude.json")
     if os.path.exists(exclude_path):
         with open(exclude_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -30,14 +78,14 @@ def load_config():
     return [], exclude # Return empty threads as we will discover them dynamically
 
 def discover_threads():
-    print("Discovering latest threads from 5ch...")
+    logging.info("Discovering latest threads from 5ch...")
     subject_url = "https://egg.5ch.net/stock/subject.txt"
     try:
         resp = requests.get(subject_url, timeout=10)
         resp.encoding = "CP932"
         text = resp.text
     except Exception as e:
-        print(f"Failed to fetch subject.txt: {e}")
+        logging.error(f"Failed to fetch subject.txt: {e}")
         return []
 
     # Format: 1735832043.dat<>【まとめ】米国株やってる人の溜まり場8730【禁止】 (123)
@@ -61,29 +109,14 @@ def discover_threads():
     # Take top 4
     top_threads = candidates[:4]
     for t in top_threads:
-        print(f"Found: {t['name']} (No.{t['num']})")
+        logging.info(f"Found: {t['name']} (No.{t['num']})")
         
     return top_threads
 
-def cleanup_cache():
-    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dat_cache")
-    if not os.path.exists(cache_dir):
-        return
-        
-    files = [os.path.join(cache_dir, f) for f in os.listdir(cache_dir) if f.endswith(".dat")]
-    # Keep max 20 files, sort by mtime desc
-    if len(files) > 20:
-        files.sort(key=os.path.getmtime, reverse=True)
-        for f in files[20:]:
-            try:
-                os.remove(f)
-                print(f"Cleaned up old cache: {os.path.basename(f)}")
-            except:
-                pass
-
 def parse_dat_content(text_data):
     comments = []
-    for line in text_data.splitlines():
+    # Skip the first post (1レス目) as requested
+    for line in text_data.splitlines()[1:]:
         parts = line.split("<>")
         # Format: Name<>Email<>Date ID<>Message<>Title
         if len(parts) >= 4:
@@ -97,13 +130,13 @@ def parse_dat_content(text_data):
         
     full_text = "\n".join(comments)
     if len(full_text) > 30000:
+        logging.info(f"Truncating text (Length: {len(full_text)} > 30000)")
         return full_text[:30000]
     return full_text
 
 def fetch_thread_text(url):
     # Setup Cache
-    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dat_cache")
-    os.makedirs(cache_dir, exist_ok=True)
+    os.makedirs(CACHE_DIR, exist_ok=True)
 
     # Convert to dat URL
     dat_url = None
@@ -116,21 +149,21 @@ def fetch_thread_text(url):
     
     # 1. Check Cache
     if thread_id:
-        cache_path = os.path.join(cache_dir, f"{thread_id}.dat")
+        cache_path = os.path.join(CACHE_DIR, f"{thread_id}.dat")
         if os.path.exists(cache_path):
             try:
                 with open(cache_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     # Check if thread is "finished" (approx 1000 lines)
                     if content.count('\n') >= 995: 
-                        print(f"Using cached (finished): {thread_id}")
+                        logging.info(f"Using cached (finished): {thread_id}")
                         return parse_dat_content(content)
             except Exception as e:
-                print(f"Cache read error: {e}")
+                logging.warning(f"Cache read error: {e}")
 
     # 2. Fetch from Network
     target_url = dat_url if dat_url else url
-    print(f"Fetching {target_url}...")
+    logging.info(f"Fetching {target_url}...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -146,18 +179,18 @@ def fetch_thread_text(url):
             
             # Save to cache if we have a thread_id
             if thread_id:
-                cache_path = os.path.join(cache_dir, f"{thread_id}.dat")
+                cache_path = os.path.join(CACHE_DIR, f"{thread_id}.dat")
                 with open(cache_path, "w", encoding="utf-8") as f:
                     f.write(text_data)
-                
-                cleanup_cache()
+                logging.info(f"Saved to cache: {thread_id}")
 
             processed = parse_dat_content(text_data)
             if not processed:
-                 print("Warning: Parsed .dat but found no comments.")
+                 logging.warning("Parsed .dat but found no comments.")
             return processed
             
         # Fallback to HTML handling if dat fails or not a dat url
+        logging.info("Fallback to HTML parsing...")
         resp.encoding = "CP932"
         soup = BeautifulSoup(resp.text, "html.parser")
         
@@ -172,15 +205,15 @@ def fetch_thread_text(url):
         if not msgs:
             msgs = soup.select("div.post > div.message")
             
-        for msg in msgs:
+        # Skip 1st post in Fallback checks
+        for msg in msgs[1:]:
             text = msg.get_text(strip=True)
             if text:
                 comments.append(text)
 
         if not comments:
-             print(f"Warning: No comments parsed from {url}.")
-             print("DEBUG: First 500 chars of HTML content:")
-             print(soup.prettify()[:500])
+             logging.warning(f"No comments parsed from {url}.")
+             logging.debug(f"HTML Head: {soup.prettify()[:500]}")
              return ""
              
         full_text = "\n".join(comments)
@@ -189,11 +222,11 @@ def fetch_thread_text(url):
         return full_text
 
     except Exception as e:
-        print(f"Failed to fetch {url}: {e}")
+        logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
 def analyze_with_gemini(text, exclude_list):
-    print("Analyzing with Gemini (via REST API)...")
+    logging.info("Analyzing with Gemini (via REST API)...")
     
     # Simplified prompt for brevity in logs, strict JSON is key.
     prompt_text = f"""
@@ -225,7 +258,7 @@ def analyze_with_gemini(text, exclude_list):
         }
         
         try:
-            # print(f"Trying model: {model_name}")
+            # logging.info(f"Trying model: {model_name}")
             resp = requests.post(url, headers=headers, json=payload, timeout=300)
             
             if resp.status_code == 200:
@@ -239,18 +272,18 @@ def analyze_with_gemini(text, exclude_list):
             elif resp.status_code == 404:
                 continue # Try next model
             else:
-                print(f"Model {model_name} error: {resp.status_code}")
+                logging.error(f"Model {model_name} error: {resp.status_code}")
                 
         except Exception as e:
-            print(f"Request failed for {model_name}: {e}")
+            logging.error(f"Request failed for {model_name}: {e}")
             
-    print("All Gemini models failed.")
+    logging.error("All Gemini models failed.")
     return []
 
 def send_to_worker(items, sources):
-    print(f"Sending {len(items)} tickers to Worker...")
+    logging.info(f"Sending {len(items)} tickers to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
-        print("Worker config missing (WORKER_URL or INGEST_TOKEN). Skipping upload.")
+        logging.warning("Worker config missing (WORKER_URL or INGEST_TOKEN). Skipping upload.")
         return
 
     payload = {
@@ -263,7 +296,7 @@ def send_to_worker(items, sources):
     base_url = WORKER_URL.rstrip("/")
     url = f"{base_url}/internal/ingest"
     
-    print(f"DEBUG: Posting to {url}")
+    logging.info(f"DEBUG: Posting to {url}")
     
     headers = {
         "Authorization": f"Bearer {INGEST_TOKEN}",
@@ -273,14 +306,17 @@ def send_to_worker(items, sources):
     try:
         resp = requests.post(url, json=payload, headers=headers)
         if resp.status_code == 200:
-            print("Success!")
+            logging.info("Success!")
         else:
-            print(f"Worker Error: {resp.status_code}")
-            # print(resp.text) # Uncomment for detailed html debug if needed
+            logging.error(f"Worker Error: {resp.status_code}")
+            # logging.error(resp.text)
     except Exception as e:
-        print(f"Upload failed: {e}")
+        logging.error(f"Upload failed: {e}")
 
 def main():
+    # Cleanup old logs and cache
+    cleanup_old_files()
+    
     # Load exclude config only
     _, exclude = load_config()
     
@@ -288,7 +324,7 @@ def main():
     threads = discover_threads()
     
     if not threads:
-        print("No threads found. Exiting.")
+        logging.info("No threads found. Exiting.")
         return
 
     all_text = ""
@@ -297,7 +333,7 @@ def main():
     for t in threads:
         text = fetch_thread_text(t["url"])
         if not text:
-            print(f"Skipping {t['name']} (empty)")
+            logging.info(f"Skipping {t['name']} (empty)")
             continue
             
         all_text += f"\n--- Thread: {t['name']} ---\n{text}"
@@ -305,7 +341,7 @@ def main():
         time.sleep(1) # Be polite
     
     if not all_text.strip():
-        print("No content fetched.")
+        logging.info("No content fetched.")
         return
 
     tickers = analyze_with_gemini(all_text, exclude)
@@ -320,9 +356,9 @@ def main():
     final_items = [{"ticker": k, "count": v} for k, v in agg.items()]
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
-    print("--- Top 10 ---")
+    logging.info("--- Top 10 ---")
     for i in final_items[:10]:
-        print(f"{i['ticker']}: {i['count']}")
+        logging.info(f"{i['ticker']}: {i['count']}")
         
     send_to_worker(final_items, source_meta)
 
