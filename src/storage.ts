@@ -22,7 +22,7 @@ function rankingMetaKey(window: string): string {
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
   // 1. Get items
   const { results } = await env.DB.prepare(
-    "SELECT ticker, count FROM rankings WHERE window = ? ORDER BY count DESC"
+    "SELECT ticker, count FROM rankings WHERE term = ? ORDER BY count DESC"
   )
     .bind(window)
     .all<{ ticker: string; count: number }>();
@@ -53,12 +53,13 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   const statements: D1PreparedStatement[] = [];
 
   // 1. Delete old ranking for window
-  statements.push(env.DB.prepare("DELETE FROM rankings WHERE window = ?").bind(window));
+  // Use 'term' column
+  statements.push(env.DB.prepare("DELETE FROM rankings WHERE term = ?").bind(window));
 
   // 2. Insert new items
   for (const item of payload.items) {
     statements.push(
-      env.DB.prepare("INSERT INTO rankings (window, ticker, count) VALUES (?, ?, ?)")
+      env.DB.prepare("INSERT INTO rankings (term, ticker, count) VALUES (?, ?, ?)")
         .bind(window, item.ticker, item.count)
     );
   }
