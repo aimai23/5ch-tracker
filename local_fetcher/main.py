@@ -231,9 +231,11 @@ def analyze_with_gemini(text, exclude_list):
     # Simplified prompt for brevity in logs, strict JSON is key.
     prompt_text = f"""
     You are a financial analyst. Analyze the following text.
-    Task: Identify US stock tickers and count them. 
+    Task: Identify US stock tickers and company names, then count them as their standardized ticker symbol.
+    Map company names (English or Japanese) to the official US ticker (e.g. "Apple", "アップル" -> AAPL).
     Ignore Japanese stock codes.
     Convert nicknames (e.g. テスラ -> TSLA).
+    VERIFY that each output ticker is a valid, currently trading US stock symbol. Do not output invalid or hallucinated tickers.
     Exclude: {json.dumps(exclude_list)}
     
     Output strictly JSON:
@@ -280,8 +282,61 @@ def analyze_with_gemini(text, exclude_list):
     logging.error("All Gemini models failed.")
     return []
 
-def send_to_worker(items, sources):
-    logging.info(f"Sending {len(items)} tickers to Worker...")
+def analyze_topics(text):
+    logging.info("Analyzing topics (Keyword Extraction)...")
+    
+    # Common Japanese stop words / noise
+    stop_words = {
+        'こと', 'もの', 'さん', 'これ', 'それ', 'あれ', 'どれ', 
+        'よう', 'そう', 'はず', 'まま', 'ため', 'だけ', 'ばっ',
+        'どこ', 'そこ', 'あそこ', 'いま', 'いつ', 'なん',
+        'の', 'し', 'て', 'いる', 'ある', 'する', 'なる', 
+        'ない', 'いい', 'も', 'な', 'だ', 'ん', 'ー', 'www', 'w'
+    }
+    
+    words = []
+    
+    try:
+        from janome.tokenizer import Tokenizer
+        logging.info("Using Janome for morphological analysis.")
+        t = Tokenizer()
+        tokens = t.tokenize(text)
+        for token in tokens:
+            part_of_speech = token.part_of_speech.split(',')[0]
+            if part_of_speech in ['名詞']:
+                word = token.surface
+                if len(word) > 1 and word not in stop_words and not word.isdigit():
+                    words.append(word)
+    except ImportError:
+        logging.warning("Janome not found. Falling back to simple Regex extraction.")
+        logging.info("To improve accuracy, please install janome: python3 -m pip install janome")
+        # Extract contiguous Kanji, Katakana, or Alphanumeric blocks (2+ chars)
+        # Kanji: \u4e00-\u9faf
+        # Katakana: \u30a0-\u30ff
+        # Alphanum: a-zA-Z0-9
+        # Regex: ([一-龠ァ-ヶa-zA-Z0-9]{2,})
+        pattern = re.compile(r"([一-龠ァ-ヶa-zA-Z]{2,})") # Exclude pure numbers which are usually prices
+        matches = pattern.findall(text)
+        for w in matches:
+             if w not in stop_words and not w.isdigit():
+                 words.append(w)
+
+    # Count frequency
+    from collections import Counter
+    counter = Counter(words)
+    
+    # Format top 50
+    # Output: [{"word": "BTC", "count": 120}, ...]
+    top_words = [{"word": k, "count": v} for k, v in counter.most_common(50)]
+    
+    logging.info("--- Top Topics ---")
+    for t in top_words[:5]:
+        logging.info(f"{t['word']}: {t['count']}")
+        
+    return top_words
+
+def send_to_worker(items, topics, sources):
+    logging.info(f"Sending {len(items)} tickers and {len(topics)} topics to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing (WORKER_URL or INGEST_TOKEN). Skipping upload.")
         return
@@ -289,6 +344,7 @@ def send_to_worker(items, sources):
     payload = {
         "window": "24h",
         "items": items,
+        "topics": topics,
         "sources": sources
     }
     
@@ -344,6 +400,10 @@ def main():
         logging.info("No content fetched.")
         return
 
+    # Analyze Topics (No AI)
+    topics = analyze_topics(all_text)
+
+    # Analyze Tickers (AI)
     tickers = analyze_with_gemini(all_text, exclude)
     
     agg = {}
@@ -356,11 +416,11 @@ def main():
     final_items = [{"ticker": k, "count": v} for k, v in agg.items()]
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
-    logging.info("--- Top 10 ---")
+    logging.info("--- Top 10 Tickers ---")
     for i in final_items[:10]:
         logging.info(f"{i['ticker']}: {i['count']}")
         
-    send_to_worker(final_items, source_meta)
+    send_to_worker(final_items, topics, source_meta)
 
 if __name__ == "__main__":
     main()
