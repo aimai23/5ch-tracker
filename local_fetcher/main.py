@@ -236,8 +236,14 @@ def analyze_with_gemini(text, exclude_list):
     
     # Simplified prompt for brevity in logs, strict JSON is key.
     prompt_text = f"""
-    You are a financial analyst. Analyze the following text.
-    Task: Identify US stock tickers and company names, then count them as their standardized ticker symbol.
+    You are a financial analyst. Analyze the following text from a Japanese investment board.
+    Task: Identify US stock tickers, count mentions, AND analyze sentiment (-1.0 to 1.0).
+    
+    Sentiment Score:
+    -1.0: Extremely Bearish / Selling / Panic
+     0.0: Neutral / News sharing
+    +1.0: Extremely Bullish / Buying / Hype
+    
     Map company names (English or Japanese) to the official US ticker (e.g. "Apple", "アップル" -> AAPL).
     Ignore Japanese stock codes.
     Convert nicknames (e.g. テスラ -> TSLA).
@@ -246,7 +252,7 @@ def analyze_with_gemini(text, exclude_list):
     
     Output strictly JSON:
     [
-      {{"ticker": "NVDA", "count": 15}}
+      {{"ticker": "NVDA", "count": 15, "sentiment": 0.5}}
     ]
     
     Text:
@@ -442,15 +448,28 @@ def main():
     for t in tickers:
         sym = t.get("ticker", "").upper()
         cnt = t.get("count", 0)
+        sent = t.get("sentiment", 0.0)
+        
         if sym:
-            agg[sym] = agg.get(sym, 0) + cnt
+            if sym not in agg:
+                agg[sym] = {"count": 0, "sent_w_sum": 0.0}
+            agg[sym]["count"] += cnt
+            agg[sym]["sent_w_sum"] += (sent * cnt)
     
-    final_items = [{"ticker": k, "count": v} for k, v in agg.items()]
+    final_items = []
+    for k, v in agg.items():
+        avg_sent = v["sent_w_sum"] / v["count"] if v["count"] > 0 else 0.0
+        final_items.append({
+            "ticker": k, 
+            "count": v["count"],
+            "sentiment": round(avg_sent, 2)
+        })
+
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
-    logging.info("--- Top 10 Tickers ---")
+    logging.info("--- Top 10 Tickers (with Sentiment) ---")
     for i in final_items[:10]:
-        logging.info(f"{i['ticker']}: {i['count']}")
+        logging.info(f"{i['ticker']}: {i['count']} (Mood: {i['sentiment']})")
         
     send_to_worker(final_items, topics, source_meta)
 

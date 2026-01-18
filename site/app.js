@@ -72,12 +72,31 @@ async function main() {
       // Calculate bar width percentage
       const barPercent = Math.max((item.count / maxCount) * 100, 1);
 
+      // Sentiment Logic
+      let moodClass = "neutral";
+      let moodIcon = "😐";
+      let moodText = "NEUTRAL";
+      const score = item.sentiment || 0;
+
+      if (score >= 0.1) {
+        moodClass = "bullish";
+        moodIcon = "🚀";
+        moodText = "BULL";
+      } else if (score <= -0.1) {
+        moodClass = "bearish";
+        moodIcon = "🐻";
+        moodText = "BEAR";
+      }
+
       row.innerHTML = `
         <td>${rank}</td>
         <td>
           <div class="ticker-cell">
             <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${item.ticker}?format=png" loading="lazy" onerror="this.style.display='none'">
-            <span class="ticker-name">${item.ticker}</span>
+            <div class="ticker-info">
+                <span class="ticker-name">${item.ticker}</span>
+                <span class="mood-badge ${moodClass}">${moodIcon} ${moodText}</span>
+            </div>
           </div>
         </td>
         <td>
