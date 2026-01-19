@@ -625,56 +625,60 @@ footer a {
   position: absolute;
   bottom: 0;
   left: 50%;
+
+  /* User's Padding Method */
   width: 0;
   height: 0;
-  /* Reset dimensions */
+  padding: 135px 6px 0;
+  /* Height 135px, Width 12px */
+  margin-left: -6px;
 
-  /* Create Triangle using Borders (Standard CSS Trick) */
-  /* Wide Base (bottom), Pointy Tip (top) */
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 140px solid #fff;
+  background-color: #fff;
+  background-image: linear-gradient(to bottom, #ffffff 0%, #cccccc 100%);
+  border-radius: 50% 50% 0 0;
 
-  margin-left: -8px;
-  /* Center horizontally */
-
-  transform-origin: center bottom;
-  /* Pivot at the base */
+  transform-origin: 50% 100%;
   transform: rotate(-90deg);
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
 
-  box-sizing: content-box;
-  /* CRITICAL for border-triangle */
-  z-index: 999;
-  /* Ensure on top */
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+  z-index: 100;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
 
-  /* Reset previous properties */
-  background: none;
+  /* Reset */
+  border: none;
   clip-path: none;
   pointer-events: none;
+  box-sizing: content-box;
 }
 
-.gauge-needle::after {
+/* Static Pin (Added to HTML next) */
+.gauge-pin {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, 50%);
+  /* Start center at bottom edge */
+
+  background-image: linear-gradient(to bottom, #555, #222);
+  border: 2px solid #111;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  z-index: 101;
+}
+
+.gauge-pin::after {
   content: '';
   position: absolute;
-  /* Position relative to the top tip (0,0 of content box) */
-  top: 140px;
-  /* Moves to the bottom base */
-  left: -12px;
-  /* Center the 24px circle specific to the 0px width content */
-
-  width: 24px;
-  height: 24px;
-  background: #fff;
-  border: 4px solid #161b22;
-  /* Add dark border to match theme background for contrast */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: #000;
   border-radius: 50%;
-  box-sizing: border-box;
-
-  transform: translateY(-50%);
-  /* Center on the pivot line */
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
 }
 
 .gauge-labels {
