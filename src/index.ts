@@ -122,6 +122,7 @@ export default {
         items: Array.isArray(body.items) ? body.items : [],
         topics: Array.isArray(body.topics) ? body.topics : [],
         overview: body.overview,
+        fear_greed: body.fear_greed,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

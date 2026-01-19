@@ -20,6 +20,7 @@ export type RankingPayload = {
   items: RankingItem[];
   topics: TopicItem[];
   overview?: string;
+  fear_greed?: number;
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -62,6 +63,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     items: results || [],
     topics: meta.topics || [],
     overview: meta.overview || null,
+    fear_greed: meta.fear_greed,
     sources: meta.sources || [],
   };
 }
@@ -87,6 +89,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     sources: payload.sources,
     topics: payload.topics,
     overview: payload.overview,
+    fear_greed: payload.fear_greed,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
