@@ -598,27 +598,26 @@ footer a {
   /* Remove overflow hidden to let needle glow bleed if needed,
      but keeping it for mask safety usually is better.
      Let's keep text OUTSIDE this container. */
-  overflow: hidden;
+  overflow: visible;
 }
 
 .gauge-body {
   width: 300px;
-  height: 300px;
+  height: 150px;
   /* Full circle */
-  background: conic-gradient(from 180deg,
+  background: conic-gradient(from 270deg at 50% 100%,
       #ff4444 0deg,
       #ff8844 45deg,
       #ffff00 90deg,
       #ccff00 135deg,
       #00ff88 180deg);
-  border-radius: 50%;
+  border-radius: 150px 150px 0 0;
   position: absolute;
   top: 0;
   left: 0;
-  transform: rotate(0deg);
   /* Mask the center to make it an arc */
-  mask: radial-gradient(transparent 60%, black 61%);
-  -webkit-mask: radial-gradient(transparent 60%, black 61%);
+  mask: radial-gradient(at 50% 100%, transparent 60%, black 61%);
+  -webkit-mask: radial-gradient(at 50% 100%, transparent 60%, black 61%);
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
@@ -629,12 +628,13 @@ footer a {
   width: 16px;
   height: 140px;
   margin-left: -8px;
-  background: linear-gradient(180deg, #fff 0%, #ddd 100%);
-  clip-path: polygon(50% 0, 5% 100%, 95% 100%);
+  background: #fff;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   transform-origin: bottom center;
   transform: rotate(-90deg);
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
-  z-index: 20;
+  z-index: 100;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
 }
 
 .gauge-needle::after {
