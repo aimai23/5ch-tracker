@@ -215,28 +215,26 @@ def analyze_market_data(text, exclude_list):
     
     prompt_text = f"""
     You are a cynical 5ch Market AI.
-    Analyze the following text from a Japanese investment board to extract US stock trends AND write a short market summary.
+    Analyze the following text to extract US stock trends, a general summary, a vibe check, and 5 specific sentiment metrics.
 
     1. Identify US stock tickers:
        - Map company names to valid US tickers (e.g. "Apple" -> AAPL).
-       - Sentiment (-1.0 to 1.0): -1.0=Bearish/Panic, 0.0=Neutral, 1.0=Bullish/Hype.
+       - Sentiment (-1.0 to 1.0).
        - Exclude: {json.dumps(exclude_list)}
-       - VERIFY tickers are valid US stocks.
 
-    2. Analyze the overall market sentiment (Ongi & Greed Index):
-       - Score from 0 (Extreme Ongi) to 100 (Extreme Greed).
-       - 0-25: Ongi/Panic (Despair, "Ongi" slang in 5ch)
-       - 26-45: Fear/Bearish
-       - 46-54: Neutral
-       - 55-75: Greed/Bullish
-       - 76-100: Extreme Greed/Euphoria
-       - Based on the "vibe" of the thread.
+    2. Analyze Market Sentiment (Ongi & Greed):
+       - Score 0-100 (0=Despair, 100=Euphoria).
 
-    3. Write a Market Summary (max 100 chars):
-       - Style: Casual, cynical, slang-heavy Japanese (5ch style).
-       - Focus on the overall "vibe" (despair, euphoria, confusion, excitement).
-       - Summarize the collective emotional state of the thread, NOT specific stock movements.
-       - NO polite language.
+    3. Extract 5 Radar Metrics (0-10 Scale):
+       - "hype": Momentum/Excitement
+       - "panic": Fear/Despair
+       - "faith": HODL mentality/Confidence
+       - "gamble": Speculative/YOLO spirit
+       - "iq": Quality of discussion (vs noise)
+
+    4. Write TWO Summaries (Japanese, 5ch style, max 100 chars each):
+       - "summary": General market news/movers (e.g. "NVDA exploded, everyone rich").
+       - "ongi_comment": Pure atmospheric vibe check for the Ongi Gauge (e.g. "Complete despair, everyone dying").
 
     Output STRICT JSON format:
     {{
@@ -244,8 +242,10 @@ def analyze_market_data(text, exclude_list):
         {{ "ticker": "NVDA", "count": 15, "sentiment": 0.5 }},
         ...
       ],
-      "fear_greed_score": 25,
-      "summary": "相場はクソ、NVDAだけが救い。"
+      "fear_greed_score": 50,
+      "radar": {{ "hype": 5, "panic": 5, "faith": 5, "gamble": 5, "iq": 5 }},
+      "summary": "...",
+      "ongi_comment": "..."
     }}
 
     Text:
@@ -272,7 +272,7 @@ def analyze_market_data(text, exclude_list):
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {})
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", "")
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -282,7 +282,7 @@ def analyze_market_data(text, exclude_list):
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}
+    return [], "要約生成失敗", 50, {}, ""
 
 def analyze_topics(text):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -331,7 +331,7 @@ def analyze_topics(text):
         
     return top_words
 
-def send_to_worker(items, topics, sources, overview="", fear_greed=50, radar={}):
+def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, and overview to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -343,6 +343,7 @@ def send_to_worker(items, topics, sources, overview="", fear_greed=50, radar={})
         "topics": topics,
         "sources": sources,
         "overview": overview,
+        "ongi_comment": ongi_comment,
         "fear_greed": fear_greed,
         "radar": radar
     }
@@ -387,7 +388,7 @@ def run_analysis(debug_mode=False):
         return
 
     # Combined Gemini Analysis
-    tickers_raw, market_summary, fear_greed, radar_data = analyze_market_data(all_text, exclude)
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment = analyze_market_data(all_text, exclude)
     
     # Validation: If Gemini failed, DO NOT upload empty data (protects backend DB)
     if market_summary == "要約生成失敗":
@@ -415,10 +416,11 @@ def run_analysis(debug_mode=False):
     for i in final_items[:10]:
         logging.info(f"{i['ticker']}: {i['count']} (Sent: {i['sentiment']})")
     logging.info(f"Summary: {market_summary}")
+    logging.info(f"Ongi Comment: {ongi_comment}")
     logging.info(f"Fear & Ongi: {fear_greed}")
     logging.info(f"Radar Data: {radar_data}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, fear_greed=fear_greed, radar=radar_data)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data)
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""

@@ -168,7 +168,10 @@ async function main() {
       if (data.overview) {
         overviewEl.style.display = "block";
         overviewText.textContent = data.overview;
-        if (ongiCommentEl) ongiCommentEl.textContent = data.overview;
+        if (ongiCommentEl) {
+          // Prefer ongi_comment, fallback to overview
+          ongiCommentEl.textContent = data.ongi_comment || data.overview;
+        }
       } else {
         overviewEl.style.display = "none";
         if (ongiCommentEl) ongiCommentEl.textContent = "Waiting for AI analysis...";
