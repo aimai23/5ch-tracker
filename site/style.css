@@ -311,6 +311,8 @@ h1 {
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .tab-btn.active,
@@ -576,4 +578,122 @@ footer a {
   padding: 4rem;
   color: var(--text-secondary);
   font-style: italic;
+}
+
+/* GAUGE STYLES */
+.gauge-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.gauge-container {
+  position: relative;
+  width: 300px;
+  height: 150px;
+  /* Half circle */
+  overflow: hidden;
+}
+
+.gauge-body {
+  width: 300px;
+  height: 300px;
+  /* Full circle */
+  background: conic-gradient(from 180deg,
+      #ff4444 0deg,
+      #ff8844 45deg,
+      #ffff00 90deg,
+      #ccff00 135deg,
+      #00ff88 180deg);
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(0deg);
+  /* Mask the center to make it an arc */
+  mask: radial-gradient(transparent 60%, black 61%);
+  -webkit-mask: radial-gradient(transparent 60%, black 61%);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.gauge-needle {
+  position: absolute;
+  bottom: 0px;
+  /* Center of the circle logic */
+  left: 50%;
+  width: 4px;
+  height: 140px;
+  background-color: #fff;
+  border-radius: 4px;
+  transform-origin: bottom center;
+  transform: rotate(-90deg);
+  /* Start at 0 (left) */
+  transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  z-index: 5;
+}
+
+.gauge-needle::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.gauge-labels {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.gauge-labels span {
+  position: absolute;
+  font-weight: bold;
+  font-size: 0.9rem;
+  top: 60%;
+  color: #fff;
+  text-shadow: 0 0 4px #000;
+}
+
+.gauge-labels .fear {
+  left: 20px;
+  color: #ff4444;
+}
+
+.gauge-labels .ongi {
+  right: 20px;
+  color: #00ff88;
+}
+
+.gauge-score-display {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  line-height: 1;
+  z-index: 10;
+}
+
+.gauge-status-text {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ai-comment {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
 }
