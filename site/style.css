@@ -626,29 +626,31 @@ footer a {
   bottom: 0;
   left: 50%;
 
-  /* User's Padding Method */
-  width: 0;
-  height: 0;
-  padding: 135px 6px 0;
-  /* Height 135px, Width 12px */
-  margin-left: -6px;
+  /* SIMPLE SOLID RECTANGLE - NO TRICKS */
+  width: 8px;
+  height: 135px;
+  margin-left: -4px;
+  /* Center (half of width) */
 
-  background-color: #fff;
-  background-image: linear-gradient(to bottom, #ffffff 0%, #cccccc 100%);
-  border-radius: 50% 50% 0 0;
+  background: #fff;
+  background: linear-gradient(to top, #fff 40%, #ddd 100%);
 
-  transform-origin: 50% 100%;
+  /* Round Tip */
+  border-radius: 4px 4px 0 0;
+
+  /* Rotation Pivot at Bottom */
+  transform-origin: bottom center;
   transform: rotate(-90deg);
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
 
-  z-index: 100;
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 
-  /* Reset */
+  /* Explicitly reset interfering properties */
   border: none;
+  padding: 0;
+  box-sizing: border-box;
   clip-path: none;
-  pointer-events: none;
-  box-sizing: content-box;
 }
 
 /* Static Pin (Added to HTML next) */
