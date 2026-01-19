@@ -123,6 +123,7 @@ export default {
         topics: Array.isArray(body.topics) ? body.topics : [],
         overview: body.overview,
         fear_greed: body.fear_greed,
+        radar: body.radar,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

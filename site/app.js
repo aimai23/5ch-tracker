@@ -1,5 +1,6 @@
 const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 let chartWidget = null;
+let radarChart = null;
 let currentTicker = null;
 let currentTopics = []; // NEW: Store topics globally
 let currentItems = []; // Global for heatmap
@@ -83,12 +84,97 @@ async function main() {
       currentTopics = data.topics.map(t => [t.word, t.count]);
     }
 
+    // ... top of file
+    let chartWidget = null;
+    let radarChart = null; // NEW GLOBAL
+    // ...
+
     // Fear & Ongi Update
     if (data.fear_greed !== undefined) {
       updateFearOngi(data.fear_greed);
+    }
+
+    // NEW: Radar Chart Update
+    if (data.radar) {
+      updateRadarChart(data.radar);
     } else {
-      // Mock data for testing if API not ready yet
-      // updateFearOngi(Math.floor(Math.random() * 100)); 
+      // Init with empty/random data for visualization if missing
+      updateRadarChart({ hype: 5, panic: 5, faith: 5, gamble: 5, iq: 5 });
+    }
+
+    // AI Overview
+    // ...
+
+    function updateRadarChart(radarData) {
+      const canvas = document.getElementById('sentiment-radar');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      // Default values if missing
+      const dataValues = [
+        radarData.hype || 0,
+        radarData.panic || 0,
+        radarData.faith || 0,
+        radarData.gamble || 0,
+        radarData.iq || 0
+      ];
+
+      if (radarChart) {
+        radarChart.data.datasets[0].data = dataValues;
+        radarChart.update();
+        return;
+      }
+
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['熱狂 (HYPE)', '阿鼻叫喚 (PANIC)', '信仰心 (FAITH)', '脳汁 (GAMBLE)', '知性 (IQ)'],
+          datasets: [{
+            label: '5ch Sentiment',
+            data: dataValues,
+            backgroundColor: 'rgba(0, 255, 136, 0.2)', // Neon Greenish fill
+            borderColor: '#00ff88',
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#00ff88',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#00ff88',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: {
+                color: 'rgba(255, 255, 255, 0.2)'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              pointLabels: {
+                color: '#eee',
+                font: {
+                  size: 11,
+                  family: '"JetBrains Mono", sans-serif',
+                  weight: 'bold'
+                }
+              },
+              ticks: {
+                display: false,
+                backdropColor: 'transparent'
+              },
+              suggestedMin: 0,
+              suggestedMax: 10
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
     }
 
     // AI Overview

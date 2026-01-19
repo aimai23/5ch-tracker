@@ -82,6 +82,11 @@
           <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
         </div>
 
+        <div class="radar-chart-container"
+          style="position: relative; width: 100%; max-width: 400px; margin: 0 auto 2rem;">
+          <canvas id="sentiment-radar"></canvas>
+        </div>
+
         <div class="market-overview" style="text-align: left; margin-top: 2rem;">
           <div class="overview-header">
             <span class="overview-title">🤖 AI MARKET INSIGHT</span>
@@ -116,6 +121,7 @@
 
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 

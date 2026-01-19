@@ -13,6 +13,14 @@ export interface PriceItem {
   updated_at: string;
 }
 
+export interface RadarData {
+  hype: number;
+  panic: number;
+  faith: number;
+  gamble: number;
+  iq: number;
+}
+
 export type TopicItem = { word: string; count: number };
 export type RankingPayload = {
   updatedAt: string | null;
@@ -21,6 +29,7 @@ export type RankingPayload = {
   topics: TopicItem[];
   overview?: string;
   fear_greed?: number;
+  radar?: RadarData;
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -64,6 +73,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     topics: meta.topics || [],
     overview: meta.overview || null,
     fear_greed: meta.fear_greed,
+    radar: meta.radar,
     sources: meta.sources || [],
   };
 }
@@ -90,6 +100,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     topics: payload.topics,
     overview: payload.overview,
     fear_greed: payload.fear_greed,
+    radar: payload.radar,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

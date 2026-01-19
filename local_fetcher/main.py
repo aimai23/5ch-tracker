@@ -271,7 +271,7 @@ def analyze_market_data(text, exclude_list):
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50)
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {})
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -281,7 +281,7 @@ def analyze_market_data(text, exclude_list):
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50
+    return [], "要約生成失敗", 50, {}
 
 def analyze_topics(text):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -330,7 +330,7 @@ def analyze_topics(text):
         
     return top_words
 
-def send_to_worker(items, topics, sources, overview="", fear_greed=50):
+def send_to_worker(items, topics, sources, overview="", fear_greed=50, radar={}):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, and overview to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -342,7 +342,8 @@ def send_to_worker(items, topics, sources, overview="", fear_greed=50):
         "topics": topics,
         "sources": sources,
         "overview": overview,
-        "fear_greed": fear_greed
+        "fear_greed": fear_greed,
+        "radar": radar
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -385,7 +386,7 @@ def run_analysis(debug_mode=False):
         return
 
     # Combined Gemini Analysis
-    tickers_raw, market_summary, fear_greed = analyze_market_data(all_text, exclude)
+    tickers_raw, market_summary, fear_greed, radar_data = analyze_market_data(all_text, exclude)
     
     # Validation: If Gemini failed, DO NOT upload empty data (protects backend DB)
     if market_summary == "要約生成失敗":
@@ -414,8 +415,9 @@ def run_analysis(debug_mode=False):
         logging.info(f"{i['ticker']}: {i['count']} (Sent: {i['sentiment']})")
     logging.info(f"Summary: {market_summary}")
     logging.info(f"Fear & Ongi: {fear_greed}")
+    logging.info(f"Radar Data: {radar_data}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, fear_greed=fear_greed)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, fear_greed=fear_greed, radar=radar_data)
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
