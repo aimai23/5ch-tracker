@@ -162,12 +162,16 @@ async function main() {
     // AI Overview
     const overviewEl = document.getElementById("market-overview");
     const overviewText = document.getElementById("overview-text");
+    const ongiCommentEl = document.getElementById("fear-ongi-comment");
+
     if (overviewEl) {
       if (data.overview) {
         overviewEl.style.display = "block";
         overviewText.textContent = data.overview;
+        if (ongiCommentEl) ongiCommentEl.textContent = data.overview;
       } else {
         overviewEl.style.display = "none";
+        if (ongiCommentEl) ongiCommentEl.textContent = "Waiting for AI analysis...";
       }
     }
 
@@ -347,18 +351,8 @@ function updateFearOngi(score) {
   labelEl.textContent = label;
   labelEl.style.color = color;
 
-  // AI Comment
-  if (commentEl) {
-    const comments = [
-      "恩義(ONGI)の嵐です…市場は阿鼻叫喚！ (Extreme Ongi/Panic)",
-      "弱気ムード。恩義マンが出没中？ (Ongi/Fear)",
-      "どっちつかずの展開です。 (Neutral)",
-      "強欲ムード！イケイケですね。 (Greed)",
-      "強欲の極み！靴磨きの少年も株の話をしてるかも？ (Extreme Greed)"
-    ];
-    const idx = Math.min(Math.floor(score / 20), 4);
-    commentEl.textContent = comments[idx];
-  }
+  // AI Comment logic moved to main() to use actual AI summary
+  // if (commentEl) { ... }
 }
 
 function loadChart(ticker) {

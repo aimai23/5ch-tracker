@@ -234,7 +234,8 @@ def analyze_market_data(text, exclude_list):
 
     3. Write a Market Summary (max 100 chars):
        - Style: Casual, cynical, slang-heavy Japanese (5ch style).
-       - Focus on the biggest movers or overall mood.
+       - Focus on the overall "vibe" (despair, euphoria, confusion, excitement).
+       - Summarize the collective emotional state of the thread, NOT specific stock movements.
        - NO polite language.
 
     Output STRICT JSON format:
