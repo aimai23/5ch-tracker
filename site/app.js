@@ -4,7 +4,48 @@ let radarChart = null;
 let currentTicker = null;
 let currentTopics = []; // NEW: Store topics globally
 let currentItems = [];
-// Removed watchlistData logic
+
+// Tab Switching
+document.addEventListener("DOMContentLoaded", () => {
+  const tabBtns = document.querySelectorAll(".tab-btn");
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      // Remove active class
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const tabId = btn.getAttribute("data-tab");
+
+      // Hide all views
+      document.getElementById("view-dashboard").style.display = "none";
+      document.getElementById("view-topics").style.display = "none";
+      document.getElementById("view-ongi-greed").style.display = "none";
+
+      // Show selected view
+      if (tabId === 'dashboard') {
+        document.getElementById("view-dashboard").style.display = "grid";
+      } else if (tabId === 'topics') {
+        document.getElementById("view-topics").style.display = "block";
+        setTimeout(renderWordCloud, 100);
+      } else if (tabId === 'ongi_greed') {
+        document.getElementById("view-ongi-greed").style.display = "block";
+      }
+    });
+  });
+
+  // Set initial active tab (dashboard by default)
+  const initialTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (initialTabBtn) {
+    initialTabBtn.classList.add('active');
+    document.getElementById("view-dashboard").style.display = "grid";
+  }
+
+  loadChart("SPX"); // Default
+  main();
+  // Refresh every 30s for Monitor Mode
+  setInterval(main, 30000);
+});
 
 async function main() {
   const loadingEl = document.getElementById("loading");
@@ -355,5 +396,3 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
   }
 });
-
-main();
