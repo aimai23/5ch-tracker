@@ -221,6 +221,7 @@ def analyze_market_data(text, exclude_list):
        - Map company names to valid US tickers (e.g. "Apple" -> AAPL).
        - Sentiment (-1.0 to 1.0).
        - Exclude: {json.dumps(exclude_list)}
+       - Extract ALL mentioned tickers. Do not limit to Top 10. Aim for Top 20 if data allows.
 
     2. Analyze Market Sentiment (Ongi & Greed):
        - Score 0-100 (0=Despair, 100=Euphoria).
@@ -232,9 +233,9 @@ def analyze_market_data(text, exclude_list):
        - "gamble": Speculative/YOLO spirit
        - "iq": Quality of discussion (vs noise)
 
-    4. Write TWO Summaries (Japanese, 5ch style, max 100 chars each):
-       - "summary": General market news/movers (e.g. "NVDA exploded, everyone rich").
-       - "ongi_comment": Pure atmospheric vibe check for the Ongi Gauge (e.g. "Complete despair, everyone dying").
+    4. Write TWO Summaries (max 100 chars each):
+       - "summary": General market news/movers. Style: Casual, cynical, slang-heavy 5ch style.
+       - "ongi_comment": Calm, objective analysis of the market sentiment. Explain the "Why" behind the Fear/Greed score. Style: Analytical, intellectual Japanese. Focus on market conditions, not thread participants.
 
     Output STRICT JSON format:
     {{
@@ -412,8 +413,8 @@ def run_analysis(debug_mode=False):
 
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
-    logging.info("--- Top 10 Tickers ---")
-    for i in final_items[:10]:
+    logging.info("--- Top 20 Tickers ---")
+    for i in final_items[:20]:
         logging.info(f"{i['ticker']}: {i['count']} (Sent: {i['sentiment']})")
     logging.info(f"Summary: {market_summary}")
     logging.info(f"Ongi Comment: {ongi_comment}")

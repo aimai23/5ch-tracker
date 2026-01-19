@@ -43,7 +43,7 @@ function rankingMetaKey(window: string): string {
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
   // 1. Get items
   const { results } = await env.DB.prepare(
-    "SELECT ticker, count, sentiment FROM rankings WHERE term = ? ORDER BY count DESC"
+    "SELECT ticker, count, sentiment FROM rankings WHERE term = ? ORDER BY count DESC LIMIT 20"
   )
     .bind(window)
     .all<{ ticker: string; count: number; sentiment: number }>();
