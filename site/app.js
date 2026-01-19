@@ -3,66 +3,8 @@ let chartWidget = null;
 let radarChart = null;
 let currentTicker = null;
 let currentTopics = []; // NEW: Store topics globally
-let currentItems = []; // Global for heatmap
-let watchlistData = {};
-
-// Tab Switching
-document.addEventListener("DOMContentLoaded", () => {
-  const tabBtns = document.querySelectorAll(".tab-btn");
-
-  tabBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      tabBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      const tabId = btn.getAttribute("data-tab");
-
-      // Hide all
-      // Hide all
-      document.getElementById("view-dashboard").style.display = "none";
-      document.getElementById("view-topics").style.display = "none";
-      document.getElementById("view-ongi-greed").style.display = "none";
-
-      // Show selected
-      // ...
-      if (tabId === 'dashboard') {
-        document.getElementById("view-dashboard").style.display = "grid";
-      } else if (tabId === 'topics') {
-        document.getElementById("view-topics").style.display = "block";
-        setTimeout(renderWordCloud, 100);
-      } else if (tabId === 'ongi_greed') {
-        document.getElementById("view-ongi-greed").style.display = "block";
-      }
-    });
-  });
-
-  // Set initial active tab (dashboard by default)
-  const initialTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
-  if (initialTabBtn) {
-    initialTabBtn.classList.add('active');
-    document.getElementById("view-dashboard").style.display = "grid";
-  }
-
-  loadChart("SPX"); // Default
-  fetchWatchlist();
-  main();
-  // Refresh every 30s for Monitor Mode
-  setInterval(main, 30000);
-});
-
-
-async function fetchWatchlist() {
-  try {
-    const res = await fetch("config/watchlist.json");
-    if (res.ok) {
-      watchlistData = await res.json();
-    }
-  } catch (e) {
-    console.error("Failed to load watchlist config", e);
-  }
-}
-
-let currentPrices = {}; // Global for prices
+let currentItems = [];
+// Removed watchlistData logic
 
 async function main() {
   const loadingEl = document.getElementById("loading");
@@ -76,8 +18,7 @@ async function main() {
 
     const data = await res.json();
     const items = data.items || [];
-    currentItems = items; // Store global
-    currentPrices = data.prices || {}; // Store prices global
+    currentItems = items;
 
     // Store topics
     if (data.topics) {

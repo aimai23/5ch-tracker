@@ -82,14 +82,7 @@ export default {
         sources: []
       };
 
-      // Fetch Prices
-      const priceMap = await getAllPrices(env);
-
-      // Merge for convenience
-      const responseData = {
-        ...safeRanking,
-        prices: priceMap
-      };
+      const responseData = { ...safeRanking };
 
       return new Response(JSON.stringify(responseData), {
         headers: { ...commonCorsHeaders, "Content-Type": "application/json" }

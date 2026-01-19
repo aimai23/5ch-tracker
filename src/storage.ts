@@ -6,12 +6,7 @@ export interface RankingItem {
   sentiment?: number;
 }
 
-export interface PriceItem {
-  ticker: string;
-  price: number;
-  change_percent: number;
-  updated_at: string;
-}
+// PriceItem Removed
 
 export interface RadarData {
   hype: number;
@@ -112,31 +107,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
 
 // --- Price Functions ---
 
-export async function getAllPrices(env: Env): Promise<Record<string, PriceItem>> {
-  const { results } = await env.DB.prepare("SELECT * FROM prices").all<PriceItem>();
-  const map: Record<string, PriceItem> = {};
-  if (results) {
-    for (const p of results) {
-      map[p.ticker] = p;
-    }
-  }
-  return map;
-}
-
-export async function putPricesBatch(env: Env, items: PriceItem[]): Promise<void> {
-  const statements: D1PreparedStatement[] = [];
-  for (const item of items) {
-    statements.push(
-      env.DB.prepare(
-        "INSERT OR REPLACE INTO prices (ticker, price, change_percent, updated_at) VALUES (?, ?, ?, ?)"
-      ).bind(item.ticker, item.price, item.change_percent, item.updated_at)
-    );
-  }
-  if (statements.length > 0) {
-    // Batch limit is usually higher, but let's be safe.
-    await env.DB.batch(statements);
-  }
-}
+// Prices Logic Removed
 
 export async function getMeta(env: Env): Promise<MetaPayload | null> {
   const val = await env.DB.prepare("SELECT value FROM meta WHERE key = 'global_meta'")
