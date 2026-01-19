@@ -385,7 +385,7 @@ def run_analysis(debug_mode=False):
         return
 
     # Combined Gemini Analysis
-    tickers_raw, market_summary = analyze_market_data(all_text, exclude)
+    tickers_raw, market_summary, fear_greed = analyze_market_data(all_text, exclude)
     
     agg = {}
     for t in tickers_raw:
@@ -408,8 +408,9 @@ def run_analysis(debug_mode=False):
     for i in final_items[:10]:
         logging.info(f"{i['ticker']}: {i['count']} (Sent: {i['sentiment']})")
     logging.info(f"Summary: {market_summary}")
+    logging.info(f"Fear & Ongi: {fear_greed}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, fear_greed=fear_greed)
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
