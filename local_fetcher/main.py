@@ -223,14 +223,14 @@ def analyze_market_data(text, exclude_list):
        - Exclude: {json.dumps(exclude_list)}
        - VERIFY tickers are valid US stocks.
 
-    2. Analyze the overall market sentiment (Fear & Greed Index):
-       - Score from 0 (Extreme Fear) to 100 (Extreme Greed/Ongi).
-       - 0-25: Panic/Despair
+    2. Analyze the overall market sentiment (Ongi & Greed Index):
+       - Score from 0 (Extreme Ongi) to 100 (Extreme Greed).
+       - 0-25: Ongi/Panic (Despair, "Ongi" slang in 5ch)
        - 26-45: Fear/Bearish
        - 46-54: Neutral
        - 55-75: Greed/Bullish
-       - 76-100: Euphoria/Mania (Ongi)
-       - Based on the "vibe" of the thread (panic selling vs to the moon).
+       - 76-100: Extreme Greed/Euphoria
+       - Based on the "vibe" of the thread.
 
     3. Write a Market Summary (max 100 chars):
        - Style: Casual, cynical, slang-heavy Japanese (5ch style).

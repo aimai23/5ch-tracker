@@ -32,7 +32,7 @@
     <div class="tab-container">
       <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
       <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
-      <button class="tab-btn" data-tab="fear_ongi">Fear & Ongi</button>
+      <button class="tab-btn" data-tab="ongi_greed">Ongi & Greed</button>
     </div>
 
     <main class="dashboard-grid" id="view-dashboard">
@@ -60,10 +60,10 @@
       </section>
     </main>
 
-    <!-- Fear & Ongi View -->
-    <div id="view-fear-ongi" style="display: none;">
+    <!-- Ongi & Greed View -->
+    <div id="view-ongi-greed" style="display: none;">
       <section class="panel" style="text-align: center; padding: 2rem;">
-        <h2 style="margin-bottom: 2rem; color: var(--accent-gold);">😱 Fear & Ongi Index 🤑</h2>
+        <h2 style="margin-bottom: 2rem; color: var(--accent-gold);">😱 Ongi & Greed Index 🤑</h2>
 
         <div class="gauge-wrapper" style="margin-bottom: 2rem;">
           <div class="gauge-container">
@@ -73,8 +73,8 @@
               <div class="gauge-needle" id="gauge-needle"></div>
             </div>
             <div class="gauge-labels">
-              <span class="fear">☠️ FEAR</span>
-              <span class="ongi">🤑 ONGI</span>
+              <span class="fear">📉 ONGI</span>
+              <span class="ongi">📈 GREED</span>
             </div>
             <div class="gauge-score-display" id="fear-ongi-score">--</div>
             <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
