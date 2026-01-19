@@ -387,6 +387,11 @@ def run_analysis(debug_mode=False):
     # Combined Gemini Analysis
     tickers_raw, market_summary, fear_greed = analyze_market_data(all_text, exclude)
     
+    # Validation: If Gemini failed, DO NOT upload empty data (protects backend DB)
+    if market_summary == "要約生成失敗":
+        logging.error("Analysis Failed (Gemini API Error). Aborting upload.")
+        return
+    
     agg = {}
     for t in tickers_raw:
         sym = t.get("ticker", "").upper()
