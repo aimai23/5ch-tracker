@@ -22,15 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("view-heatmap").style.display = "none";
 
       // Show selected
+      // ...
       if (tabId === 'dashboard') {
         document.getElementById("view-dashboard").style.display = "grid";
       } else if (tabId === 'topics') {
         document.getElementById("view-topics").style.display = "block";
-        // Trigger render after display is handled to ensure canvas sizing works
         setTimeout(renderWordCloud, 100);
-      } else if (tabId === 'heatmap') {
-        document.getElementById("view-heatmap").style.display = "block";
-        renderHeatmap();
+      } else if (tabId === 'fear_ongi') {
+        document.getElementById("view-fear-ongi").style.display = "block";
       }
     });
   });
@@ -81,6 +80,14 @@ async function main() {
     // Store topics
     if (data.topics) {
       currentTopics = data.topics.map(t => [t.word, t.count]);
+    }
+
+    // Fear & Ongi Update
+    if (data.fear_greed !== undefined) {
+      updateFearOngi(data.fear_greed);
+    } else {
+      // Mock data for testing if API not ready yet
+      // updateFearOngi(Math.floor(Math.random() * 100)); 
     }
 
     // AI Overview
@@ -140,9 +147,6 @@ async function main() {
         moodIcon = "🐻";
         moodText = "BEAR";
       }
-
-      // Price Info for Table (Optional, tiny)
-      // const pInfo = currentPrices[item.ticker];
 
       row.innerHTML = `
         <td>${rank}</td>
@@ -234,97 +238,53 @@ function renderWordCloud() {
   loading.style.display = 'none';
 }
 
-function renderHeatmap() {
-  const container = document.getElementById("heatmap-container");
-  container.innerHTML = "";
+function updateFearOngi(score) {
+  const scoreEl = document.getElementById("fear-ongi-score");
+  const labelEl = document.getElementById("fear-ongi-label");
+  const fillEl = document.getElementById("meter-fill");
+  const commentEl = document.getElementById("fear-ongi-comment");
 
-  // Flatten tickers unique
-  const allTickers = new Set();
+  if (score === undefined || score === null) {
+    scoreEl.textContent = "--";
+    labelEl.textContent = "No Data";
+    return;
+  }
 
-  // 1. Add Watchlist Only (Strict Separation)
-  Object.values(watchlistData).flat().forEach(t => allTickers.add(t));
+  scoreEl.textContent = score;
+  fillEl.style.width = `${score}%`;
 
-  // Note: Rankings are NOT added here. Heatmap is strictly for the Fixed Watchlist.
+  let label = "NEUTRAL";
+  let color = "#ffff00";
 
-  // Sort alphabetical for stability, or by change% if we want "Heat" map style
-  const tickerList = Array.from(allTickers).sort();
+  if (score <= 25) {
+    label = "EXTREME FEAR (Panic Selling?)";
+    color = "#ff4444";
+  } else if (score <= 45) {
+    label = "FEAR";
+    color = "#ff8844";
+  } else if (score >= 75) {
+    label = "EXTREME ONGI (Euphoria)";
+    color = "#00ff00";
+  } else if (score >= 55) {
+    label = "ONGI (Greed)";
+    color = "#ccff00";
+  }
 
-  const grid = document.createElement("div");
-  grid.className = "heatmap-grid single-grid"; // Added specialized class
+  labelEl.textContent = label;
+  labelEl.style.color = color;
 
-  tickerList.forEach(ticker => {
-    const item = currentItems.find(i => i.ticker === ticker);
-    const priceData = currentPrices[ticker];
-
-    let bgStyle = "rgba(43, 43, 60, 0.5)";
-    let borderStyle = "1px solid #444";
-
-    // Display Values
-    let mainVal = "--%";
-    let subVal = "$--";
-
-    // Use Price Data if available
-    if (priceData) {
-      const chg = priceData.change_percent;
-      mainVal = `${chg > 0 ? '+' : ''}${chg}%`;
-      subVal = `$${priceData.price}`;
-
-      // Color Logic
-      if (chg > 0) {
-        const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
-        bgStyle = `rgba(0, 160, 80, ${opacity})`;
-        borderStyle = "1px solid #4f4";
-      } else if (chg < 0) {
-        const opacity = 0.3 + Math.min(Math.abs(chg) / 3, 0.7);
-        bgStyle = `rgba(180, 40, 40, ${opacity})`;
-        borderStyle = "1px solid #f44";
-      } else {
-        bgStyle = "#444";
-      }
-    } else {
-      // No price data
-      if (item) {
-        subVal = `${item.count} res`;
-        mainVal = "No Price";
-      } else {
-        bgStyle = "#222";
-        borderStyle = "1px dashed #444";
-      }
-    }
-
-    const card = document.createElement("div");
-    card.className = "heatmap-card compact"; // Added compact class
-    card.style.background = bgStyle;
-    card.style.border = borderStyle;
-
-    // Styling moved to CSS mostly, but dynamic BG/Border remains here
-
-    if (!priceData && !item) {
-      card.style.opacity = "0.6";
-    }
-
-    card.innerHTML = `
-          <div class="hm-ticker">${ticker}</div>
-          <div class="hm-val">${mainVal}</div>
-      `;
-    // Removed subVal for "Smart/Compact" look unless huge change? 
-    // User said "Smart small". Maybe just Ticker + % is enough.
-    // Let's keep Ticker + %.
-
-    card.title = `${ticker}: ${subVal}`; // Tooltip for price
-
-    card.addEventListener("mouseenter", () => card.style.transform = "scale(1.05)");
-    card.addEventListener("mouseleave", () => card.style.transform = "scale(1)");
-
-    card.addEventListener("click", () => {
-      document.querySelector('[data-tab="dashboard"]').click();
-      loadChart(ticker);
-    });
-
-    grid.appendChild(card);
-  });
-
-  container.appendChild(grid);
+  // AI Comment (Mock mapping for now)
+  if (commentEl) {
+    const comments = [
+      "市場はパニック状態です。飛びつき注意！ (Market is panic selling)",
+      "弱気ムードが漂っています。 (Traders are fearful)",
+      "どっちつかずの展開です。 (Market is sideways)",
+      "強気ムード！イケイケですね。 (Bulls are taking control)",
+      "お祭り騒ぎ！靴磨きの少年も株の話をしてるかも？ (Extreme Euphorria)"
+    ];
+    const idx = Math.min(Math.floor(score / 20), 4);
+    commentEl.textContent = `AI Analysis: ${comments[idx]}`;
+  }
 }
 
 function loadChart(ticker) {

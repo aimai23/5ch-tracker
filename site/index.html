@@ -32,7 +32,7 @@
     <div class="tab-container">
       <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
       <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
-      <button class="tab-btn" data-tab="heatmap">ZOO10</button>
+      <button class="tab-btn" data-tab="fear_ongi">Fear & Ongi</button>
     </div>
 
     <main class="dashboard-grid" id="view-dashboard">
@@ -60,13 +60,34 @@
       </section>
     </main>
 
-    <!-- Heatmap View -->
-    <div id="view-heatmap" style="display: none;">
-      <section class="panel">
-        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🚀 ZOO10</h2>
-        <div id="heatmap-container" class="heatmap-container">
-          <!-- Injected by JS -->
+    <!-- Fear & Ongi View -->
+    <div id="view-fear-ongi" style="display: none;">
+      <section class="panel" style="text-align: center; padding: 2rem;">
+        <h2 style="margin-bottom: 2rem; color: var(--accent-gold);">😱 Fear & Ongi Index 🤑</h2>
+
+        <div class="gauge-wrapper" style="margin-bottom: 2rem;">
+          <div class="gauge-score" id="fear-ongi-score" style="font-size: 4rem; font-weight: 800;">--</div>
+          <div class="gauge-label" id="fear-ongi-label" style="font-size: 1.2rem;">Analyzing...</div>
         </div>
+
+        <div class="meter-container" style="max-width: 600px; margin: 0 auto;">
+          <div class="meter-bg"
+            style="height: 20px; background: #333; border-radius: 10px; overflow: hidden; position: relative;">
+            <div id="meter-fill" class="meter-fill"
+              style="width: 50%; height: 100%; background: linear-gradient(90deg, #ff4444, #ffff00, #00ff00); transition: width 1s ease;">
+            </div>
+          </div>
+          <div class="meter-labels"
+            style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #888;">
+            <span>☠️ FEAR (0)</span>
+            <span>🤑 ONGI (100)</span>
+          </div>
+        </div>
+
+        <p class="ai-comment" id="fear-ongi-comment"
+          style="margin-top: 3rem; font-size: 1.1rem; line-height: 1.6; border: 1px solid #333; padding: 1rem; border-radius: 8px;">
+          Waiting for AI analysis...
+        </p>
       </section>
     </div>
 
