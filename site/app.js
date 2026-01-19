@@ -17,9 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const tabId = btn.getAttribute("data-tab");
 
       // Hide all
+      // Hide all
       document.getElementById("view-dashboard").style.display = "none";
       document.getElementById("view-topics").style.display = "none";
-      document.getElementById("view-heatmap").style.display = "none";
+      document.getElementById("view-fear-ongi").style.display = "none";
 
       // Show selected
       // ...
