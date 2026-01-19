@@ -241,7 +241,7 @@ function renderWordCloud() {
 function updateFearOngi(score) {
   const scoreEl = document.getElementById("fear-ongi-score");
   const labelEl = document.getElementById("fear-ongi-label");
-  const fillEl = document.getElementById("meter-fill");
+  const needleEl = document.getElementById("gauge-needle");
   const commentEl = document.getElementById("fear-ongi-comment");
 
   if (score === undefined || score === null) {
@@ -251,20 +251,25 @@ function updateFearOngi(score) {
   }
 
   scoreEl.textContent = score;
-  fillEl.style.width = `${score}%`;
+
+  // Rotate Needle: 0-100 => -90deg to +90deg
+  const rotation = (Math.max(0, Math.min(100, score)) / 100 * 180) - 90;
+  if (needleEl) {
+    needleEl.style.transform = `rotate(${rotation}deg)`;
+  }
 
   let label = "NEUTRAL";
   let color = "#ffff00";
 
   if (score <= 25) {
-    label = "EXTREME FEAR (Panic Selling?)";
+    label = "EXTREME FEAR";
     color = "#ff4444";
   } else if (score <= 45) {
     label = "FEAR";
     color = "#ff8844";
   } else if (score >= 75) {
-    label = "EXTREME ONGI (Euphoria)";
-    color = "#00ff00";
+    label = "EXTREME ONGI";
+    color = "#00ff88";
   } else if (score >= 55) {
     label = "ONGI (Greed)";
     color = "#ccff00";
