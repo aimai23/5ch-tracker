@@ -643,7 +643,9 @@ footer a {
   transform: rotate(-90deg);
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
 
-  z-index: 100;
+  box-sizing: content-box;
+  /* CRITICAL for border-triangle */
+  z-index: 999;
   /* Ensure on top */
   filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
 
