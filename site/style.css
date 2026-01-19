@@ -583,9 +583,11 @@ footer a {
 /* GAUGE STYLES */
 .gauge-wrapper {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin-top: 2rem;
+  gap: 10px;
 }
 
 .gauge-container {
@@ -593,6 +595,9 @@ footer a {
   width: 300px;
   height: 150px;
   /* Half circle */
+  /* Remove overflow hidden to let needle glow bleed if needed,
+     but keeping it for mask safety usually is better.
+     Let's keep text OUTSIDE this container. */
   overflow: hidden;
 }
 
@@ -630,7 +635,7 @@ footer a {
   transform: rotate(-90deg);
   /* Start at 0 (left) */
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 1);
   z-index: 5;
 }
 
@@ -643,7 +648,7 @@ footer a {
   height: 16px;
   background-color: #fff;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 1);
 }
 
 .gauge-labels {
@@ -663,12 +668,12 @@ footer a {
 }
 
 .gauge-labels .fear {
-  left: 20px;
+  left: 30px;
   color: #ff4444;
 }
 
 .gauge-labels .ongi {
-  right: 20px;
+  right: 30px;
   color: #00ff88;
 }
 
@@ -677,20 +682,22 @@ footer a {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  line-height: 1;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  line-height: 0.8;
   z-index: 10;
 }
 
 .gauge-status-text {
-  margin-top: 1rem;
-  font-size: 1.2rem;
-  font-weight: bold;
+  margin-top: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
 }
 
 .ai-comment {
