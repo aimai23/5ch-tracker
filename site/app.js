@@ -289,7 +289,7 @@ function updateFearOngi(score) {
       "強欲の極み！靴磨きの少年も株の話をしてるかも？ (Extreme Greed)"
     ];
     const idx = Math.min(Math.floor(score / 20), 4);
-    commentEl.textContent = `AI Analysis: ${comments[idx]}`;
+    commentEl.textContent = comments[idx];
   }
 }
 

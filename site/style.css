@@ -624,31 +624,31 @@ footer a {
 
 .gauge-needle {
   position: absolute;
-  bottom: 0px;
-  /* Center of the circle logic */
+  bottom: 0;
   left: 50%;
-  width: 4px;
+  width: 16px;
   height: 140px;
-  background-color: #fff;
-  border-radius: 4px;
+  margin-left: -8px;
+  background: linear-gradient(180deg, #fff 0%, #ddd 100%);
+  clip-path: polygon(50% 0, 5% 100%, 95% 100%);
   transform-origin: bottom center;
   transform: rotate(-90deg);
-  /* Start at 0 (left) */
   transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 1);
-  z-index: 5;
+  z-index: 20;
 }
 
 .gauge-needle::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: -6px;
-  width: 16px;
-  height: 16px;
-  background-color: #fff;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(50%);
+  width: 24px;
+  height: 24px;
+  background: #fff;
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 21;
 }
 
 .gauge-labels {
