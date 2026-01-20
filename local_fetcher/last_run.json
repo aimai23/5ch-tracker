@@ -1,63 +1,63 @@
 {
-  "timestamp": 1768918878.813612,
+  "timestamp": 1768942834.8994431,
   "rankings": [
     {
       "ticker": "MU",
-      "count": 15,
-      "sentiment": 0.7
+      "count": 52,
+      "sentiment": 0.9
     },
     {
-      "ticker": "SOXL",
-      "count": 10,
-      "sentiment": 0.3
-    },
-    {
-      "ticker": "HOOD",
-      "count": 9,
-      "sentiment": -0.4
-    },
-    {
-      "ticker": "NFLX",
-      "count": 6,
-      "sentiment": 0.0
-    },
-    {
-      "ticker": "APP",
-      "count": 5,
-      "sentiment": -0.3
-    },
-    {
-      "ticker": "NBIS",
-      "count": 4,
-      "sentiment": -0.2
-    },
-    {
-      "ticker": "TSLA",
-      "count": 3,
-      "sentiment": -0.1
+      "ticker": "SNDK",
+      "count": 28,
+      "sentiment": 0.95
     },
     {
       "ticker": "NVDA",
-      "count": 3,
-      "sentiment": 0.1
+      "count": 24,
+      "sentiment": -0.5
     },
     {
-      "ticker": "IREN",
-      "count": 3,
-      "sentiment": 0.0
+      "ticker": "SOXL",
+      "count": 20,
+      "sentiment": 0.3
     },
     {
-      "ticker": "PLTR",
-      "count": 3,
-      "sentiment": 0.0
+      "ticker": "APP",
+      "count": 14,
+      "sentiment": -0.9
+    },
+    {
+      "ticker": "NBIS",
+      "count": 12,
+      "sentiment": -0.7
+    },
+    {
+      "ticker": "AVGO",
+      "count": 10,
+      "sentiment": -0.8
+    },
+    {
+      "ticker": "ASTS",
+      "count": 10,
+      "sentiment": 0.8
+    },
+    {
+      "ticker": "INTC",
+      "count": 9,
+      "sentiment": 0.6
+    },
+    {
+      "ticker": "NFLX",
+      "count": 8,
+      "sentiment": 0.7
     }
   ],
-  "fear_greed": 25,
+  "fear_greed": 42,
   "radar": {
-    "hype": 7,
-    "panic": 8,
+    "hype": 9,
+    "panic": 7,
     "faith": 3,
-    "gamble": 7,
-    "iq": 3
+    "gamble": 9,
+    "iq": 2
   }
 }

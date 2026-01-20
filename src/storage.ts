@@ -26,6 +26,8 @@ export type RankingPayload = {
   ongi_comment?: string; // New separate comment for Ongi tab
   fear_greed?: number;
   radar?: RadarData;
+  breaking_news?: string[];
+  polymarket?: Array<{ title: string; title_ja?: string; outcomes: string; url: string; volume: number }>;
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -72,6 +74,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     fear_greed: meta.fear_greed,
     radar: meta.radar,
     breaking_news: meta.breaking_news || [],
+    polymarket: meta.polymarket || [],
     sources: meta.sources || [],
   };
 }
@@ -101,6 +104,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     fear_greed: payload.fear_greed,
     radar: payload.radar,
     breaking_news: payload.breaking_news,
+    polymarket: payload.polymarket,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

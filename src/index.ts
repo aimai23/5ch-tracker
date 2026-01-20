@@ -126,6 +126,7 @@ export default {
         fear_greed: body.fear_greed,
         radar: body.radar,
         breaking_news: body.breaking_news,
+        polymarket: body.polymarket,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

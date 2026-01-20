@@ -230,6 +230,7 @@ def analyze_market_data(text, exclude_list, prev_state=None):
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
+    LANGUAGE: JAPANESE ONLY (for all text outputs like summaries and news).
     Analyze the following text to extract US stock trends, a general summary, a vibe check, and 5 specific sentiment metrics.
 
     CONTEXT FROM PREVIOUS RUN (Use this for "Breaking News" comparison):
@@ -259,11 +260,12 @@ def analyze_market_data(text, exclude_list, prev_state=None):
        - Compare PREVIOUS vs CURRENT state.
        - Generate 1-3 short, punchy headlines (max 60 chars each).
        - Style: "Sports Commentary" or "Breaking News Ticker". DRAMATIC and EXAGGERATED.
+       - IMPORTANT: DO NOT use "【速報】". You can use "【悲報】", "【朗報】", "【異変】" etc, or just start with the Ticker.
        - Focus on CHANGE: Rank swaps, Sentiment flips (Fear->Greed), crash or moon.
        - Examples:
-         - "【速報】SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
+         - "SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
          - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
-         - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
+         - "【朗報】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
     Output STRICT JSON format:
     {{
@@ -299,6 +301,10 @@ def analyze_market_data(text, exclude_list, prev_state=None):
             if resp.status_code == 200:
                 logging.info(f"Gemini Success ({model_name})")
                 result = resp.json()
+                usage = result.get("usageMetadata", {})
+                prompt_tokens = usage.get("promptTokenCount", "N/A")
+                total_tokens = usage.get("totalTokenCount", "N/A")
+                logging.info(f"Token Usage - Input: {prompt_tokens}, Total: {total_tokens}")
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
@@ -386,6 +392,116 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
             logging.error(f"Worker Error: {resp.status_code}")
     except Exception as e:
         logging.error(f"Upload failed: {e}")
+
+def fetch_polymarket_events():
+    logging.info("Fetching Polymarket data...")
+    url = "https://gamma-api.polymarket.com/events"
+    params = {
+        "limit": 6,
+        "active": "true",
+        "closed": "false",
+        "tag_slug": "business", 
+        "sort": "volume"
+    }
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            return data
+        else:
+            logging.warning(f"Polymarket API Error: {resp.status_code}")
+            return []
+    except Exception as e:
+        logging.error(f"Polymarket Fetch Error: {e}")
+        return []
+
+def translate_polymarket_events(events):
+    if not events: return []
+    
+    logging.info("Translating Polymarket events with Gemini...")
+    
+    items = []
+    titles = []
+    
+    for e in events:
+        title = e.get("title", "")
+        # Find best market (highest volume)
+        markets = e.get("markets", [])
+        if not markets: continue
+        
+        # Sort markets by volume if possible, or just take first
+        markets.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
+        main_market = markets[0]
+        
+        # Outcomes
+        outcomes = []
+        try:
+            outcomes_raw = json.loads(main_market.get("outcomes", "[]"))
+            outcome_prices = json.loads(main_market.get("outcomePrices", "[]"))
+            
+            for i, out_name in enumerate(outcomes_raw):
+                val = 0
+                if i < len(outcome_prices):
+                    try:
+                        val = float(outcome_prices[i]) * 100
+                    except: val = 0
+                outcomes.append(f"{out_name}: {val:.1f}%")
+        except:
+            pass
+
+        item = {
+            "title": title,
+            "outcomes": " | ".join(outcomes[:2]), # Top 2 outcomes
+            "url": f"https://polymarket.com/event/{e.get('slug')}",
+            "volume": e.get("volume", 0)
+        }
+        items.append(item)
+        titles.append(title)
+        
+    if not items: return []
+
+    # Batch Translate
+    prompt = f"""
+    Translate these prediction market event titles to Japanese. 
+    Make them short, catchy, and suitable for a finance dashboard.
+    Keep proper nouns (like Nvidia, BTC) in English if common.
+
+    Titles:
+    {json.dumps(titles)}
+
+    Output JSON:
+    {{
+        "translations": ["Translated Title 1", "Translated Title 2", ...]
+    }}
+    """
+    
+    models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    translations = titles # Fallback
+    
+    for model_name in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = { "contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"response_mime_type": "application/json"} }
+        try:
+            resp = requests.post(url, headers=headers, json=payload, timeout=60)
+            if resp.status_code == 200:
+                res_json = resp.json()
+                try:
+                    content = res_json["candidates"][0]["content"]["parts"][0]["text"]
+                    parsed = json.loads(content)
+                    translations = parsed.get("translations", titles)
+                    break 
+                except: pass
+        except: pass
+        
+    # Merge translations
+    for i, item in enumerate(items):
+        if i < len(translations):
+            item["title_ja"] = translations[i]
+        else:
+            item["title_ja"] = item["title"]
+            
+    return items
 
 STATE_FILE = "last_run.json"
 
