@@ -167,6 +167,12 @@ async function main() {
     // Store topics
     if (data.topics) {
       currentTopics = data.topics.map(t => [t.word, t.count]);
+      renderWordCloud(data.topics); // Moved from setTimeout in tab switching
+    }
+
+    // NEW: Polymarket
+    if (data.polymarket) {
+      renderPolymarket(data.polymarket);
     }
 
     // ... top of file
