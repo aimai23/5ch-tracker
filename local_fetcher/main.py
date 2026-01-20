@@ -132,7 +132,7 @@ def parse_dat_content(text_data, spam_list=[]):
     
     if not comments: return ""
     full_text = "\n".join(comments)
-    if len(full_text) > 30000: return full_text[:30000]
+    if len(full_text) > 15000: return full_text[:15000]
     return full_text
 
 def fetch_thread_text(url, spam_list=[]):
