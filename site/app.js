@@ -110,7 +110,7 @@ async function main() {
       radarChart = new Chart(ctx, {
         type: 'radar',
         data: {
-          labels: ['熱狂 (HYPE)', '阿鼻叫喚 (PANIC)', '信仰心 (FAITH)', '脳汁 (GAMBLE)', '知性 (IQ)'],
+          labels: ['熱狂 (HYPE)', '阿鼻叫喚 (PANIC)', '信仰心 (FAITH)', '射幸心 (GAMBLE)', '知性 (IQ)'],
           datasets: [{
             label: '5ch Sentiment',
             data: dataValues,

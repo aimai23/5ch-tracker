@@ -215,6 +215,8 @@ def analyze_market_data(text, exclude_list):
     
     prompt_text = f"""
     You are a cynical 5ch Market AI.
+    IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
+    Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
     Analyze the following text to extract US stock trends, a general summary, a vibe check, and 5 specific sentiment metrics.
 
     1. Identify US stock tickers:
@@ -230,12 +232,12 @@ def analyze_market_data(text, exclude_list):
        - "hype": Momentum/Excitement
        - "panic": Fear/Despair
        - "faith": HODL mentality/Confidence
-       - "gamble": Speculative/YOLO spirit
+       - "gamble": Pure Gambling/Speculation (Shakoushin/High risk appetite)
        - "iq": Quality of discussion (vs noise)
 
     4. Write TWO Summaries (max 100 chars each):
-       - "summary": General market news/movers. Style: Casual, cynical, slang-heavy 5ch style.
-       - "ongi_comment": Calm, objective analysis of the market sentiment. Explain the "Why" behind the Fear/Greed score. Style: Analytical, intellectual Japanese. Focus on market conditions, not thread participants.
+       - "summary": General market news/movers. Style: Highly entertaining and cynical. ACCURATELY MIMIC the specific slang/tone used in the thread (e.g. if they say "God NVDA", use that). Do NOT use generic "www" unless the thread is full of it. Make it sound like a witty recap.
+       - "ongi_comment": STRICT analysis of the THREAD's collective psychology/atmosphere. Analyze the residents' panic or delusion objectively. Do not focus on external market news, focus on the board's reaction. Style: Analytical, intellectual, cold Japanese.
 
     Output STRICT JSON format:
     {{
