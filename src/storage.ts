@@ -71,6 +71,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     ongi_comment: meta.ongi_comment || null,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
+    breaking_news: meta.breaking_news || [],
     sources: meta.sources || [],
   };
 }
@@ -99,6 +100,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     ongi_comment: payload.ongi_comment,
     fear_greed: payload.fear_greed,
     radar: payload.radar,
+    breaking_news: payload.breaking_news,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

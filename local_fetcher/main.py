@@ -209,17 +209,31 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list):
+def analyze_market_data(text, exclude_list, prev_state=None):
     """
     Combined analysis: Extracts tickers AND generates a summary in one shot.
     """
-    logging.info("Analyzing with Gemini (Combined Ticker Extraction & Summary)...")
+    logging.info("Analyzing with Gemini (Combined Ticker Extraction & Summary & Breaking News)...")
     
+    # Build Context String
+    context_info = "No previous data available."
+    if prev_state:
+        try:
+            prev_rank = ", ".join([f"{x['ticker']}(#{i+1})" for i, x in enumerate(prev_state.get('rankings', [])[:5])])
+            prev_ongi = prev_state.get('fear_greed', 50)
+            prev_radar = prev_state.get('radar', {})
+            context_info = f"Previous Rankings: {prev_rank}. Previous Ongi Score: {prev_ongi}. Previous Radar: {json.dumps(prev_radar)}."
+        except:
+            pass
+
     prompt_text = f"""
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
     Analyze the following text to extract US stock trends, a general summary, a vibe check, and 5 specific sentiment metrics.
+
+    CONTEXT FROM PREVIOUS RUN (Use this for "Breaking News" comparison):
+    {context_info}
 
     1. Identify US stock tickers:
        - Map company names to valid US tickers (e.g. "Apple" -> AAPL).
@@ -241,6 +255,16 @@ def analyze_market_data(text, exclude_list):
        - "summary": General market news/movers. Style: Highly entertaining and cynical. ACCURATELY MIMIC the specific slang/tone used in the thread (e.g. if they say "God NVDA", use that). Do NOT use generic "www" unless the thread is full of it. Make it sound like a witty recap.
        - "ongi_comment": STRICT analysis of the THREAD's collective psychology/atmosphere. Analyze the residents' panic or delusion objectively. Do not focus on external market news, focus on the board's reaction. Style: Analytical, intellectual, cold Japanese.
 
+    5. LIVE BREAKING NEWS (Jikkyo/Ticker Style):
+       - Compare PREVIOUS vs CURRENT state.
+       - Generate 1-3 short, punchy headlines (max 60 chars each).
+       - Style: "Sports Commentary" or "Breaking News Ticker". DRAMATIC and EXAGGERATED.
+       - Focus on CHANGE: Rank swaps, Sentiment flips (Fear->Greed), crash or moon.
+       - Examples:
+         - "【速報】SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
+         - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
+         - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
+
     Output STRICT JSON format:
     {{
       "tickers": [
@@ -250,7 +274,8 @@ def analyze_market_data(text, exclude_list):
       "fear_greed_score": 50,
       "radar": {{ "hype": 5, "panic": 5, "faith": 5, "gamble": 5, "iq": 5 }},
       "summary": "...",
-      "ongi_comment": "..."
+      "ongi_comment": "...",
+      "breaking_news": ["Headline 1", "Headline 2"]
     }}
 
     Text:
@@ -277,7 +302,7 @@ def analyze_market_data(text, exclude_list):
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", "")
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", [])
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -287,7 +312,7 @@ def analyze_market_data(text, exclude_list):
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}, ""
+    return [], "要約生成失敗", 50, {}, "", []
 
 def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -361,6 +386,24 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
     except Exception as e:
         logging.error(f"Upload failed: {e}")
 
+STATE_FILE = "last_run.json"
+
+def load_prev_state():
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return None
+    return None
+
+def save_current_state(data):
+    try:
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.warning(f"Failed to save state: {e}")
+
 def run_analysis(debug_mode=False):
     cleanup_old_files()
     stopwords, exclude, spam = load_config()
@@ -368,6 +411,9 @@ def run_analysis(debug_mode=False):
     if not threads:
         logging.info("No threads found.")
         return
+
+    # Load Previous State
+    prev_state = load_prev_state()
 
     all_text = ""
     source_meta = []
@@ -387,8 +433,8 @@ def run_analysis(debug_mode=False):
         logging.info("DEBUG MODE: Skipping AI and Upload.")
         return
 
-    # Combined Gemini Analysis
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment = analyze_market_data(all_text, exclude)
+    # Combined Gemini Analysis with Context
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news = analyze_market_data(all_text, exclude, prev_state)
     
     # Validation: If Gemini failed, DO NOT upload empty data (protects backend DB)
     if market_summary == "要約生成失敗":
@@ -412,15 +458,24 @@ def run_analysis(debug_mode=False):
 
     final_items.sort(key=lambda x: x["count"], reverse=True)
     
+    # Save State for Next Run
+    current_state = {
+        "timestamp": time.time(),
+        "rankings": final_items[:10], # Top 10 for context
+        "fear_greed": fear_greed,
+        "radar": radar_data
+    }
+    save_current_state(current_state)
+    
     logging.info("--- Top 20 Tickers ---")
     for i in final_items[:20]:
         logging.info(f"{i['ticker']}: {i['count']} (Sent: {i['sentiment']})")
     logging.info(f"Summary: {market_summary}")
     logging.info(f"Ongi Comment: {ongi_comment}")
+    logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
-    logging.info(f"Radar Data: {radar_data}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news)
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""

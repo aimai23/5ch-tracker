@@ -187,6 +187,20 @@ async function main() {
       updateRadarChart({ hype: 5, panic: 5, faith: 5, gamble: 5, iq: 5 });
     }
 
+    // Breaking News Ticker
+    const tickerContainer = document.getElementById("breaking-news-container");
+    const tickerText = document.getElementById("news-marquee");
+
+    if (data.breaking_news && Array.isArray(data.breaking_news) && data.breaking_news.length > 0) {
+      if (tickerContainer) tickerContainer.style.display = "flex";
+      if (tickerText) {
+        // Join with spacing - Duplicate for length safety
+        tickerText.textContent = data.breaking_news.join("   ///   ") + "   ///   " + data.breaking_news.join("   ///   ");
+      }
+    } else {
+      if (tickerContainer) tickerContainer.style.display = "none";
+    }
+
     // AI Overview
     // ...
 
