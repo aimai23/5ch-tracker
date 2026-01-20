@@ -129,3 +129,58 @@ export async function putMeta(env: Env, payload: MetaPayload): Promise<void> {
     .bind(JSON.stringify(payload))
     .run();
 }
+
+// --- Ongi History ---
+
+export interface OngiHistoryItem {
+  timestamp: number;
+  score: number;
+  label: string;
+  metrics: RadarData;
+}
+
+export async function saveOngiHistory(env: Env, score: number, label: string, metrics: RadarData): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+
+  // 1. Check last entry
+  const lastEntry = await env.DB.prepare("SELECT id, timestamp FROM ongi_history ORDER BY timestamp DESC LIMIT 1")
+    .first<{ id: number; timestamp: number }>();
+
+  // 2. Logic: If last entry is within 1 hour (3600s), OVERWRITE it.
+  if (lastEntry && (now - lastEntry.timestamp) < 3600) {
+    await env.DB.prepare(
+      "UPDATE ongi_history SET timestamp = ?, score = ?, label = ?, metrics = ? WHERE id = ?"
+    )
+      .bind(now, score, label || "", JSON.stringify(metrics || {}), lastEntry.id)
+      .run();
+  } else {
+    // Insert new
+    await env.DB.prepare(
+      "INSERT INTO ongi_history (timestamp, score, label, metrics) VALUES (?, ?, ?, ?)"
+    )
+      .bind(now, score, label || "", JSON.stringify(metrics || {}))
+      .run();
+  }
+}
+
+export async function getOngiHistory(env: Env): Promise<OngiHistoryItem[]> {
+  // Get all history (limit if needed later)
+  const results = await env.DB.prepare(
+    "SELECT timestamp, score, label, metrics FROM ongi_history ORDER BY timestamp ASC"
+  ).all<{ timestamp: number; score: number; label: string; metrics: string }>();
+
+  if (!results.results) return [];
+
+  return results.results.map(r => {
+    let parsedMetrics: RadarData = { hype: 0, panic: 0, faith: 0, gamble: 0, iq: 0 };
+    try {
+      parsedMetrics = JSON.parse(r.metrics);
+    } catch { }
+    return {
+      timestamp: r.timestamp,
+      score: r.score,
+      label: r.label,
+      metrics: parsedMetrics
+    };
+  });
+}

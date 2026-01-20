@@ -1,5 +1,5 @@
 import type { Env } from "./types";
-import { getMeta, getRanking, putMeta, putRanking, getAllPrices, type RankingPayload } from "./storage";
+import { getMeta, getRanking, putMeta, putRanking, getAllPrices, type RankingPayload, getOngiHistory, saveOngiHistory } from "./storage";
 import { scheduled as scheduledImpl } from "./cron";
 import { handleScheduled } from "./scheduler";
 
@@ -89,6 +89,13 @@ export default {
       });
     }
 
+    if (url.pathname === "/api/ongi-history") {
+      const history = await getOngiHistory(env);
+      return new Response(JSON.stringify(history), {
+        headers: { ...commonCorsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     // Internal endpoint for GitHub Actions (or other fetchers)
     if (request.method === "POST" && pathname === "/internal/ingest") {
       const token = env.INGEST_TOKEN;
@@ -123,6 +130,11 @@ export default {
 
       // Only aggregated data is stored.
       await putRanking(env, window, payload);
+
+      // Save Ongi History if available
+      if (typeof payload.fear_greed === 'number') {
+        await saveOngiHistory(env, payload.fear_greed, "", payload.radar || { hype: 0, panic: 0, faith: 0, gamble: 0, iq: 0 });
+      }
 
       await putMeta(env, {
         lastRunAt: new Date().toISOString(),

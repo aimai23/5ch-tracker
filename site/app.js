@@ -1,8 +1,9 @@
 const WORKER_URL = "https://5ch-tracker.arakawa47.workers.dev";
 let chartWidget = null;
 let radarChart = null;
+let ongiHistoryChart = null; // NEW GLOBAL
 let currentTicker = null;
-let currentTopics = []; // NEW: Store topics globally
+let currentTopics = [];
 let currentItems = [];
 
 // Tab Switching
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(renderWordCloud, 100);
       } else if (tabId === 'ongi_greed') {
         document.getElementById("view-ongi-greed").style.display = "block";
+        fetchOngiHistory(); // NEW CALL
       }
     });
   });
@@ -46,6 +48,107 @@ document.addEventListener("DOMContentLoaded", () => {
   // Refresh every 30s for Monitor Mode
   setInterval(main, 30000);
 });
+
+// ... (rest of main function remains until end of file)
+
+async function fetchOngiHistory() {
+  try {
+    const res = await fetch(`${WORKER_URL}/api/ongi-history`);
+    if (!res.ok) return;
+    const history = await res.json();
+    renderOngiHistoryChart(history);
+  } catch (err) {
+    console.error("History fetch failed", err);
+  }
+}
+
+function renderOngiHistoryChart(history) {
+  const canvas = document.getElementById("ongi-history-chart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  if (ongiHistoryChart) {
+    ongiHistoryChart.destroy();
+  }
+
+  // Format Data
+  const labels = history.map(h => {
+    const d = new Date(h.timestamp * 1000);
+    return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+  });
+  const dataPoints = history.map(h => h.score);
+
+  // Gradient
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(0, 212, 255, 0.4)'); // Cyan Top
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');   // Fade Bottom
+
+  ongiHistoryChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sentiment Score',
+        data: dataPoints,
+        borderColor: '#00d4ff', // Cyan
+        backgroundColor: gradient,
+        borderWidth: 2,
+        tension: 0.4, // Smooth Spline
+        pointBackgroundColor: '#111',
+        pointBorderColor: '#00ff88', // Green points
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: {
+            color: '#888',
+            font: { family: '"JetBrains Mono", sans-serif' }
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#888',
+            maxTicksLimit: 8,
+            font: { family: '"JetBrains Mono", sans-serif' }
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleColor: '#00d4ff',
+          bodyColor: '#fff',
+          borderColor: '#333',
+          borderWidth: 1,
+          callbacks: {
+            label: function (context) {
+              return `Score: ${context.parsed.y}`;
+            }
+          }
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
+    }
+  });
+}
 
 async function main() {
   const loadingEl = document.getElementById("loading");

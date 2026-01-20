@@ -65,28 +65,41 @@
       <section class="panel" style="text-align: center; padding: 2rem;">
         <h2 style="margin-bottom: 2rem; color: var(--accent-gold);">😱 Ongi & Greed Index 🤑</h2>
 
-        <div class="gauge-wrapper" style="margin-bottom: 2rem;">
-          <div class="gauge-container">
-            <div class="gauge-body">
-              <div class="gauge-fill"></div>
-              <div class="gauge-cover"></div>
-              <div class="gauge-needle" id="gauge-needle"></div>
-              <div class="gauge-pin"></div>
+        <!-- Top Row: Gauge & Radar -->
+        <div class="ongi-top-row"
+          style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
+
+          <!-- Gauge -->
+          <div class="gauge-wrapper" style="flex: 1; min-width: 300px;">
+            <div class="gauge-container">
+              <div class="gauge-body">
+                <div class="gauge-fill"></div>
+                <div class="gauge-cover"></div>
+                <div class="gauge-needle" id="gauge-needle"></div>
+                <div class="gauge-pin"></div>
+              </div>
+              <div class="gauge-labels">
+                <span class="fear">📉 ONGI</span>
+                <span class="ongi">📈 GREED</span>
+              </div>
+              <div class="gauge-score-display" id="fear-ongi-score">--</div>
             </div>
-            <div class="gauge-labels">
-              <span class="fear">📉 ONGI</span>
-              <span class="ongi">📈 GREED</span>
-            </div>
-            <div class="gauge-score-display" id="fear-ongi-score">--</div>
+            <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
           </div>
-          <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
+
+          <!-- Radar -->
+          <div class="radar-chart-container" style="flex: 1; min-width: 300px; max-width: 400px; position: relative;">
+            <canvas id="sentiment-radar"></canvas>
+          </div>
         </div>
 
-        <div class="radar-chart-container"
-          style="position: relative; width: 100%; max-width: 400px; margin: 0 auto 2rem;">
-          <canvas id="sentiment-radar"></canvas>
+        <!-- Middle Row: History Chart -->
+        <div class="history-chart-container" style="width: 100%; height: 300px; margin-bottom: 2rem;">
+          <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">MARKET SENTIMENT HISTORY (24H)</h3>
+          <canvas id="ongi-history-chart"></canvas>
         </div>
 
+        <!-- Bottom Row: AI Insight -->
         <div class="market-overview" style="text-align: left; margin-top: 2rem;">
           <div class="overview-header">
             <span class="overview-title">🤖 AI MARKET INSIGHT</span>
