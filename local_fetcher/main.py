@@ -69,13 +69,15 @@ def cleanup_old_files():
 def load_config():
     exclude = []
     spam = []
+    stopwords = []
     exclude_path = os.path.join(os.path.dirname(BASE_DIR), "config", "exclude.json")
     if os.path.exists(exclude_path):
         with open(exclude_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             exclude = data.get("tickers", []) + data.get("words", []) + data.get("exclude", [])
             spam = data.get("spam", [])
-    return [], exclude, spam
+            stopwords = data.get("stopwords", [])
+    return stopwords, exclude, spam
 
 def discover_threads():
     logging.info("Discovering latest threads from 5ch...")
@@ -287,17 +289,9 @@ def analyze_market_data(text, exclude_list):
     logging.error("All Gemini models failed.")
     return [], "要約生成失敗", 50, {}, ""
 
-def analyze_topics(text):
+def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
-    stop_words = {
-        'こと', 'もの', 'さん', 'これ', 'それ', 'あれ', 'どれ', 'よう', 'そう', 'はず', 
-        'まま', 'ため', 'だけ', 'ばっ', 'どこ', 'そこ', 'あそこ', 'いま', 'いつ', 'なん',
-        '明らか', 'の', 'し', 'て', 'いる', 'ある', 'する', 'なる', 'あと', 'ない', 'いい', 
-        'も', 'な', 'だ', 'ん', 'ー', 'www', 'w', 'gt', 'amp', 'nbsp', 'http', 'https', 'com', 'co', 'jp',
-        'みたい', 'ども', 'やつ', 'わけ', 'ほう', 'スレ', 'レス', 'マジ', 'ワイ', '普通', 
-        'バカ', 'マン', 'おじ', '本当', '以上', '一つ', '我々', '自分', '何処',
-        'ここ', 'たち', 'とも', '的', '化', '明日', '今日', '昨日', '今回', '前回', '異常', '投資', '言葉', '全て', 'アイヌ'
-    }
+    stop_words = set(stopwords_list)
     
     words = []
     try:
@@ -310,8 +304,11 @@ def analyze_topics(text):
             sub_pos = pos_parts[1]
             if main_pos == '名詞' and sub_pos not in ['非自立', '代名詞', '数', '接尾']:
                 word = token.surface
+                word = token.surface
                 if word.isdigit() or len(word) < 2 or word in stop_words: continue
-                if re.search(r'[;&=<>\(\)\{\}\[\]]', word): continue
+                # Filter symbols (Half-width and Full-width) including ～, ：, ”, ％
+                if re.search(r'[!-/:-@[-`{-~]', word): continue 
+                if re.search(r'[！-／：-＠［-｀｛-～、-〜”’・％]', word): continue
                 if 'http' in word or '.com' in word: continue
                 words.append(word)
     except ImportError:
@@ -366,7 +363,7 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
 
 def run_analysis(debug_mode=False):
     cleanup_old_files()
-    _, exclude, spam = load_config()
+    stopwords, exclude, spam = load_config()
     threads = discover_threads()
     if not threads:
         logging.info("No threads found.")
@@ -384,7 +381,7 @@ def run_analysis(debug_mode=False):
     
     if not all_text.strip(): return
 
-    topics = analyze_topics(all_text)
+    topics = analyze_topics(all_text, stopwords)
 
     if debug_mode:
         logging.info("DEBUG MODE: Skipping AI and Upload.")

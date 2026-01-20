@@ -3,8 +3,8 @@ compatibility_date = "2024-04-03"
 main = "src/index.ts"
 
 [triggers]
-#crons = ["*/10 13-21 * * 1-5"]
-crons = ["*/2 * * * *"]
+crons = ["*/10 13-21 * * 1-5"]
+#crons = ["*/2 * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "stock-rankings"
