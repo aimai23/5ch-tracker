@@ -65,6 +65,15 @@
       <section class="panel" style="text-align: center; padding: 2rem;">
         <h2 style="margin-bottom: 2rem; color: var(--accent-gold);">😱 Ongi & Greed Index 🤑</h2>
 
+        <!-- Bottom Row: AI Insight (Moved to Top) -->
+        <div class="market-overview" style="text-align: left; margin-bottom: 2rem;">
+          <div class="overview-header">
+            <span class="overview-title">🤖 AI MARKET INSIGHT</span>
+            <span class="overview-blink">_</span>
+          </div>
+          <p id="fear-ongi-comment" class="overview-text">Waiting for AI analysis...</p>
+        </div>
+
         <!-- Top Row: Gauge & Radar -->
         <div class="ongi-top-row"
           style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
@@ -99,15 +108,6 @@
           <canvas id="ongi-history-chart"></canvas>
         </div>
 
-        <!-- Bottom Row: AI Insight -->
-        <div class="market-overview" style="text-align: left; margin-top: 2rem;">
-          <div class="overview-header">
-            <span class="overview-title">🤖 AI MARKET INSIGHT</span>
-            <span class="overview-blink">_</span>
-          </div>
-          <p id="fear-ongi-comment" class="overview-text">Waiting for AI analysis...</p>
-        </div>
-
       </section>
     </div>
 
@@ -116,19 +116,20 @@
       <section class="panel" style="height: 600px; display: flex; flex-direction: column;">
         <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
 
-        <div id="wordcloud-container"
-          style="flex: 1; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
-          <canvas id="topic-canvas"></canvas>
-          <div id="topic-loading" class="loading-text">Loading trends...</div>
-        </div>
-
-        <div id="market-overview" class="market-overview" style="display: none; margin-top: 1rem;">
+        <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
           <div class="overview-header">
             <span class="overview-title">🤖 AI MARKET INSIGHT</span>
             <span class="overview-blink">_</span>
           </div>
           <p id="overview-text" class="overview-text">Loading analysis...</p>
         </div>
+
+        <div id="wordcloud-container"
+          style="flex: 1; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
+          <canvas id="topic-canvas"></canvas>
+          <div id="topic-loading" class="loading-text">Loading trends...</div>
+        </div>
+
       </section>
     </div>
 
