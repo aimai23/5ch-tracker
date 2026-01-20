@@ -356,7 +356,7 @@ def analyze_topics(text, stopwords_list=[]):
         
     return top_words
 
-def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}):
+def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[]):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, and overview to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -370,7 +370,8 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
         "overview": overview,
         "ongi_comment": ongi_comment,
         "fear_greed": fear_greed,
-        "radar": radar
+        "radar": radar,
+        "breaking_news": breaking_news
     }
     
     base_url = WORKER_URL.rstrip("/")

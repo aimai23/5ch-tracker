@@ -1,0 +1,63 @@
+{
+  "timestamp": 1768917410.8095143,
+  "rankings": [
+    {
+      "ticker": "MU",
+      "count": 29,
+      "sentiment": 0.31
+    },
+    {
+      "ticker": "SOXL",
+      "count": 12,
+      "sentiment": -0.17
+    },
+    {
+      "ticker": "NFLX",
+      "count": 4,
+      "sentiment": 0.02
+    },
+    {
+      "ticker": "HOOD",
+      "count": 4,
+      "sentiment": -0.29
+    },
+    {
+      "ticker": "NBIS",
+      "count": 3,
+      "sentiment": -0.42
+    },
+    {
+      "ticker": "SOFI",
+      "count": 3,
+      "sentiment": -0.25
+    },
+    {
+      "ticker": "TSLA",
+      "count": 2,
+      "sentiment": -0.3
+    },
+    {
+      "ticker": "NVDA",
+      "count": 2,
+      "sentiment": 0.05
+    },
+    {
+      "ticker": "PATH",
+      "count": 2,
+      "sentiment": -0.35
+    },
+    {
+      "ticker": "PLTR",
+      "count": 2,
+      "sentiment": -0.25
+    }
+  ],
+  "fear_greed": 35,
+  "radar": {
+    "hype": 7,
+    "panic": 6,
+    "faith": 3,
+    "gamble": 7,
+    "iq": 4
+  }
+}
