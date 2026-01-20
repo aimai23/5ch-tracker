@@ -86,7 +86,7 @@
           style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
 
           <!-- Gauge -->
-          <div class="gauge-wrapper" style="flex: 1; min-width: 300px;">
+          <div class="gauge-wrapper" style="flex: 1; min-width: 300px; text-align: center;">
             <div class="gauge-container">
               <div class="gauge-body">
                 <div class="gauge-fill"></div>
@@ -104,13 +104,15 @@
           </div>
 
           <!-- Radar -->
-          <div class="radar-chart-container" style="flex: 1; min-width: 300px; max-width: 400px; position: relative;">
+          <div class="radar-chart-container"
+            style="flex: 1; min-width: 300px; max-width: 400px; position: relative; text-align: center;">
             <canvas id="sentiment-radar"></canvas>
           </div>
         </div>
 
         <!-- Middle Row: History Chart -->
-        <div class="history-chart-container" style="width: 100%; height: 300px; margin-bottom: 1rem;">
+        <div class="history-chart-container"
+          style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
           <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (24H)</h3>
           <canvas id="ongi-history-chart"></canvas>
         </div>
