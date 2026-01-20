@@ -103,7 +103,7 @@ def discover_threads():
             candidates.append({"name": title, "url": url, "num": thread_num})
     
     candidates.sort(key=lambda x: x["num"], reverse=True)
-    top_threads = candidates[:5]
+    top_threads = candidates[:4]
     for t in top_threads:
         logging.info(f"Found: {t['name']} (No.{t['num']})")
         
@@ -295,7 +295,7 @@ def analyze_market_data(text, exclude_list, prev_state=None):
         }
         
         try:
-            resp = requests.post(url, headers=headers, json=payload, timeout=120)
+            resp = requests.post(url, headers=headers, json=payload, timeout=600)
             if resp.status_code == 200:
                 logging.info(f"Gemini Success ({model_name})")
                 result = resp.json()

@@ -125,6 +125,7 @@ export default {
         ongi_comment: body.ongi_comment,
         fear_greed: body.fear_greed,
         radar: body.radar,
+        breaking_news: body.breaking_news,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

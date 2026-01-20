@@ -1,63 +1,63 @@
 {
-  "timestamp": 1768917410.8095143,
+  "timestamp": 1768918538.2955804,
   "rankings": [
     {
       "ticker": "MU",
       "count": 29,
-      "sentiment": 0.31
+      "sentiment": 0.48
     },
     {
       "ticker": "SOXL",
-      "count": 12,
-      "sentiment": -0.17
-    },
-    {
-      "ticker": "NFLX",
-      "count": 4,
-      "sentiment": 0.02
+      "count": 5,
+      "sentiment": -0.45
     },
     {
       "ticker": "HOOD",
-      "count": 4,
-      "sentiment": -0.29
-    },
-    {
-      "ticker": "NBIS",
-      "count": 3,
-      "sentiment": -0.42
-    },
-    {
-      "ticker": "SOFI",
-      "count": 3,
-      "sentiment": -0.25
+      "count": 5,
+      "sentiment": -0.4
     },
     {
       "ticker": "TSLA",
-      "count": 2,
-      "sentiment": -0.3
+      "count": 3,
+      "sentiment": -0.57
     },
     {
       "ticker": "NVDA",
-      "count": 2,
-      "sentiment": 0.05
-    },
-    {
-      "ticker": "PATH",
-      "count": 2,
-      "sentiment": -0.35
+      "count": 3,
+      "sentiment": -0.2
     },
     {
       "ticker": "PLTR",
       "count": 2,
-      "sentiment": -0.25
+      "sentiment": -0.5
+    },
+    {
+      "ticker": "SNDK",
+      "count": 2,
+      "sentiment": 0.0
+    },
+    {
+      "ticker": "IREN",
+      "count": 2,
+      "sentiment": 0.0
+    },
+    {
+      "ticker": "NBIS",
+      "count": 2,
+      "sentiment": -1.0
+    },
+    {
+      "ticker": "SOFI",
+      "count": 2,
+      "sentiment": -0.7
     }
   ],
-  "fear_greed": 35,
+  "fear_greed": 40,
   "radar": {
     "hype": 7,
-    "panic": 6,
+    "panic": 8,
     "faith": 3,
     "gamble": 7,
-    "iq": 4
+    "iq": 3
   }
 }
