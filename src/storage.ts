@@ -76,6 +76,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     radar: meta.radar,
     breaking_news: meta.breaking_news || [],
     polymarket: meta.polymarket || [],
+    cnn_fear_greed: meta.cnn_fear_greed,
     sources: meta.sources || [],
   };
 }
@@ -106,6 +107,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     radar: payload.radar,
     breaking_news: payload.breaking_news,
     polymarket: payload.polymarket,
+    cnn_fear_greed: payload.cnn_fear_greed,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
