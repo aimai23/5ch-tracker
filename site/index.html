@@ -145,7 +145,17 @@
     <!-- Topic View -->
     <div id="view-topics" style="display: none;">
       <section class="panel" style="min-height: 600px; display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+          <h2 style="margin: 0; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+          <div class="tooltip-container" style="position: relative; display: inline-block;">
+            <span class="tooltip-icon"
+              style="font-size: 0.85rem; width: 18px; height: 18px; line-height: 18px;">?</span>
+            <div class="tooltip-text" style="width: 250px; left: 50%; transform: translateX(-50%); bottom: 130%;">
+              5chの書き込み頻度が高い単語を視覚化したものです。文字の大きさは出現回数を表しています。
+              <div class="tooltip-arrow" style="left: 50%; bottom: -5px;"></div>
+            </div>
+          </div>
+        </div>
 
         <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
           <div class="overview-header">
