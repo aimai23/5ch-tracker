@@ -5,6 +5,7 @@ let ongiHistoryChart = null; // NEW GLOBAL
 let currentTicker = null;
 let currentTopics = [];
 let currentItems = [];
+let currentPolymarket = null;
 
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
@@ -28,7 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("view-dashboard").style.display = "grid";
       } else if (tabId === 'topics') {
         document.getElementById("view-topics").style.display = "block";
-        setTimeout(renderWordCloud, 100);
+        setTimeout(() => {
+          renderWordCloud();
+          if (currentPolymarket) renderPolymarket(currentPolymarket);
+        }, 50);
       } else if (tabId === 'ongi_greed') {
         document.getElementById("view-ongi-greed").style.display = "block";
         fetchOngiHistory(); // NEW CALL
@@ -167,12 +171,18 @@ async function main() {
     // Store topics
     if (data.topics) {
       currentTopics = data.topics.map(t => [t.word, t.count]);
-      renderWordCloud(data.topics); // Moved from setTimeout in tab switching
+      // Lazy Render logic: only if visible
+      if (document.getElementById("view-topics").style.display !== "none") {
+        renderWordCloud();
+      }
     }
 
     // NEW: Polymarket
     if (data.polymarket) {
-      renderPolymarket(data.polymarket);
+      currentPolymarket = data.polymarket;
+      if (document.getElementById("view-topics").style.display !== "none") {
+        renderPolymarket(currentPolymarket);
+      }
     }
 
     // ... top of file
