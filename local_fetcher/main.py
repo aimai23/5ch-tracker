@@ -436,10 +436,12 @@ def fetch_polymarket_events():
                 # For now, accept them but relying on variety of queries to mix it up
                 seen_ids.add(eid)
                 all_events.append(e)
+        logging.info(f"Polymarket Query '{q.get('q', q.get('tag_slug'))}': Found {len(res)} events.")
 
     # Sort everything by volume first
     all_events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
     
+    logging.info(f"Total Polymarket events found: {len(all_events)}. Top 8 selected.")
     return all_events[:8]
 
 def translate_polymarket_events(events):
@@ -536,9 +538,14 @@ def translate_polymarket_events(events):
                     break 
 
                 except: pass
-        except: pass
+                except: pass
+            else:
+                logging.warning(f"Polymarket Translation failed with {model_name}: Status {resp.status_code}")
+        except Exception as e:
+            logging.warning(f"Polymarket Translation model error {model_name}: {e}")
+            pass
         
-    # Merge translations
+    logging.info(f"Polymarket Translation completed. Success count: {len(translations)}/{len(titles)}")
     for i, item in enumerate(items):
         if i < len(translations):
             item["title_ja"] = translations[i]
@@ -667,6 +674,3 @@ if __name__ == "__main__":
             logging.info("Monitor stopped.")
     else:
         run_analysis(debug_mode=False)
-
-if __name__ == "__main__":
-    main()

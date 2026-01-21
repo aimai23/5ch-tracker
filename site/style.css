@@ -736,3 +736,64 @@ footer a {
     transform: translateX(-100%);
   }
 }
+
+/* --- Polymarket Insights --- */
+.polymarket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.poly-card {
+  background: rgba(20, 20, 30, 0.6);
+  border: 1px solid rgba(213, 0, 249, 0.3);
+  /* Purple accent */
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.poly-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-purple);
+  box-shadow: 0 4px 12px rgba(213, 0, 249, 0.2);
+  background: rgba(213, 0, 249, 0.05);
+}
+
+.poly-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.poly-outcome {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-top: auto;
+  font-family: var(--font-mono);
+}
+
+.poly-volume {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.5rem;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.outcome-pill {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
