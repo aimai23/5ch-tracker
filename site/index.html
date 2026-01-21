@@ -111,9 +111,17 @@
               <div class="gauge-score-display" id="fear-ongi-score">--</div>
             </div>
             <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
-            <div style="text-align: center; margin-top: 5px;">
+            <div style="display: flex; align-items: center; justify-content: center; margin-top: 5px; gap: 6px;">
               <span id="cnn-fear-greed-label"
                 style="font-size: 0.8rem; color: #888; font-family: 'JetBrains Mono', cursive;"></span>
+              <div class="tooltip-container" style="position: relative; display: inline-block;">
+                <span class="tooltip-icon"
+                  style="font-size: 0.75rem; width: 14px; height: 14px; line-height: 14px;">?</span>
+                <div class="tooltip-text" style="width: 240px; left: 50%; transform: translateX(-50%); bottom: 130%;">
+                  米CNNが提供する、株式市場の恐怖と強欲を測る指数(0-100)です。
+                  <div class="tooltip-arrow" style="left: 50%; bottom: -5px;"></div>
+                </div>
+              </div>
             </div>
           </div>
 

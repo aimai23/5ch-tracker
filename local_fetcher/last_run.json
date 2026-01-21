@@ -1,63 +1,63 @@
 {
-  "timestamp": 1769005472.2750883,
+  "timestamp": 1769005824.8433397,
   "rankings": [
+    {
+      "ticker": "GLD",
+      "count": 36,
+      "sentiment": 0.8
+    },
     {
       "ticker": "MU",
       "count": 28,
-      "sentiment": 0.65
-    },
-    {
-      "ticker": "GLD",
-      "count": 28,
-      "sentiment": 0.85
+      "sentiment": 0.4
     },
     {
       "ticker": "NFLX",
-      "count": 18,
+      "count": 21,
       "sentiment": -0.8
     },
     {
       "ticker": "SNDK",
-      "count": 15,
-      "sentiment": 0.75
+      "count": 14,
+      "sentiment": 0.8
     },
     {
       "ticker": "NVDA",
-      "count": 11,
-      "sentiment": 0.2
+      "count": 12,
+      "sentiment": 0.1
+    },
+    {
+      "ticker": "FANG",
+      "count": 12,
+      "sentiment": -0.4
     },
     {
       "ticker": "IREN",
       "count": 6,
-      "sentiment": -0.3
+      "sentiment": -0.2
     },
     {
-      "ticker": "QQQ",
-      "count": 4,
-      "sentiment": -0.25
-    },
-    {
-      "ticker": "META",
-      "count": 4,
-      "sentiment": -0.65
-    },
-    {
-      "ticker": "SOXL",
-      "count": 4,
-      "sentiment": 0.0
+      "ticker": "GOOG",
+      "count": 6,
+      "sentiment": -0.1
     },
     {
       "ticker": "OKLO",
-      "count": 3,
+      "count": 5,
       "sentiment": 0.7
+    },
+    {
+      "ticker": "LAES",
+      "count": 5,
+      "sentiment": 0.3
     }
   ],
-  "fear_greed": 35,
+  "fear_greed": 40,
   "radar": {
     "hype": 8,
-    "panic": 9,
-    "faith": 4,
+    "panic": 7,
+    "faith": 5,
     "gamble": 9,
-    "iq": 1
+    "iq": 2
   }
 }
