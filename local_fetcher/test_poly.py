@@ -73,7 +73,7 @@ def translate_polymarket_events(events):
     }}
     """
     
-    models = ["gemma-3-12b-it", "gemma-3-12b", "gemma-3-27b-it"]
+    models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it"]
     translations = titles
     
     for model_name in models:
