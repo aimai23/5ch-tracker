@@ -724,7 +724,7 @@ footer a {
 #news-marquee {
   white-space: nowrap;
   padding-left: 100%;
-  animation: marquee 50s linear infinite;
+  animation: marquee 45s linear infinite;
   color: #c7dbe6;
   font-family: var(--font-mono);
   font-weight: 500;
