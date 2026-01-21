@@ -460,27 +460,50 @@ def translate_polymarket_events(events):
         
         # Sort markets by volume if possible, or just take first
         markets.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
-        main_market = markets[0]
-        
-        # Outcomes
+        # Determine if it's a group of binary markets (e.g. "Will X happen by Y?")
+        # or a single market with multiple outcomes (e.g. "Election Winner")
         outcomes = []
-        try:
-            outcomes_raw = json.loads(main_market.get("outcomes", "[]"))
-            outcome_prices = json.loads(main_market.get("outcomePrices", "[]"))
-            
-            for i, out_name in enumerate(outcomes_raw):
-                val = 0
-                if i < len(outcome_prices):
-                    try:
-                        val = float(outcome_prices[i]) * 100
-                    except: val = 0
-                outcomes.append(f"{out_name}: {val:.1f}%")
-        except:
-            pass
+        is_group = len(markets) > 1
+        
+        if is_group:
+             # Take top 3 markets, assume they are binary Yes/No
+             for m in markets[:3]:
+                 label = m.get("groupItemTitle") or m.get("question")
+                 # If label is too long/complex, might need trimming, but let's try raw first
+                 # Fallback if label is missing
+                 if not label: label = "Yes"
+                 
+                 price = 0
+                 try:
+                    prices = json.loads(m.get("outcomePrices", "[]"))
+                    outs = json.loads(m.get("outcomes", "[]"))
+                    target_idx = 0
+                    if "Yes" in outs: target_idx = outs.index("Yes")
+                    price = float(prices[target_idx]) * 100
+                 except: pass
+                 outcomes.append(f"{label}: {price:.1f}%")
+        else:
+            # Single market (could be binary or multi-outcome)
+            m = markets[0]
+            try:
+                outcomes_raw = json.loads(m.get("outcomes", "[]"))
+                outcome_prices = json.loads(m.get("outcomePrices", "[]"))
+                temp_outs = []
+                for i, name in enumerate(outcomes_raw):
+                    p = 0
+                    if i < len(outcome_prices):
+                        try: p = float(outcome_prices[i]) * 100
+                        except: pass
+                    temp_outs.append((name, p))
+                
+                # Sort by probability
+                temp_outs.sort(key=lambda x: x[1], reverse=True)
+                outcomes = [f"{n}: {v:.1f}%" for n, v in temp_outs[:2]]
+            except: pass
 
         item = {
             "title": title,
-            "outcomes": " | ".join(outcomes[:2]), # Top 2 outcomes
+            "outcomes": " | ".join(outcomes[:3]), # Top 3 outcomes
             "url": f"https://polymarket.com/event/{e.get('slug')}",
             "volume": e.get("volume", 0)
         }

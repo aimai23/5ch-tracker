@@ -143,6 +143,8 @@ def display_events(events):
         if markets:
             markets.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
             main_market = markets[0]
+            # Debug Print
+            print(f"   [DEBUG] Q: {main_market.get('question')} | Grp: {main_market.get('groupItemTitle')}")
             try:
                 outcomes_raw = json.loads(main_market.get("outcomes", "[]"))
                 outcome_prices = json.loads(main_market.get("outcomePrices", "[]"))
