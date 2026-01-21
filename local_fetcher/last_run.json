@@ -1,62 +1,62 @@
 {
-  "timestamp": 1768956843.8903987,
+  "timestamp": 1768997189.0956166,
   "rankings": [
     {
       "ticker": "MU",
-      "count": 42,
-      "sentiment": 0.8
-    },
-    {
-      "ticker": "SNDK",
-      "count": 35,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "GLDM",
-      "count": 22,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "BTC",
-      "count": 18,
-      "sentiment": -0.8
-    },
-    {
-      "ticker": "NVDA",
-      "count": 15,
-      "sentiment": -0.5
-    },
-    {
-      "ticker": "SOXL",
-      "count": 12,
-      "sentiment": -0.1
-    },
-    {
-      "ticker": "NBIS",
-      "count": 10,
-      "sentiment": -0.6
+      "count": 25,
+      "sentiment": 0.22
     },
     {
       "ticker": "NFLX",
-      "count": 9,
-      "sentiment": -0.2
+      "count": 25,
+      "sentiment": -0.66
     },
     {
-      "ticker": "AVGO",
-      "count": 7,
-      "sentiment": -0.7
+      "ticker": "GLDM",
+      "count": 24,
+      "sentiment": 0.85
+    },
+    {
+      "ticker": "NVDA",
+      "count": 18,
+      "sentiment": -0.22
+    },
+    {
+      "ticker": "SNDK",
+      "count": 15,
+      "sentiment": 0.73
+    },
+    {
+      "ticker": "FANG",
+      "count": 10,
+      "sentiment": -0.65
+    },
+    {
+      "ticker": "IREN",
+      "count": 6,
+      "sentiment": -0.42
+    },
+    {
+      "ticker": "GOOG",
+      "count": 5,
+      "sentiment": -0.5
     },
     {
       "ticker": "INTC",
-      "count": 6,
-      "sentiment": 0.4
+      "count": 4,
+      "sentiment": -0.37
+    },
+    {
+      "ticker": "ZETA",
+      "count": 4,
+      "sentiment": 0.62
     }
   ],
-  "fear_greed": 40,
+  "fear_greed": 35,
   "radar": {
-    "hype": 8,
-    "panic": 8,
-    "faith": 5,
+    "hype": 7,
+    "panic": 9,
+    "faith": 4,
     "gamble": 9,
     "iq": 2
   }

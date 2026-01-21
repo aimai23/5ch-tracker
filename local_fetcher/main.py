@@ -34,6 +34,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WORKER_URL = os.getenv("WORKER_URL") 
 INGEST_TOKEN = os.getenv("INGEST_TOKEN")
+STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
 
 if not GEMINI_API_KEY:
     logging.error("GEMINI_API_KEY is not set.")

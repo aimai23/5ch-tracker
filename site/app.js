@@ -76,9 +76,14 @@ function renderOngiHistoryChart(history) {
   }
 
   // Format Data
+  // Format Data
   const labels = history.map(h => {
     const d = new Date(h.timestamp * 1000);
-    return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+    const month = d.getMonth() + 1;
+    const date = d.getDate();
+    const hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${month}/${date} ${hours}:${mins}`;
   });
   const dataPoints = history.map(h => h.score);
 
