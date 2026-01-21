@@ -513,30 +513,32 @@ def translate_polymarket_events(events):
     if not items: return []
 
     # Batch Translate
+    batch_data = [{"id": i, "title": item["title"], "outcomes": item["outcomes"]} for i, item in enumerate(items)]
+
     prompt = f"""
-    Translate these prediction market event titles to Japanese as concise news headlines.
-    - Style: Natural, "Cool" Japanese news ticker style.
-    - Avoid direct translations ("out by" -> "辞任時期", "IPO by" -> "上場時期").
-    - Keep important proper nouns (Nvidia, BTC) in English if they look better.
+    Translate the 'title' and 'outcomes' fields to Japanese.
+    - Title: Natural, "Cool" news headline style.
+    - Outcomes: Translate labels (Yes->はい, No->いいえ, Trump->トランプ). Keep numbers/symbols/separators exactly as is.
     - OUTPUT MUST BE VALID JSON ONLY.
 
-    Titles:
-    {json.dumps(titles)}
+    Input:
+    {json.dumps(batch_data)}
 
     Output JSON Format:
     {{
-        "translations": ["Translated Title 1", "Translation 2", ...]
+        "results": [
+            {{ "id": 0, "title_ja": "...", "outcomes_ja": "..." }}
+        ]
     }}
     """
     
     models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemini-2.5-flash-lite"]
-    translations = titles # Fallback
+    success = False
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         
-        # Gemma models often fail with response_mime_type application/json
         generation_config = {}
         if "gemini" in model_name:
              generation_config = {"response_mime_type": "application/json"}
@@ -544,7 +546,7 @@ def translate_polymarket_events(events):
         payload = { "contents": [{"parts": [{"text": prompt}]}] }
         if generation_config:
             payload["generationConfig"] = generation_config
-
+            
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=60)
             if resp.status_code == 200:
@@ -557,27 +559,37 @@ def translate_polymarket_events(events):
                         content = content[content.find("{"):content.rfind("}")+1]
                     
                     parsed = json.loads(content)
-                    translations = parsed.get("translations", titles)
+                    results = parsed.get("results", [])
+                    
+                    # Apply translations
+                    result_map = {r.get("id"): r for r in results}
+                    for i, item in enumerate(items):
+                         if i in result_map:
+                             item["title_ja"] = result_map[i].get("title_ja", item["title"])
+                             # Overwrite outcomes with translated version
+                             if result_map[i].get("outcomes_ja"):
+                                item["outcomes"] = result_map[i].get("outcomes_ja")
+                         else:
+                             item["title_ja"] = item["title"]
+                    
+                    logging.info(f"Polymarket Translation Success: {len(results)}/{len(items)}")
+                    success = True
                     break 
 
-                except: pass
-                except: pass
+                except Exception as e:
+                     logging.warning(f"Polymarket Parse Error {model_name}: {e}")
             else:
                 logging.warning(f"Polymarket Translation failed with {model_name}: Status {resp.status_code}")
         except Exception as e:
             logging.warning(f"Polymarket Translation model error {model_name}: {e}")
             pass
         
-    logging.info(f"Polymarket Translation completed. Success count: {len(translations)}/{len(titles)}")
-    for i, item in enumerate(items):
-        if i < len(translations):
-            item["title_ja"] = translations[i]
-        else:
+    if not success:
+        logging.warning("All Polymarket translations failed. Using English.")
+        for item in items:
             item["title_ja"] = item["title"]
             
     return items
-
-STATE_FILE = "last_run.json"
 
 def load_prev_state():
     if os.path.exists(STATE_FILE):

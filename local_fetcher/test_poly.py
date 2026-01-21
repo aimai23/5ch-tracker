@@ -65,36 +65,78 @@ def translate_polymarket_events(events):
 
     print("Translating with Gemma-3-12b...")
     
-    titles = [e.get("title", "") for e in events]
-    
+    # 1. Prepare items with formatted Outcomes string (Logic from main.py)
+    items = []
+    for e in events:
+        # Outcome Logic
+        markets = e.get("markets", [])
+        outcomes_str = ""
+        if markets:
+            markets.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
+            outcomes = []
+            is_group = len(markets) > 1
+            if is_group:
+                 for m in markets[:3]:
+                     label = m.get("groupItemTitle") or m.get("question")
+                     if not label: label = "Yes"
+                     price = 0
+                     try:
+                        prices = json.loads(m.get("outcomePrices", "[]"))
+                        outs = json.loads(m.get("outcomes", "[]"))
+                        target_idx = 0
+                        if "Yes" in outs: target_idx = outs.index("Yes")
+                        price = float(prices[target_idx]) * 100
+                     except: pass
+                     outcomes.append(f"{label}: {price:.1f}%")
+            else:
+                m = markets[0]
+                try:
+                    outcomes_raw = json.loads(m.get("outcomes", "[]"))
+                    outcome_prices = json.loads(m.get("outcomePrices", "[]"))
+                    temp_outs = []
+                    for k, name in enumerate(outcomes_raw):
+                        p = 0
+                        if k < len(outcome_prices):
+                            try: p = float(outcome_prices[k]) * 100
+                            except: pass
+                        temp_outs.append((name, p))
+                    temp_outs.sort(key=lambda x: x[1], reverse=True)
+                    outcomes = [f"{n}: {v:.1f}%" for n, v in temp_outs[:2]]
+                except: pass
+            outcomes_str = " | ".join(outcomes[:3])
+            
+        item = e.copy()
+        item["outcomes"] = outcomes_str
+        items.append(item)
+
+    # 2. Batch Translate
+    batch_data = [{"id": i, "title": item["title"], "outcomes": item["outcomes"]} for i, item in enumerate(items)]
+
     prompt = f"""
-    Translate these prediction market event titles to Japanese as concise news headlines.
-    - Style: Natural, "Cool" Japanese news ticker style.
-    - Avoid direct translations ("out by" -> "辞任時期", "IPO by" -> "上場時期").
-    - Keep important proper nouns (Nvidia, BTC) in English if they look better.
+    Translate the 'title' and 'outcomes' fields to Japanese.
+    - Title: Natural, "Cool" news headline style.
+    - Outcomes: Translate labels (Yes->はい, No->いいえ, Trump->トランプ). Keep numbers/symbols/separators exactly as is.
     - OUTPUT MUST BE VALID JSON ONLY.
 
-    Titles:
-    {json.dumps(titles)}
+    Input:
+    {json.dumps(batch_data)}
 
     Output JSON Format:
     {{
-        "translations": ["Translated Title 1", "Translation 2", ...]
+        "results": [
+            {{ "id": 0, "title_ja": "...", "outcomes_ja": "..." }}
+        ]
     }}
     """
     
-    # Gemma models may not support response_mime_type: application/json
-    # Prioritize smartest models: 27B -> 12B -> 4B
     models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it"]
-    translations = titles
+    success = False
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
-        # Removing JSON mode enforcement for Gemma compatibility
-        payload = { 
-            "contents": [{"parts": [{"text": prompt}]}]
-        }
+        payload = { "contents": [{"parts": [{"text": prompt}]}] }
+        
         try:
             print(f"Trying {model_name}...")
             resp = requests.post(url, headers=headers, json=payload, timeout=60)
@@ -102,14 +144,25 @@ def translate_polymarket_events(events):
                 res_json = resp.json()
                 try:
                     content = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                    # Robust cleanup for manual JSON parsing
                     content = content.replace("```json", "").replace("```", "").strip()
                     if "{" in content:
                         content = content[content.find("{"):content.rfind("}")+1]
                     
                     parsed = json.loads(content)
-                    translations = parsed.get("translations", titles)
+                    results = parsed.get("results", [])
+                    
+                    # Apply
+                    result_map = {r.get("id"): r for r in results}
+                    for i, item in enumerate(items):
+                         if i in result_map:
+                             item["title_ja"] = result_map[i].get("title_ja", item["title"])
+                             if result_map[i].get("outcomes_ja"):
+                                item["outcomes"] = result_map[i].get("outcomes_ja")
+                         else:
+                             item["title_ja"] = item["title"]
+                    
                     print(f"Success with {model_name}")
+                    success = True
                     break 
                 except: 
                     print("Parse Error (Non-JSON)")
@@ -119,12 +172,10 @@ def translate_polymarket_events(events):
             print(f"Err {model_name}: {e}")
             pass
             
-    items = []
-    for i, e in enumerate(events):
-        item = e.copy()
-        if i < len(translations):
-            item["title_ja"] = translations[i]
-        items.append(item)
+    if not success:
+        for item in items:
+            item["title_ja"] = item["title"]
+
     return items
 
 def display_events(events):
@@ -137,28 +188,8 @@ def display_events(events):
         title_ja = e.get("title_ja", "")
         volume = float(e.get("volume", 0) or 0)
         
-        # Outcomes
-        markets = e.get("markets", [])
-        outcomes_str = ""
-        if markets:
-            markets.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
-            main_market = markets[0]
-            # Debug Print
-            print(f"   [DEBUG] Q: {main_market.get('question')} | Grp: {main_market.get('groupItemTitle')}")
-            try:
-                outcomes_raw = json.loads(main_market.get("outcomes", "[]"))
-                outcome_prices = json.loads(main_market.get("outcomePrices", "[]"))
-                
-                parts = []
-                for j, out_name in enumerate(outcomes_raw):
-                    val = 0
-                    if j < len(outcome_prices):
-                        try:
-                            val = float(outcome_prices[j]) * 100
-                        except: val = 0
-                    parts.append(f"{out_name}: {val:.1f}%")
-                outcomes_str = " | ".join(parts[:2])
-            except: pass
+        # Outcomes string is already generated and translated in e["outcomes"]
+        outcomes_str = e.get("outcomes", "")
 
         print(f"{i}. {title}")
         if title_ja: print(f"   JA: {title_ja}")
