@@ -516,3 +516,53 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
   }
 });
+
+/* Polymarket Rendering */
+function renderPolymarket(data) {
+  const container = document.getElementById("polymarket-container");
+  const list = document.getElementById("polymarket-list");
+
+  if (!data || data.length === 0) {
+    if (container) container.style.display = "none";
+    return;
+  }
+
+  if (container) container.style.display = "block";
+  if (list) {
+    list.innerHTML = "";
+
+    data.forEach(item => {
+      // Outcomes string "Yes: 80% | No: 20%" -> split
+      let outcomesHtml = "";
+      if (item.outcomes) {
+        outcomesHtml = item.outcomes.split(" | ").map(o => {
+          const parts = o.split(": ");
+          const label = parts[0];
+          const val = parts[1] || "";
+          return `<div class="poly-outcome"><span>${label}</span><strong>${val}</strong></div>`;
+        }).join("");
+      }
+
+      // Volume format
+      let vol = "0";
+      try {
+        vol = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0, notation: "compact" }).format(item.volume || 0);
+      } catch (e) { }
+
+      const card = document.createElement("a");
+      card.className = "poly-card";
+      card.href = item.url;
+      card.target = "_blank";
+      card.style.textDecoration = "none";
+
+      card.innerHTML = `
+        <div class="poly-title">${item.title_ja || item.title}</div>
+        <div class="poly-outcomes-list">
+          ${outcomesHtml}
+        </div>
+        <div class="poly-volume">Vol: <span>${vol}</span></div>
+      `;
+      list.appendChild(card);
+    });
+  }
+}

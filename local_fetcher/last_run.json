@@ -1,63 +1,63 @@
 {
-  "timestamp": 1768942834.8994431,
+  "timestamp": 1768953679.9941416,
   "rankings": [
     {
       "ticker": "MU",
-      "count": 52,
+      "count": 130,
       "sentiment": 0.9
     },
     {
       "ticker": "SNDK",
-      "count": 28,
+      "count": 60,
       "sentiment": 0.95
     },
     {
-      "ticker": "NVDA",
-      "count": 24,
-      "sentiment": -0.5
-    },
-    {
-      "ticker": "SOXL",
-      "count": 20,
-      "sentiment": 0.3
-    },
-    {
-      "ticker": "APP",
-      "count": 14,
-      "sentiment": -0.9
-    },
-    {
-      "ticker": "NBIS",
-      "count": 12,
-      "sentiment": -0.7
-    },
-    {
-      "ticker": "AVGO",
-      "count": 10,
-      "sentiment": -0.8
-    },
-    {
-      "ticker": "ASTS",
-      "count": 10,
+      "ticker": "GLDM",
+      "count": 50,
       "sentiment": 0.8
     },
     {
-      "ticker": "INTC",
-      "count": 9,
-      "sentiment": 0.6
+      "ticker": "NVDA",
+      "count": 20,
+      "sentiment": -0.9
+    },
+    {
+      "ticker": "BTC",
+      "count": 20,
+      "sentiment": -0.9
+    },
+    {
+      "ticker": "FANG",
+      "count": 20,
+      "sentiment": -0.8
     },
     {
       "ticker": "NFLX",
-      "count": 8,
-      "sentiment": 0.7
+      "count": 15,
+      "sentiment": -0.3
+    },
+    {
+      "ticker": "SOXL",
+      "count": 10,
+      "sentiment": 0.3
+    },
+    {
+      "ticker": "NBIS",
+      "count": 10,
+      "sentiment": -0.7
+    },
+    {
+      "ticker": "SOXS",
+      "count": 7,
+      "sentiment": -0.2
     }
   ],
-  "fear_greed": 42,
+  "fear_greed": 30,
   "radar": {
     "hype": 9,
-    "panic": 7,
-    "faith": 3,
+    "panic": 9,
+    "faith": 7,
     "gamble": 9,
-    "iq": 2
+    "iq": 1
   }
 }
