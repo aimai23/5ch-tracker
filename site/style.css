@@ -683,10 +683,10 @@ footer a {
 #breaking-news-container {
   width: 95%;
   max-width: 800px;
-  background: rgba(10, 10, 16, 0.7);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.3);
   border-radius: 6px;
-  height: 32px;
+  height: 38px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -694,7 +694,7 @@ footer a {
   z-index: 100;
   margin: 1.5rem auto 0 auto;
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .news-label {
@@ -705,7 +705,7 @@ footer a {
   height: 100%;
   display: flex;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   white-space: nowrap;
   z-index: 10;
   border-right: 1px solid rgba(0, 0, 0, 0.3);
@@ -723,13 +723,14 @@ footer a {
 #news-marquee {
   white-space: nowrap;
   padding-left: 100%;
-  animation: marquee 40s linear infinite;
-  color: var(--accent-cyan);
+  animation: marquee 60s linear infinite;
+  color: #ffffff;
   font-family: var(--font-mono);
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 1.05rem;
   display: inline-block;
-  text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+  letter-spacing: 0.5px;
 }
 
 @keyframes marquee {
