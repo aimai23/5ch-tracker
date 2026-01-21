@@ -198,6 +198,12 @@ async function main() {
     // Fear & Ongi Update
     if (data.fear_greed !== undefined) {
       updateFearOngi(data.fear_greed);
+
+      // CNN Fear & Greed (NEW)
+      const cnnEl = document.getElementById("cnn-fear-greed-label");
+      if (cnnEl && data.cnn_fear_greed) {
+        cnnEl.textContent = `🇺🇸 CNN Fear & Greed: ${data.cnn_fear_greed.score} (${data.cnn_fear_greed.rating})`;
+      }
     }
 
     // NEW: Radar Chart Update

@@ -608,6 +608,30 @@ def save_current_state(data):
     except Exception as e:
         logging.warning(f"Failed to save state: {e}")
 
+def fetch_cnn_fear_greed():
+    try:
+        url = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Referer": "https://edition.cnn.com/"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            fg = data.get("fear_and_greed", {})
+            score = fg.get("score")
+            rating = fg.get("rating")
+            timestamp = fg.get("timestamp")
+            if score is not None:
+                return {
+                    "score": round(float(score), 1), 
+                    "rating": rating, 
+                    "timestamp": timestamp
+                }
+    except Exception as e:
+        logging.warning(f"Failed to fetch CNN F&G: {e}")
+    return None
+
 def run_analysis(debug_mode=False, poly_only=False):
     cleanup_old_files()
     stopwords, exclude, spam = load_config()
@@ -654,6 +678,11 @@ def run_analysis(debug_mode=False, poly_only=False):
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error). Aborting upload.")
         return
+
+    # Fetch External CNN Fear & Greed
+    cnn_fg = fetch_cnn_fear_greed()
+    if cnn_fg:
+        logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
     
     agg = {}
     for t in tickers_raw:
@@ -689,7 +718,7 @@ def run_analysis(debug_mode=False, poly_only=False):
     logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg)
 
 if __name__ == "__main__":
     import argparse

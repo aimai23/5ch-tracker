@@ -28,6 +28,7 @@ export type RankingPayload = {
   radar?: RadarData;
   breaking_news?: string[];
   polymarket?: Array<{ title: string; title_ja?: string; outcomes: string; url: string; volume: number }>;
+  cnn_fear_greed?: { score: number; rating: string; timestamp?: string };
   sources: Array<{ name: string; url: string }>;
 };
 
