@@ -23,6 +23,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .container {
@@ -846,6 +847,30 @@ footer a {
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
   line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .tooltip-text {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    bottom: auto;
+    width: 70vw !important;
+    max-width: 280px;
+    z-index: 10000;
+    text-align: left;
+    white-space: normal;
+    background-color: #1a1a24;
+    border: 1px solid var(--accent-cyan);
+    padding: 1rem;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  }
+
+  .tooltip-text::after {
+    display: none;
+    /* Hide arrow on mobile */
+  }
 }
 
 .poly-outcome {
