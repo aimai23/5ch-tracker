@@ -395,57 +395,52 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
         logging.error(f"Upload failed: {e}")
 
 def fetch_polymarket_events():
-    logging.info("Fetching Polymarket data...")
+    logging.info("Fetching Polymarket data with Diversified Search...")
     url = "https://gamma-api.polymarket.com/events"
     headers = {
         "User-Agent": "5ch-Tracker/1.0",
         "Accept": "application/json"
     }
     
-    # helper
     def get_events(params):
         try:
             r = requests.get(url, params=params, headers=headers, timeout=10)
             if r.status_code == 200:
                 return r.json()
-            else:
-                logging.warning(f"Polymarket API Error ({params.get('tag_slug') or 'all'}): {r.status_code}")
-                return []
-        except Exception as e:
-            logging.error(f"Polymarket Fetch Error: {e}")
+            return []
+        except:
             return []
 
-    # 1. Try Business Tag
-    events = get_events({
-        "limit": 10, "active": "true", "closed": "false", 
-        "tag_slug": "business", "sort": "volume"
-    })
+    # Strategy: Fetch specifically to force variety
+    queries = [
+        {"tag_slug": "business", "sort": "volume", "limit": 10}, # Base Business
+        {"q": "Fed", "sort": "volume", "limit": 5},              # Macro
+        {"q": "Nvidia", "sort": "volume", "limit": 5},           # Tech/Stock
+        {"q": "Recession", "sort": "volume", "limit": 5},        # Doom
+        {"q": "S&P 500", "sort": "volume", "limit": 5},          # Market
+        {"q": "Top 10", "sort": "volume", "limit": 5},           # Rankings
+        {"q": "Rate", "sort": "volume", "limit": 5}              # Interest Rates
+    ]
     
-    # 2. If too few, try generic search or top volume categories
-    if len(events) < 3:
-        logging.info("Few business events found. Fetching Top Volume...")
-        # Fetch detailed top list
-        top_events = get_events({
-            "limit": 20, "active": "true", "closed": "false", "sort": "volume"
-        })
-        
-        # Filter for economy-ish keywords relative to stocks/finance
-        keywords = ["fed", "rate", "stock", "economy", "recession", "gdp", "cpi", "nvidia", "bitcoin", "crypto", "trump", "election", "us"]
-        
-        for e in top_events:
-            # Avoid duplicates
-            if any(x.get("id") == e.get("id") for x in events): continue
-            
-            title = e.get("title", "").lower()
-            slug = e.get("slug", "").lower()
-            
-            # If matches keyword
-            if any(k in title or k in slug for k in keywords):
-                events.append(e)
-                
-    # Sort by volume desc
-    events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
-    return events[:6]
+    all_events = []
+    seen_ids = set()
+    
+    for q in queries:
+        q["active"] = "true"
+        q["closed"] = "false"
+        res = get_events(q)
+        for e in res:
+            eid = e.get("id")
+            if eid not in seen_ids:
+                # Filter out pure crypto prices (often noisy) if fetched via specific non-crypto queries
+                # For now, accept them but relying on variety of queries to mix it up
+                seen_ids.add(eid)
+                all_events.append(e)
+
+    # Sort everything by volume first
+    all_events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
+    
+    return all_events[:8]
 
 def translate_polymarket_events(events):
     if not events: return []
@@ -507,7 +502,7 @@ def translate_polymarket_events(events):
     }}
     """
     
-    models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it"]
     translations = titles # Fallback
     
     for model_name in models:
