@@ -576,3 +576,33 @@ function renderPolymarket(data) {
     });
   }
 }
+
+// Mobile Tooltip Logic
+document.addEventListener('click', (e) => {
+  const container = e.target.closest('.tooltip-container');
+  if (container && window.innerWidth <= 768) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const textEl = container.querySelector('.tooltip-text');
+    if (textEl) {
+      const text = textEl.innerHTML;
+      const overlay = document.getElementById('mobile-tooltip-overlay');
+      const modalText = document.getElementById('mobile-tooltip-text');
+      if (overlay && modalText) {
+        modalText.innerHTML = text;
+        overlay.style.display = 'flex';
+      }
+    }
+  }
+});
+
+// Close modal when clicking outside content
+const tooltipOverlay = document.getElementById('mobile-tooltip-overlay');
+if (tooltipOverlay) {
+  tooltipOverlay.addEventListener('click', (e) => {
+    if (e.target === tooltipOverlay) {
+      tooltipOverlay.style.display = 'none';
+    }
+  });
+}
