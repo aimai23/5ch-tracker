@@ -396,24 +396,55 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
 def fetch_polymarket_events():
     logging.info("Fetching Polymarket data...")
     url = "https://gamma-api.polymarket.com/events"
-    params = {
-        "limit": 6,
-        "active": "true",
-        "closed": "false",
-        "tag_slug": "business", 
-        "sort": "volume"
+    headers = {
+        "User-Agent": "5ch-Tracker/1.0",
+        "Accept": "application/json"
     }
-    try:
-        resp = requests.get(url, params=params, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data
-        else:
-            logging.warning(f"Polymarket API Error: {resp.status_code}")
+    
+    # helper
+    def get_events(params):
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=10)
+            if r.status_code == 200:
+                return r.json()
+            else:
+                logging.warning(f"Polymarket API Error ({params.get('tag_slug') or 'all'}): {r.status_code}")
+                return []
+        except Exception as e:
+            logging.error(f"Polymarket Fetch Error: {e}")
             return []
-    except Exception as e:
-        logging.error(f"Polymarket Fetch Error: {e}")
-        return []
+
+    # 1. Try Business Tag
+    events = get_events({
+        "limit": 10, "active": "true", "closed": "false", 
+        "tag_slug": "business", "sort": "volume"
+    })
+    
+    # 2. If too few, try generic search or top volume categories
+    if len(events) < 3:
+        logging.info("Few business events found. Fetching Top Volume...")
+        # Fetch detailed top list
+        top_events = get_events({
+            "limit": 20, "active": "true", "closed": "false", "sort": "volume"
+        })
+        
+        # Filter for economy-ish keywords relative to stocks/finance
+        keywords = ["fed", "rate", "stock", "economy", "recession", "gdp", "cpi", "nvidia", "bitcoin", "crypto", "trump", "election", "us"]
+        
+        for e in top_events:
+            # Avoid duplicates
+            if any(x.get("id") == e.get("id") for x in events): continue
+            
+            title = e.get("title", "").lower()
+            slug = e.get("slug", "").lower()
+            
+            # If matches keyword
+            if any(k in title or k in slug for k in keywords):
+                events.append(e)
+                
+    # Sort by volume desc
+    events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
+    return events[:6]
 
 def translate_polymarket_events(events):
     if not events: return []
