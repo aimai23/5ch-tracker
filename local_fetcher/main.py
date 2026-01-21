@@ -552,9 +552,19 @@ def save_current_state(data):
     except Exception as e:
         logging.warning(f"Failed to save state: {e}")
 
-def run_analysis(debug_mode=False):
+def run_analysis(debug_mode=False, poly_only=False):
     cleanup_old_files()
     stopwords, exclude, spam = load_config()
+    
+    # Polymarket Fetch (Parallel-ish in effect)
+    polymarket_raw = fetch_polymarket_events()
+    polymarket_data = translate_polymarket_events(polymarket_raw)
+    
+    if poly_only:
+        logging.info("--- POLYMARKET ONLY MODE ---")
+        logging.info(json.dumps(polymarket_data, indent=2, ensure_ascii=False))
+        return
+
     threads = discover_threads()
     if not threads:
         logging.info("No threads found.")
@@ -623,21 +633,25 @@ def run_analysis(debug_mode=False):
     logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data)
 
-def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode == "monitor":
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true", help="Run in debug mode (no upload)")
+    parser.add_argument("--poly-only", action="store_true", help="Run only Polymarket fetch/translate experiment")
+    parser.add_argument("--monitor", action="store_true", help="Run in monitor mode (loop every 120s)")
+    args = parser.parse_args()
+
+    if args.monitor:
         logging.info("--- MONITOR MODE (120s) ---")
         try:
             while True:
-                run_analysis(debug_mode=False)
+                run_analysis(debug_mode=args.debug, poly_only=args.poly_only)
                 logging.info("Waiting 120s...")
                 time.sleep(120) 
         except KeyboardInterrupt:
             logging.info("Monitor stopped.")
-    elif mode == "debug":
-        run_analysis(debug_mode=True)
     else:
         run_analysis(debug_mode=False)
 
