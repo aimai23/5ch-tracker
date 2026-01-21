@@ -148,6 +148,10 @@ export interface OngiHistoryItem {
 export async function saveOngiHistory(env: Env, score: number, label: string, metrics: RadarData): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
 
+  // Cleanup old data (older than 30 days) to keep DB healthy
+  // Fire and forget (await but don't block logic if possible, though await is safer for D1)
+  await env.DB.prepare("DELETE FROM ongi_history WHERE timestamp < ?").bind(now - 30 * 86400).run();
+
   // 1. Check last entry
   const lastEntry = await env.DB.prepare("SELECT id, timestamp FROM ongi_history ORDER BY timestamp DESC LIMIT 1")
     .first<{ id: number; timestamp: number }>();
@@ -170,10 +174,13 @@ export async function saveOngiHistory(env: Env, score: number, label: string, me
 }
 
 export async function getOngiHistory(env: Env): Promise<OngiHistoryItem[]> {
-  // Get all history (limit if needed later)
+  // Get filtered history (Last 30 Days)
+  const now = Math.floor(Date.now() / 1000);
+  const cutoff = now - 30 * 86400; // 30 days
+
   const results = await env.DB.prepare(
-    "SELECT timestamp, score, label, metrics FROM ongi_history ORDER BY timestamp ASC"
-  ).all<{ timestamp: number; score: number; label: string; metrics: string }>();
+    "SELECT timestamp, score, label, metrics FROM ongi_history WHERE timestamp > ? ORDER BY timestamp ASC"
+  ).bind(cutoff).all<{ timestamp: number; score: number; label: string; metrics: string }>();
 
   if (!results.results) return [];
 
