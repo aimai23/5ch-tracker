@@ -211,7 +211,7 @@ async function main() {
       if (tickerContainer) tickerContainer.style.display = "flex";
       if (tickerText) {
         // Join with spacing - Duplicate for length safety
-        tickerText.textContent = data.breaking_news.join("   ///   ") + "   ///   " + data.breaking_news.join("   ///   ");
+        tickerText.textContent = data.breaking_news.join("        ") + "        " + data.breaking_news.join("        ");
       }
     } else {
       if (tickerContainer) tickerContainer.style.display = "none";
