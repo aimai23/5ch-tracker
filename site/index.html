@@ -14,159 +14,157 @@
 </head>
 
 <body>
-  <!-- Breaking News Ticker -->
-  <div id="breaking-news-container" style="display: none;">
-    <div class="news-label">LIVE 🔴</div>
-    <div class="news-content">
-      <div id="news-marquee">Generating Market Commentary...</div>
+  <header>
+    <div class="logo-container">
+      <img src="./picture/gold_tanuki.png" alt="Arakawa Tracker Logo" class="title-logo" />
+      <h1>ARAKAWA TRACKER</h1>
     </div>
+    <div class="subtitle">
+      <span class="live-indicator"></span>
+      <span>5CH US STOCK BOARD (24H)</span>
+      <span id="last-updated">Updating...</span>
+    </div>
+
+    <!-- Breaking News Ticker -->
+    <div id="breaking-news-container" style="display: none;">
+      <div class="news-label">LIVE 🔴</div>
+      <div class="news-content">
+        <div id="news-marquee">Generating Market Commentary...</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="tab-container">
+    <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
+    <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
+    <button class="tab-btn" data-tab="ongi_greed">Ongi & Greed</button>
   </div>
 
-  <div class="container">
-    <header>
-      <div class="logo-container">
-        <img src="./picture/gold_tanuki.png" alt="Arakawa Tracker Logo" class="title-logo" />
-        <h1>ARAKAWA TRACKER</h1>
-      </div>
-      <div class="subtitle">
-        <span class="live-indicator"></span>
-        <span>5CH US STOCK BOARD (24H)</span>
-        <span id="last-updated">Updating...</span>
-      </div>
-    </header>
+  <main class="dashboard-grid" id="view-dashboard">
+    <!-- Left Panel: Ranking -->
+    <section class="panel ranking-panel">
+      <div id="loading">Scanning Market Data...</div>
+      <table class="ranking-table" id="ranking-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>RK</th>
+            <th>TICKER</th>
+            <th style="text-align: right;">VOL</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-body">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
+    </section>
 
-    <!-- Navigation Tabs -->
-    <div class="tab-container">
-      <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
-      <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
-      <button class="tab-btn" data-tab="ongi_greed">Ongi & Greed</button>
-    </div>
+    <!-- Right Panel: Chart -->
+    <section class="panel chart-panel">
+      <div id="tradingview_widget"></div>
+      <div class="chart-placeholder">Select a ticker to view chart</div>
+    </section>
+  </main>
 
-    <main class="dashboard-grid" id="view-dashboard">
-      <!-- Left Panel: Ranking -->
-      <section class="panel ranking-panel">
-        <div id="loading">Scanning Market Data...</div>
-        <table class="ranking-table" id="ranking-table" style="display: none;">
-          <thead>
-            <tr>
-              <th>RK</th>
-              <th>TICKER</th>
-              <th style="text-align: right;">VOL</th>
-            </tr>
-          </thead>
-          <tbody id="ranking-body">
-            <!-- Rows injected by JS -->
-          </tbody>
-        </table>
-      </section>
+  <!-- Ongi & Greed View -->
+  <div id="view-ongi-greed" style="display: none;">
+    <section class="panel" style="padding: 1rem;">
+      <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">😱 Ongi & Greed Index 🤑</h2>
 
-      <!-- Right Panel: Chart -->
-      <section class="panel chart-panel">
-        <div id="tradingview_widget"></div>
-        <div class="chart-placeholder">Select a ticker to view chart</div>
-      </section>
-    </main>
-
-    <!-- Ongi & Greed View -->
-    <div id="view-ongi-greed" style="display: none;">
-      <section class="panel" style="padding: 1rem;">
-        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">😱 Ongi & Greed Index 🤑</h2>
-
-        <!-- Bottom Row: AI Insight (Moved to Top) -->
-        <div class="market-overview" style="text-align: left; margin-bottom: 1rem;">
-          <div class="overview-header">
-            <span class="overview-title">🤖 AI SENTIMENT INSIGHT</span>
-            <span class="overview-blink">_</span>
-          </div>
-          <p id="fear-ongi-comment" class="overview-text">Waiting for AI analysis...</p>
+      <!-- Bottom Row: AI Insight (Moved to Top) -->
+      <div class="market-overview" style="text-align: left; margin-bottom: 1rem;">
+        <div class="overview-header">
+          <span class="overview-title">🤖 AI SENTIMENT INSIGHT</span>
+          <span class="overview-blink">_</span>
         </div>
+        <p id="fear-ongi-comment" class="overview-text">Waiting for AI analysis...</p>
+      </div>
 
-        <!-- Top Row: Gauge & Radar -->
-        <div class="ongi-top-row"
-          style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
+      <!-- Top Row: Gauge & Radar -->
+      <div class="ongi-top-row"
+        style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
 
-          <!-- Gauge -->
-          <div class="gauge-wrapper" style="flex: 1; min-width: 300px; text-align: center;">
-            <div class="gauge-container">
-              <div class="gauge-body">
-                <div class="gauge-fill"></div>
-                <div class="gauge-cover"></div>
-                <div class="gauge-needle" id="gauge-needle"></div>
-                <div class="gauge-pin"></div>
-              </div>
-              <div class="gauge-labels">
-                <span class="fear">📉 ONGI</span>
-                <span class="ongi">📈 GREED</span>
-              </div>
-              <div class="gauge-score-display" id="fear-ongi-score">--</div>
+        <!-- Gauge -->
+        <div class="gauge-wrapper" style="flex: 1; min-width: 300px; text-align: center;">
+          <div class="gauge-container">
+            <div class="gauge-body">
+              <div class="gauge-fill"></div>
+              <div class="gauge-cover"></div>
+              <div class="gauge-needle" id="gauge-needle"></div>
+              <div class="gauge-pin"></div>
             </div>
-            <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
+            <div class="gauge-labels">
+              <span class="fear">📉 ONGI</span>
+              <span class="ongi">📈 GREED</span>
+            </div>
+            <div class="gauge-score-display" id="fear-ongi-score">--</div>
           </div>
-
-          <!-- Radar -->
-          <div class="radar-chart-container"
-            style="flex: 1; min-width: 300px; max-width: 400px; position: relative; text-align: center;">
-            <canvas id="sentiment-radar"></canvas>
-          </div>
+          <div class="gauge-status-text" id="fear-ongi-label">Analyzing...</div>
         </div>
 
-        <!-- Middle Row: History Chart -->
-        <div class="history-chart-container"
-          style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
-          <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (24H)</h3>
-          <canvas id="ongi-history-chart"></canvas>
+        <!-- Radar -->
+        <div class="radar-chart-container"
+          style="flex: 1; min-width: 300px; max-width: 400px; position: relative; text-align: center;">
+          <canvas id="sentiment-radar"></canvas>
         </div>
+      </div>
 
-      </section>
-    </div>
+      <!-- Middle Row: History Chart -->
+      <div class="history-chart-container" style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
+        <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (24H)</h3>
+        <canvas id="ongi-history-chart"></canvas>
+      </div>
 
-    <!-- Topic View -->
-    <div id="view-topics" style="display: none;">
-      <section class="panel" style="min-height: 600px; display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+    </section>
+  </div>
 
-        <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
-          <div class="overview-header">
-            <span class="overview-title">🤖 AI MARKET INSIGHT</span>
-            <span class="overview-blink">_</span>
-          </div>
-          <p id="overview-text" class="overview-text">Loading analysis...</p>
+  <!-- Topic View -->
+  <div id="view-topics" style="display: none;">
+    <section class="panel" style="min-height: 600px; display: flex; flex-direction: column;">
+      <h2 style="margin-bottom: 1rem; color: var(--accent-gold);">🔥 5ch Trending Keywords</h2>
+
+      <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
+        <div class="overview-header">
+          <span class="overview-title">🤖 AI MARKET INSIGHT</span>
+          <span class="overview-blink">_</span>
         </div>
+        <p id="overview-text" class="overview-text">Loading analysis...</p>
+      </div>
 
-        <div id="wordcloud-container"
-          style="flex: 1; min-height: 350px; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
-          <canvas id="topic-canvas"></canvas>
-          <div id="topic-loading" class="loading-text">Loading trends...</div>
+      <div id="wordcloud-container"
+        style="flex: 1; min-height: 350px; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
+        <canvas id="topic-canvas"></canvas>
+        <div id="topic-loading" class="loading-text">Loading trends...</div>
+      </div>
+
+      <!-- Polymarket Section -->
+      <div id="polymarket-container" style="margin-top: 2rem; display: none;">
+        <h2
+          style="margin-bottom: 1rem; color: var(--accent-purple); display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">
+          🔮 <span style="font-family: 'JetBrains Mono';">POLYMARKET INSIGHTS</span>
+          <span
+            style="font-size: 0.7rem; opacity: 0.7; border: 1px solid var(--accent-purple); padding: 2px 6px; border-radius: 4px;">LIVE
+            ODDS</span>
+        </h2>
+        <div class="polymarket-grid" id="polymarket-list">
+          <!-- Items injected by JS -->
         </div>
+      </div>
 
-        <!-- Polymarket Section -->
-        <div id="polymarket-container" style="margin-top: 2rem; display: none;">
-          <h2
-            style="margin-bottom: 1rem; color: var(--accent-purple); display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">
-            🔮 <span style="font-family: 'JetBrains Mono';">POLYMARKET INSIGHTS</span>
-            <span
-              style="font-size: 0.7rem; opacity: 0.7; border: 1px solid var(--accent-purple); padding: 2px 6px; border-radius: 4px;">LIVE
-              ODDS</span>
-          </h2>
-          <div class="polymarket-grid" id="polymarket-list">
-            <!-- Items injected by JS -->
-          </div>
-        </div>
+    </section>
+  </div>
 
-      </section>
-    </div>
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- TradingView Widget Script -->
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
-    <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- TradingView Widget Script -->
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-
-    <footer>
-      <p>Powered by <a href="https://target-url.com" target="_blank">Gemini 3 Pro & Cloudflare</a></p>
-      <p style="opacity: 0.5; margin-top: 0.5rem;">Data is aggregated from public forums every 3 hours. Not financial
-        advice.</p>
-    </footer>
+  <footer>
+    <p>Powered by <a href="https://target-url.com" target="_blank">Gemini 3 Pro & Cloudflare</a></p>
+    <p style="opacity: 0.5; margin-top: 0.5rem;">Data is aggregated from public forums every 3 hours. Not financial
+      advice.</p>
+  </footer>
   </div>
 
   <script src="./app.js"></script>
