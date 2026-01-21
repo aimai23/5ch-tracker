@@ -489,35 +489,52 @@ def translate_polymarket_events(events):
 
     # Batch Translate
     prompt = f"""
-    Translate these prediction market event titles to Japanese. 
-    Make them short, catchy, and suitable for a finance dashboard.
-    Keep proper nouns (like Nvidia, BTC) in English if common.
+    Translate these prediction market event titles to Japanese as concise news headlines.
+    - Style: Natural, "Cool" Japanese news ticker style.
+    - Avoid direct translations ("out by" -> "辞任時期", "IPO by" -> "上場時期").
+    - Keep important proper nouns (Nvidia, BTC) in English if they look better.
+    - OUTPUT MUST BE VALID JSON ONLY.
 
     Titles:
     {json.dumps(titles)}
 
-    Output JSON:
+    Output JSON Format:
     {{
-        "translations": ["Translated Title 1", "Translated Title 2", ...]
+        "translations": ["Translated Title 1", "Translation 2", ...]
     }}
     """
     
-    models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it"]
+    models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemini-2.5-flash-lite"]
     translations = titles # Fallback
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
-        payload = { "contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"response_mime_type": "application/json"} }
+        
+        # Gemma models often fail with response_mime_type application/json
+        generation_config = {}
+        if "gemini" in model_name:
+             generation_config = {"response_mime_type": "application/json"}
+
+        payload = { "contents": [{"parts": [{"text": prompt}]}] }
+        if generation_config:
+            payload["generationConfig"] = generation_config
+
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=60)
             if resp.status_code == 200:
                 res_json = resp.json()
                 try:
                     content = res_json["candidates"][0]["content"]["parts"][0]["text"]
+                    # Cleanup for manual JSON parsing
+                    content = content.replace("```json", "").replace("```", "").strip()
+                    if "{" in content:
+                        content = content[content.find("{"):content.rfind("}")+1]
+                    
                     parsed = json.loads(content)
                     translations = parsed.get("translations", titles)
                     break 
+
                 except: pass
         except: pass
         

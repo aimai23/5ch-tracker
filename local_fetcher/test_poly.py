@@ -2,9 +2,16 @@ import requests
 import json
 import os
 import sys
+from dotenv import load_dotenv
 
-# Try to get API KEY from environment or simple hardcode check (User has it in env)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Load params like main.py
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    print("WARN: GEMINI_API_KEY is not set.")
+    # Exit or allow fetch-only? User asked to reference it, so we try.
+
 
 def fetch_polymarket_events():
     print("Fetching Polymarket data with Diversified Search...")
@@ -61,27 +68,32 @@ def translate_polymarket_events(events):
     titles = [e.get("title", "") for e in events]
     
     prompt = f"""
-    Translate these prediction market event titles to Japanese. 
-    Make them short, catchy.
+    Translate these prediction market event titles to Japanese as concise news headlines.
+    - Style: Natural, "Cool" Japanese news ticker style.
+    - Avoid direct translations ("out by" -> "辞任時期", "IPO by" -> "上場時期").
+    - Keep important proper nouns (Nvidia, BTC) in English if they look better.
+    - OUTPUT MUST BE VALID JSON ONLY.
 
     Titles:
     {json.dumps(titles)}
 
-    Output JSON:
+    Output JSON Format:
     {{
-        "translations": ["Translated Title 1", "Translated Title 2", ...]
+        "translations": ["Translated Title 1", "Translation 2", ...]
     }}
     """
     
+    # Gemma models may not support response_mime_type: application/json
+    # Prioritize smartest models: 27B -> 12B -> 4B
     models = ["gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it"]
     translations = titles
     
     for model_name in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
+        # Removing JSON mode enforcement for Gemma compatibility
         payload = { 
-            "contents": [{"parts": [{"text": prompt}]}], 
-            "generationConfig": {"response_mime_type": "application/json"} 
+            "contents": [{"parts": [{"text": prompt}]}]
         }
         try:
             print(f"Trying {model_name}...")
@@ -90,12 +102,17 @@ def translate_polymarket_events(events):
                 res_json = resp.json()
                 try:
                     content = res_json["candidates"][0]["content"]["parts"][0]["text"]
+                    # Robust cleanup for manual JSON parsing
+                    content = content.replace("```json", "").replace("```", "").strip()
+                    if "{" in content:
+                        content = content[content.find("{"):content.rfind("}")+1]
+                    
                     parsed = json.loads(content)
                     translations = parsed.get("translations", titles)
                     print(f"Success with {model_name}")
                     break 
                 except: 
-                    print("Parse Error")
+                    print("Parse Error (Non-JSON)")
             else:
                 print(f"Failed {model_name}: {resp.status_code}")
         except Exception as e: 
