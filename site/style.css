@@ -698,7 +698,8 @@ footer a {
 }
 
 .news-label {
-  background: linear-gradient(135deg, #ff003c 0%, #a0001e 100%);
+  background: linear-gradient(135deg, #0056b3 0%, #00a8ff 100%);
+  box-shadow: 0 0 10px rgba(0, 168, 255, 0.4);
   color: #fff;
   font-weight: 800;
   padding: 0 1rem;
@@ -724,12 +725,12 @@ footer a {
   white-space: nowrap;
   padding-left: 100%;
   animation: marquee 50s linear infinite;
-  color: #ffffff;
+  color: #e6f7ff;
   font-family: var(--font-mono);
   font-weight: bold;
   font-size: 1.05rem;
   display: inline-block;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
   letter-spacing: 0.5px;
 }
 
