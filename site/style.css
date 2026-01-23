@@ -911,18 +911,18 @@ footer a {
 /* Trend Indicators */
 .trend-up {
   color: #00ff88;
-  font-size: 0.55em;
+  font-size: 0.6em;
   animation: pulse-green 2s infinite;
 }
 
 .trend-down {
   color: #ff4444;
-  font-size: 0.55em;
+  font-size: 0.6em;
 }
 
 .trend-stay {
   color: #666;
-  font-size: 0.55em;
+  font-size: 0.6em;
 }
 
 .trend-new {
