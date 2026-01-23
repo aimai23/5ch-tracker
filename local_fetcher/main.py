@@ -265,9 +265,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
        - "gamble": Pure Gambling/Speculation (Shakoushin/High risk appetite)
        - "iq": Quality of discussion (vs noise)
 
-    4. Write TWO Summaries (max 100 chars each):
-       - "summary": General market news/movers. Style: Highly entertaining and cynical. ACCURATELY MIMIC the specific slang/tone used in the thread (e.g. if they say "God NVDA", use that). Do NOT use generic "www" unless the thread is full of it. Make it sound like a witty recap.
-       - "ongi_comment": STRICT analysis of the THREAD's collective psychology/atmosphere. Analyze the residents' panic or delusion objectively. Do not focus on external market news, focus on the board's reaction. Style: Analytical, intellectual, cold Japanese.
+    4. Write TWO Summaries:
+       - "summary": General market news/movers. (Max 200 chars).
+         - Style: Highly entertaining and cynical. ACCURATELY MIMIC the specific slang/tone used in the thread (e.g. if they say "God NVDA", use that). Do NOT use generic "www" unless the thread is full of it. Make it sound like a witty recap.
+         - Cover multiple topics/tickers if possible.
+       - "ongi_comment": STRICT analysis of the THREAD's collective psychology/atmosphere. Analyze the residents' panic or delusion objectively. Do not focus on external market news, focus on the board's reaction. Style: Analytical, intellectual, cold Japanese. (Max 150 chars).
 
     5. LIVE BREAKING NEWS (Jikkyo/Ticker Style):
        - Compare PREVIOUS vs CURRENT state.
