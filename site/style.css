@@ -802,111 +802,84 @@ footer a {
   opacity: 1;
 }
 
-.tooltip-text::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: #1a1a24 transparent transparent transparent;
+/* Mobile responsive tooltip (optional: adjust position) */
+@media (max-width: 768px) {
+  .tooltip-text {
+    width: 200px;
+    left: -100px;
+    transform: none;
+  }
 }
 
-/* --- Polymarket Insights --- */
-.polymarket-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+/* POLYMARKET STYLES - COMPACT */
+.poly-container {
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  margin-top: 1rem;
 }
 
-.poly-card {
-  background: rgba(20, 20, 30, 0.6);
-  border: 1px solid rgba(213, 0, 249, 0.3);
-  /* Purple accent */
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.3s ease;
+.poly-card-link {
   text-decoration: none;
+  color: inherit;
+  flex: 0 0 calc(20% - 0.8rem);
+  min-width: 140px;
   display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
 }
 
-.poly-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-purple);
-  box-shadow: 0 4px 12px rgba(213, 0, 249, 0.2);
-  background: rgba(213, 0, 249, 0.05);
+@media (max-width: 1400px) {
+  .poly-card-link {
+    flex: 0 0 calc(25% - 0.75rem);
+  }
 }
 
-.poly-title {
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
-}
-
-
-/* Mobile Tooltip Overlay */
-.tooltip-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  animation: fadeIn 0.2s forwards;
-}
-
-.tooltip-modal {
-  background: #1a1a24;
-  border: 1px solid var(--accent-cyan);
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 90%;
-  max-width: 350px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  text-align: center;
-}
-
-#mobile-tooltip-text {
-  color: #ddd;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
-.tooltip-close {
-  background: var(--accent-cyan);
-  color: #000;
-  border: none;
-  padding: 0.5rem 2rem;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  display: inline-block;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
+@media (max-width: 1100px) {
+  .poly-card-link {
+    flex: 0 0 calc(33.33% - 0.67rem);
   }
 }
 
 @media (max-width: 768px) {
+  .poly-card-link {
+    flex: 0 0 calc(50% - 0.5rem); 
+  }
+}
 
-  /* Hide CSS tooltip to use JS modal */
+.poly-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.8rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+  height: 140px;
+  box-sizing: border-box;
+}
+
+.poly-card:hover {
+  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.poly-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 2.6em; /* fixed height for 2 lines */
+}
+
+/* Tooltip override for cleanliness */
+@media (max-width: 768px) {
   .tooltip-text {
     display: none !important;
   }
@@ -934,4 +907,32 @@ footer a {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.8rem;
+}
+
+/* Trend Indicators */
+.trend-up {
+  color: #00ff88;
+  font-size: 0.55em;
+  animation: pulse-green 2s infinite;
+}
+
+.trend-down {
+  color: #ff4444;
+  font-size: 0.55em;
+}
+
+.trend-stay {
+  color: #666;
+  font-size: 0.55em;
+}
+
+.trend-new {
+  color: #00d4ff;
+  font-size: 0.5em;
+  font-weight: 800;
+  border: 1px solid #00d4ff;
+  border-radius: 4px;
+  padding: 1px 3px;
+  letter-spacing: 0.05em;
+  animation: pulse 2s infinite;
 }
