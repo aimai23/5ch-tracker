@@ -810,7 +810,7 @@ footer a {
 }
 
 /* POLYMARKET STYLES - COMPACT */
-.poly-container {
+.polymarket-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;

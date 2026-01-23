@@ -404,7 +404,7 @@ async function main() {
 
       row.innerHTML = `
         <td>
-          <div style="display:flex; flex-direction:column; align-items:center; line-height:1.1;">
+          <div style="display:flex; flex-direction:column; align-items:center; line-height:1.1; gap:3px;">
             <span>${rank}</span>
             ${trendHtml}
           </div>
