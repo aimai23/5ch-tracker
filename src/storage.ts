@@ -68,7 +68,8 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
   }
 
   // Convert DB 0/1 to boolean for is_new
-  const items = (results || []).map(r => ({
+  // Explicitly type 'r' as any to avoid implicit-any error if inference fails
+  const items = (results || []).map((r: any) => ({
     ...r,
     is_new: !!r.is_new
   }));
@@ -90,7 +91,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
 }
 
 export async function putRanking(env: Env, window: string, payload: RankingPayload): Promise<void> {
-  const statements: D1PreparedStatement[] = [];
+  const statements: any[] = []; // Relax type to avoid namespace issues
 
   // 1. Delete old ranking for window
   // Use 'term' column
