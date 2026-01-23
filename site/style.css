@@ -847,7 +847,7 @@ footer a {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.8rem;
-  width: 100%;
+  /* width: 100%; Removed to allow flex-basis to work */
   display: flex;
   flex-direction: column;
   transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
