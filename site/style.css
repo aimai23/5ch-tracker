@@ -72,18 +72,18 @@ h1 {
 
 @keyframes pulse {
   0% {
-    transform: scale(0.95);
-    opacity: 0.7;
+    transform: scale(0.98);
+    opacity: 0.8;
   }
 
   50% {
-    transform: scale(1.2);
+    transform: scale(1.05);
     opacity: 1;
   }
 
   100% {
-    transform: scale(0.95);
-    opacity: 0.7;
+    transform: scale(0.98);
+    opacity: 0.8;
   }
 }
 
@@ -471,17 +471,15 @@ h1 {
 /* Real-time Pulse Animations */
 @keyframes pulse-green {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7);
-    border-color: #fff;
+    text-shadow: 0 0 0 rgba(0, 255, 136, 0.4);
   }
 
   70% {
-    box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
-    border-color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+    text-shadow: 0 0 0 rgba(0, 255, 136, 0);
   }
 }
 
@@ -840,7 +838,7 @@ footer a {
 
 @media (max-width: 768px) {
   .poly-card-link {
-    flex: 0 0 calc(50% - 0.5rem); 
+    flex: 0 0 calc(50% - 0.5rem);
   }
 }
 
@@ -875,7 +873,8 @@ footer a {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 2.6em; /* fixed height for 2 lines */
+  height: 2.6em;
+  /* fixed height for 2 lines */
 }
 
 /* Tooltip override for cleanliness */
