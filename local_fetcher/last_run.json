@@ -1,63 +1,153 @@
 {
-  "timestamp": 1769170133.1173472,
+  "timestamp": 1769174481.1946015,
   "rankings": [
     {
+      "ticker": "MU",
+      "count": 28,
+      "sentiment": -0.2,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
       "ticker": "INTC",
-      "count": 18,
-      "sentiment": -0.85
+      "count": 27,
+      "sentiment": -0.8,
+      "rank_delta": 0,
+      "is_new": false
     },
     {
       "ticker": "NVDA",
-      "count": 16,
-      "sentiment": 0.45
-    },
-    {
-      "ticker": "MU",
-      "count": 13,
-      "sentiment": -0.5
-    },
-    {
-      "ticker": "AMD",
-      "count": 9,
-      "sentiment": 0.7
-    },
-    {
-      "ticker": "NBIS",
-      "count": 8,
-      "sentiment": -0.3
+      "count": 25,
+      "sentiment": 0.7,
+      "rank_delta": -2,
+      "is_new": false
     },
     {
       "ticker": "GLD",
-      "count": 7,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "SOXL",
-      "count": 7,
-      "sentiment": -0.4
+      "count": 20,
+      "sentiment": 0.8,
+      "rank_delta": 1,
+      "is_new": false
     },
     {
       "ticker": "SLV",
-      "count": 6,
-      "sentiment": 0.9
+      "count": 15,
+      "sentiment": 0.9,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "NBIS",
+      "count": 13,
+      "sentiment": -0.7,
+      "rank_delta": 3,
+      "is_new": false
+    },
+    {
+      "ticker": "AMD",
+      "count": 11,
+      "sentiment": 0.8,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "FIGR",
+      "count": 11,
+      "sentiment": 0.7,
+      "rank_delta": 3,
+      "is_new": false
     },
     {
       "ticker": "BTC",
-      "count": 5,
-      "sentiment": -0.75
+      "count": 10,
+      "sentiment": -0.7,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "SOXL",
+      "count": 9,
+      "sentiment": 0.1,
+      "rank_delta": -3,
+      "is_new": false
     },
     {
       "ticker": "RDW",
-      "count": 5,
-      "sentiment": 0.6
+      "count": 7,
+      "sentiment": 0.8,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "QQQ",
+      "count": 6,
+      "sentiment": -0.4,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "AVGO",
+      "count": 6,
+      "sentiment": -0.9,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "GOOG",
+      "count": 6,
+      "sentiment": 0.4,
+      "rank_delta": 5,
+      "is_new": false
+    },
+    {
+      "ticker": "IREN",
+      "count": 4,
+      "sentiment": 0.6,
+      "rank_delta": 0,
+      "is_new": false
+    },
+    {
+      "ticker": "NFLX",
+      "count": 3,
+      "sentiment": -0.3,
+      "rank_delta": 0,
+      "is_new": false
+    },
+    {
+      "ticker": "NUGT",
+      "count": 3,
+      "sentiment": 0.7,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "TSLA",
+      "count": 2,
+      "sentiment": 0.7,
+      "rank_delta": -5,
+      "is_new": false
+    },
+    {
+      "ticker": "OSS",
+      "count": 2,
+      "sentiment": 0.7,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "LPTH",
+      "count": 2,
+      "sentiment": 0.7,
+      "rank_delta": 0,
+      "is_new": true
     }
   ],
   "fear_greed": 45,
   "radar": {
-    "hype": 8,
-    "panic": 6,
-    "faith": 5,
-    "gamble": 9,
+    "hype": 9,
+    "panic": 8,
+    "faith": 3,
+    "gamble": 10,
     "iq": 2
   }
 }
