@@ -413,17 +413,23 @@ def fetch_polymarket_events():
         except:
             return []
 
-    # Strategy: Fetch specifically to force variety
-    queries = [
-        {"tag_slug": "business", "sort": "volume", "limit": 10}, # Base Business
-        {"q": "Fed", "sort": "volume", "limit": 5},              # Macro
-        {"q": "Nvidia", "sort": "volume", "limit": 5},           # Tech/Stock
-        {"q": "Recession", "sort": "volume", "limit": 5},        # Doom
-        {"q": "S&P 500", "sort": "volume", "limit": 5},          # Market
-        {"q": "Top 10", "sort": "volume", "limit": 5},           # Rankings
-        {"q": "Rate", "sort": "volume", "limit": 5}              # Interest Rates
-    ]
+    # Load queries from config or use default
+    config_path = os.path.join(os.path.dirname(BASE_DIR), "config", "polymarket.json")
+    queries = []
     
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                queries = json.load(f)
+            logging.info(f"Loaded {len(queries)} Polymarket queries from config.")
+        except Exception as e:
+            logging.warning(f"Failed to load polymarket.json: {e}")
+    
+    # Fallback if empty or failed
+    if not queries:
+        logging.warning("No Polymarket queries found in config. Skipping Polymarket fetch.")
+        return []
+
     all_events = []
     seen_ids = set()
     
@@ -633,7 +639,7 @@ def fetch_cnn_fear_greed():
         logging.warning(f"Failed to fetch CNN F&G: {e}")
     return None
 
-def run_analysis(debug_mode=False, poly_only=False):
+def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam = load_config()
     
@@ -675,10 +681,16 @@ def run_analysis(debug_mode=False, poly_only=False):
     # Combined Gemini Analysis with Context
     tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news = analyze_market_data(all_text, exclude, prev_state)
     
-    # Validation: If Gemini failed, DO NOT upload empty data (protects backend DB)
     if market_summary == "要約生成失敗":
-        logging.error("Analysis Failed (Gemini API Error). Aborting upload.")
-        return
+        logging.error("Analysis Failed (Gemini API Error).")
+        
+        if retry_count < 1:
+            logging.info("Waiting 10 minutes before retrying process from the beginning...")
+            time.sleep(600)
+            return run_analysis(debug_mode, poly_only, retry_count + 1)
+        else:
+            logging.error("Retry failed or limit reached. Aborting upload.")
+            return
 
     # Fetch External CNN Fear & Greed
     cnn_fg = fetch_cnn_fear_greed()

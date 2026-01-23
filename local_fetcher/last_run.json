@@ -1,63 +1,63 @@
 {
-  "timestamp": 1769007704.9314005,
+  "timestamp": 1769138387.922677,
   "rankings": [
     {
       "ticker": "MU",
-      "count": 17,
-      "sentiment": 0.6
+      "count": 45,
+      "sentiment": 0.85
     },
     {
-      "ticker": "NFLX",
-      "count": 11,
+      "ticker": "INTC",
+      "count": 38,
       "sentiment": -0.8
     },
     {
-      "ticker": "GLD",
-      "count": 10,
-      "sentiment": 0.8
+      "ticker": "SLV",
+      "count": 32,
+      "sentiment": 0.9
+    },
+    {
+      "ticker": "GOLD",
+      "count": 30,
+      "sentiment": 0.9
+    },
+    {
+      "ticker": "NBIS",
+      "count": 25,
+      "sentiment": 0.1
+    },
+    {
+      "ticker": "LMND",
+      "count": 22,
+      "sentiment": 0.85
     },
     {
       "ticker": "SNDK",
-      "count": 9,
+      "count": 18,
+      "sentiment": 0.6
+    },
+    {
+      "ticker": "MRNA",
+      "count": 16,
+      "sentiment": 0.8
+    },
+    {
+      "ticker": "RDW",
+      "count": 14,
       "sentiment": 0.9
     },
     {
       "ticker": "NVDA",
-      "count": 6,
-      "sentiment": -0.2
-    },
-    {
-      "ticker": "OKLO",
-      "count": 5,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "IREN",
-      "count": 4,
-      "sentiment": 0.3
-    },
-    {
-      "ticker": "ZETA",
-      "count": 4,
-      "sentiment": 0.8
-    },
-    {
-      "ticker": "GOOG",
-      "count": 3,
-      "sentiment": 0.0
-    },
-    {
-      "ticker": "LMND",
-      "count": 3,
-      "sentiment": 0.7
+      "count": 12,
+      "sentiment": 0.4
     }
   ],
-  "fear_greed": 25,
+  "fear_greed": 78,
   "radar": {
-    "hype": 7,
-    "panic": 9,
-    "faith": 4,
-    "gamble": 8,
-    "iq": 1
+    "hype": 9,
+    "panic": 3,
+    "faith": 8,
+    "gamble": 10,
+    "iq": 2
   }
 }

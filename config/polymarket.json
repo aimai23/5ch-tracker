@@ -1,0 +1,37 @@
+[
+    {
+        "tag_slug": "business",
+        "sort": "volume",
+        "limit": 10
+    },
+    {
+        "q": "Fed",
+        "sort": "volume",
+        "limit": 5
+    },
+    {
+        "q": "Nvidia",
+        "sort": "volume",
+        "limit": 5
+    },
+    {
+        "q": "Recession",
+        "sort": "volume",
+        "limit": 5
+    },
+    {
+        "q": "S&P 500",
+        "sort": "volume",
+        "limit": 5
+    },
+    {
+        "q": "Top 10",
+        "sort": "volume",
+        "limit": 5
+    },
+    {
+        "q": "Rate",
+        "sort": "volume",
+        "limit": 5
+    }
+]

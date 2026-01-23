@@ -129,7 +129,12 @@ function renderOngiHistoryChart(history) {
           ticks: {
             color: '#888',
             maxTicksLimit: 8,
-            font: { family: '"JetBrains Mono", sans-serif' }
+            font: { family: '"JetBrains Mono", sans-serif' },
+            callback: function (val, index) {
+              // Show only Date part (split by space)
+              const label = this.getLabelForValue(val);
+              return label.split(" ")[0];
+            }
           }
         }
       },
