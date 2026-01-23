@@ -843,16 +843,17 @@ footer a {
 }
 
 .poly-card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
+  background-color: #1a1625;
+  border: 1px solid #4a3b69;
   border-radius: 8px;
   padding: 0.8rem;
   /* width: 100%; Removed to allow flex-basis to work */
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
   height: 140px;
   box-sizing: border-box;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .poly-card:hover {
