@@ -389,8 +389,26 @@ async function main() {
         moodText = "BEAR";
       }
 
+      // Trend Logic
+      let trendHtml = "";
+      if (item.is_new) {
+        trendHtml = `<span class="trend-new">NEW</span>`;
+      } else if (item.rank_delta !== undefined && item.rank_delta !== 0) {
+        const isUp = item.rank_delta > 0;
+        const arrow = isUp ? "▲" : "▼";
+        const colorClass = isUp ? "trend-up" : "trend-down";
+        trendHtml = `<span class="${colorClass}">${arrow}</span>`;
+      } else {
+        trendHtml = `<span class="trend-stay">─</span>`;
+      }
+
       row.innerHTML = `
-        <td>${rank}</td>
+        <td>
+          <div style="display:flex; flex-direction:column; align-items:center; line-height:1.1;">
+            <span>${rank}</span>
+            ${trendHtml}
+          </div>
+        </td>
         <td>
           <div class="ticker-cell">
             <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${item.ticker}?format=png" loading="lazy" onerror="this.style.display='none'">

@@ -4,6 +4,8 @@ export interface RankingItem {
   ticker: string;
   count: number;
   sentiment?: number;
+  rank_delta?: number;
+  is_new?: boolean;
 }
 
 // PriceItem Removed
@@ -46,10 +48,10 @@ function rankingMetaKey(window: string): string {
 export async function getRanking(env: Env, window: string): Promise<RankingPayload | null> {
   // 1. Get items
   const { results } = await env.DB.prepare(
-    "SELECT ticker, count, sentiment FROM rankings WHERE term = ? ORDER BY count DESC LIMIT 20"
+    "SELECT ticker, count, sentiment, rank_delta, is_new FROM rankings WHERE term = ? ORDER BY count DESC LIMIT 20"
   )
     .bind(window)
-    .all<{ ticker: string; count: number; sentiment: number }>();
+    .all<{ ticker: string; count: number; sentiment: number; rank_delta: number; is_new: number }>();
 
   // 2. Get meta (sources, updatedAt)
   const metaRaw = await env.DB.prepare("SELECT value FROM meta WHERE key = ?")
@@ -65,10 +67,16 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     } catch { }
   }
 
+  // Convert DB 0/1 to boolean for is_new
+  const items = (results || []).map(r => ({
+    ...r,
+    is_new: !!r.is_new
+  }));
+
   return {
     window,
     updatedAt: meta.updatedAt ?? null,
-    items: results || [],
+    items: items,
     topics: meta.topics || [],
     overview: meta.overview || null,
     ongi_comment: meta.ongi_comment || null,
@@ -91,8 +99,8 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   // 2. Insert new items
   for (const item of payload.items) {
     statements.push(
-      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment) VALUES (?, ?, ?, ?)")
-        .bind(window, item.ticker, item.count, item.sentiment ?? 0)
+      env.DB.prepare("INSERT INTO rankings (term, ticker, count, sentiment, rank_delta, is_new) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(window, item.ticker, item.count, item.sentiment ?? 0, item.rank_delta ?? 0, item.is_new ? 1 : 0)
     );
   }
 

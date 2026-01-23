@@ -1,63 +1,63 @@
 {
-  "timestamp": 1769169658.734878,
+  "timestamp": 1769170133.1173472,
   "rankings": [
-    {
-      "ticker": "NVDA",
-      "count": 22,
-      "sentiment": 0.85
-    },
     {
       "ticker": "INTC",
       "count": 18,
-      "sentiment": -0.9
+      "sentiment": -0.85
+    },
+    {
+      "ticker": "NVDA",
+      "count": 16,
+      "sentiment": 0.45
     },
     {
       "ticker": "MU",
-      "count": 14,
-      "sentiment": -0.1
+      "count": 13,
+      "sentiment": -0.5
     },
     {
       "ticker": "AMD",
-      "count": 12,
-      "sentiment": 0.75
-    },
-    {
-      "ticker": "SOXL",
-      "count": 10,
-      "sentiment": 0.4
-    },
-    {
-      "ticker": "GOLD",
       "count": 9,
+      "sentiment": 0.7
+    },
+    {
+      "ticker": "NBIS",
+      "count": 8,
+      "sentiment": -0.3
+    },
+    {
+      "ticker": "GLD",
+      "count": 7,
       "sentiment": 0.9
     },
     {
-      "ticker": "SLV",
-      "count": 8,
-      "sentiment": 0.95
-    },
-    {
-      "ticker": "IREN",
+      "ticker": "SOXL",
       "count": 7,
-      "sentiment": 0.6
+      "sentiment": -0.4
     },
     {
-      "ticker": "FIGR",
+      "ticker": "SLV",
       "count": 6,
-      "sentiment": 0.65
+      "sentiment": 0.9
+    },
+    {
+      "ticker": "BTC",
+      "count": 5,
+      "sentiment": -0.75
     },
     {
       "ticker": "RDW",
       "count": 5,
-      "sentiment": 0.7
+      "sentiment": 0.6
     }
   ],
-  "fear_greed": 62,
+  "fear_greed": 45,
   "radar": {
-    "hype": 9,
-    "panic": 4,
-    "faith": 7,
+    "hype": 8,
+    "panic": 6,
+    "faith": 5,
     "gamble": 9,
-    "iq": 3
+    "iq": 2
   }
 }

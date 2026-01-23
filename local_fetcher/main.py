@@ -483,8 +483,8 @@ def fetch_polymarket_events():
     # Sort everything by volume first
     all_events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
     
-    logging.info(f"Total Polymarket events found: {len(all_events)}. Top 8 selected.")
-    return all_events[:8]
+    logging.info(f"Total Polymarket events found: {len(all_events)}. Top 10 selected.")
+    return all_events[:10]
 
 def translate_polymarket_events(events):
     if not events: return []
@@ -742,16 +742,52 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             agg[sym]["sent_w_sum"] += (sent * cnt)
     
     final_items = []
+    
+    # Calculate Deltas from Previous State
+    prev_ranks = {}
+    if prev_state and "rankings" in prev_state:
+        for i, item in enumerate(prev_state["rankings"]):
+            t_name = item.get("ticker")
+            if t_name:
+                prev_ranks[t_name] = i + 1 # 1-based rank
+
+    # Create temporary list properly first
+    temp_list = []
     for k, v in agg.items():
         avg_sent = v["sent_w_sum"] / v["count"] if v["count"] > 0 else 0.0
-        final_items.append({ "ticker": k, "count": v["count"], "sentiment": round(avg_sent, 2) })
+        temp_list.append({ "ticker": k, "count": v["count"], "sentiment": round(avg_sent, 2) })
+    
+    # Sort to determine CURRENT rank
+    temp_list.sort(key=lambda x: x["count"], reverse=True)
 
-    final_items.sort(key=lambda x: x["count"], reverse=True)
+    # Assign Delta/New status
+    for i, item in enumerate(temp_list):
+        current_rank = i + 1
+        ticker = item["ticker"]
+        
+        # Logic:
+        # If in prev_ranks: Delta = Prev - Current
+        #   (e.g. Prev=5, Cur=2 -> Delta = 3 (Up))
+        #   (e.g. Prev=1, Cur=5 -> Delta = -4 (Down))
+        # If not, Is New = True
+        
+        if ticker in prev_ranks:
+            delta = prev_ranks[ticker] - current_rank
+            item["rank_delta"] = delta
+            item["is_new"] = False
+        else:
+            item["rank_delta"] = 0
+            item["is_new"] = True
+            
+        final_items.append(item)
+
+    # Limit top 20 for storing/sending is usually done by slice later
+    # but final_items is effectively sorted now.
     
     # Save State for Next Run
     current_state = {
         "timestamp": time.time(),
-        "rankings": final_items[:10], # Top 10 for context
+        "rankings": final_items[:20], # Context for next run needs top 20 to track movement
         "fear_greed": fear_greed,
         "radar": radar_data
     }

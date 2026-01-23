@@ -1,0 +1,3 @@
+-- Migration number: 0005 	 2024-01-23T00:00:00.000Z
+ALTER TABLE rankings ADD COLUMN rank_delta INTEGER DEFAULT 0;
+ALTER TABLE rankings ADD COLUMN is_new INTEGER DEFAULT 0;
