@@ -33,5 +33,10 @@
         "q": "Rate",
         "sort": "volume",
         "limit": 5
+    },
+    {
+        "q": "Technology",
+        "sort": "volume",
+        "limit": 5
     }
 ]

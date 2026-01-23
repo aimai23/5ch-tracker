@@ -1,63 +1,63 @@
 {
-  "timestamp": 1769138387.922677,
+  "timestamp": 1769169658.734878,
   "rankings": [
     {
-      "ticker": "MU",
-      "count": 45,
-      "sentiment": 0.85
-    },
-    {
-      "ticker": "INTC",
-      "count": 38,
-      "sentiment": -0.8
-    },
-    {
-      "ticker": "SLV",
-      "count": 32,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "GOLD",
-      "count": 30,
-      "sentiment": 0.9
-    },
-    {
-      "ticker": "NBIS",
-      "count": 25,
-      "sentiment": 0.1
-    },
-    {
-      "ticker": "LMND",
+      "ticker": "NVDA",
       "count": 22,
       "sentiment": 0.85
     },
     {
-      "ticker": "SNDK",
+      "ticker": "INTC",
       "count": 18,
-      "sentiment": 0.6
+      "sentiment": -0.9
     },
     {
-      "ticker": "MRNA",
-      "count": 16,
-      "sentiment": 0.8
-    },
-    {
-      "ticker": "RDW",
+      "ticker": "MU",
       "count": 14,
+      "sentiment": -0.1
+    },
+    {
+      "ticker": "AMD",
+      "count": 12,
+      "sentiment": 0.75
+    },
+    {
+      "ticker": "SOXL",
+      "count": 10,
+      "sentiment": 0.4
+    },
+    {
+      "ticker": "GOLD",
+      "count": 9,
       "sentiment": 0.9
     },
     {
-      "ticker": "NVDA",
-      "count": 12,
-      "sentiment": 0.4
+      "ticker": "SLV",
+      "count": 8,
+      "sentiment": 0.95
+    },
+    {
+      "ticker": "IREN",
+      "count": 7,
+      "sentiment": 0.6
+    },
+    {
+      "ticker": "FIGR",
+      "count": 6,
+      "sentiment": 0.65
+    },
+    {
+      "ticker": "RDW",
+      "count": 5,
+      "sentiment": 0.7
     }
   ],
-  "fear_greed": 78,
+  "fear_greed": 62,
   "radar": {
     "hype": 9,
-    "panic": 3,
-    "faith": 8,
-    "gamble": 10,
-    "iq": 2
+    "panic": 4,
+    "faith": 7,
+    "gamble": 9,
+    "iq": 3
   }
 }

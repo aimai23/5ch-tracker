@@ -78,7 +78,17 @@ def load_config():
             exclude = data.get("tickers", []) + data.get("words", []) + data.get("exclude", [])
             spam = data.get("spam", [])
             stopwords = data.get("stopwords", [])
-    return stopwords, exclude, spam
+    
+    nicknames = {}
+    nick_path = os.path.join(os.path.dirname(BASE_DIR), "config", "nickname_dictionary.json")
+    if os.path.exists(nick_path):
+        try:
+            with open(nick_path, "r", encoding="utf-8") as f:
+                nicknames = json.load(f)
+        except Exception as e:
+            logging.warning(f"Failed to load nickname_dictionary.json: {e}")
+
+    return stopwords, exclude, spam, nicknames
 
 def discover_threads():
     logging.info("Discovering latest threads from 5ch...")
@@ -210,7 +220,7 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list, prev_state=None):
+def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
     """
     Combined analysis: Extracts tickers AND generates a summary in one shot.
     """
@@ -241,6 +251,8 @@ def analyze_market_data(text, exclude_list, prev_state=None):
        - Map company names to valid US tickers (e.g. "Apple" -> AAPL).
        - Sentiment (-1.0 to 1.0).
        - Exclude: {json.dumps(exclude_list)}
+       - REFERENCE NICKNAMES (Use these to identify Tickers):
+         {json.dumps(nicknames, ensure_ascii=False)}
        - Extract ALL mentioned tickers. Do not limit to Top 10. Aim for Top 20 if data allows.
 
     2. Analyze Market Sentiment (Ongi & Greed):
@@ -641,7 +653,7 @@ def fetch_cnn_fear_greed():
 
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
-    stopwords, exclude, spam = load_config()
+    stopwords, exclude, spam, nicknames = load_config()
     
     # Polymarket Fetch (Parallel-ish in effect)
     polymarket_raw = fetch_polymarket_events()
@@ -679,7 +691,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news = analyze_market_data(all_text, exclude, prev_state)
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news = analyze_market_data(all_text, exclude, nicknames, prev_state)
     
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
