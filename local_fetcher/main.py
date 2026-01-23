@@ -276,9 +276,9 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
        - IMPORTANT: DO NOT use "【速報】". You can use "【悲報】", "【朗報】", "【異変】" etc, or just start with the Ticker.
        - Focus on CHANGE: Rank swaps, Sentiment flips (Fear->Greed), crash or moon.
        - Examples:
-         - "SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
+         - "【朗報】SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
          - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
-         - "【朗報】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
+         - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
     Output STRICT JSON format:
     {{
@@ -442,6 +442,18 @@ def fetch_polymarket_events():
         logging.warning("No Polymarket queries found in config. Skipping Polymarket fetch.")
         return []
 
+    # Load excluded titles
+    exclude_path = os.path.join(os.path.dirname(BASE_DIR), "config", "polymarket_exclude.json")
+    excluded_keywords = []
+    if os.path.exists(exclude_path):
+        try:
+            with open(exclude_path, "r", encoding="utf-8") as f:
+                excluded_keywords = json.load(f)
+            logging.info(f"Loaded {len(excluded_keywords)} exclusion keywords.")
+        except Exception as e:
+            logging.warning(f"Failed to load polymarket_exclude.json: {e}")
+
+    # Process and Filter
     all_events = []
     seen_ids = set()
     
@@ -451,9 +463,19 @@ def fetch_polymarket_events():
         res = get_events(q)
         for e in res:
             eid = e.get("id")
+            title = e.get("title", "")
+            
+            # Exclusion Check
+            is_excluded = False
+            for kw in excluded_keywords:
+                if kw.lower() in title.lower():
+                    is_excluded = True
+                    break
+            
+            if is_excluded:
+                continue
+
             if eid not in seen_ids:
-                # Filter out pure crypto prices (often noisy) if fetched via specific non-crypto queries
-                # For now, accept them but relying on variety of queries to mix it up
                 seen_ids.add(eid)
                 all_events.append(e)
         logging.info(f"Polymarket Query '{q.get('q', q.get('tag_slug'))}': Found {len(res)} events.")

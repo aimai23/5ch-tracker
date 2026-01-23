@@ -130,10 +130,26 @@ function renderOngiHistoryChart(history) {
             color: '#888',
             maxTicksLimit: 8,
             font: { family: '"JetBrains Mono", sans-serif' },
-            callback: function (val, index) {
-              // Show only Date part (split by space)
+            callback: function (val, index, ticks) {
               const label = this.getLabelForValue(val);
-              return label.split(" ")[0];
+              const datePart = label.split(" ")[0];
+
+              // Always show first and last
+              if (index === 0 || index === ticks.length - 1) {
+                return datePart;
+              }
+
+              // Show only if different from previous visible tick
+              // Note: Chart.js 'ticks' array contains the actual ticks being rendered
+              // But 'val' is the index in the data array.
+              // Simple approach: Check difference from PREVIOUS data point
+              const prevLabel = this.getLabelForValue(ticks[index - 1].value);
+              const prevDate = prevLabel.split(" ")[0];
+
+              if (datePart === prevDate) {
+                return ""; // Hide duplicate
+              }
+              return datePart;
             }
           }
         }
