@@ -395,7 +395,7 @@ async function main() {
         trendHtml = `<span class="trend-new">NEW</span>`;
       } else if (item.rank_delta !== undefined && item.rank_delta !== 0) {
         const isUp = item.rank_delta > 0;
-        const arrow = isUp ? "∧" : "∨";
+        const arrow = isUp ? "▲" : "▼";
         const colorClass = isUp ? "trend-up" : "trend-down";
         trendHtml = `<span class="${colorClass}">${arrow}</span>`;
       } else {
@@ -610,7 +610,7 @@ function renderPolymarket(data) {
       } catch (e) { }
 
       const card = document.createElement("a");
-      card.className = "poly-card";
+      card.className = "poly-card poly-card-link";
       card.href = item.url;
       card.target = "_blank";
       card.style.textDecoration = "none";
