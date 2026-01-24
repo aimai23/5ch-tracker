@@ -249,21 +249,28 @@ body {
     height: 24px;
   }
 
-  /* Tiny Live Status */
+  /* Tiny Live Status (Icon Only) */
   .live-status {
-    padding: 2px 6px;
-    gap: 4px;
+    padding: 4px;
+    background: transparent;
+    /* Remove background for cleaner look? Or keep it? User said "icon only" */
+    /* Let's keep the dot, maybe remove background if it looks bulky, but user just said "no text" */
+    /* Actually, user said "only icon open" (icon dake de yoi).
+       The current .live-status has background. Let's keep background circle or just the dot?
+       Usually 'Live' implies the red/green dot.
+       I will keep .live-status styling but hide text. */
   }
 
   .live-text {
-    display: block;
-    /* Show text but tiny */
-    font-size: 0.6rem;
+    display: none;
+    /* Hide Text per user request */
   }
 
   .live-indicator {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
+    margin: 0;
+    /* precise control */
   }
 
   /* Hide specific time on very small screens if needed */
