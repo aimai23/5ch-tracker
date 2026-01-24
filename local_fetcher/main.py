@@ -445,7 +445,7 @@ def fetch_doughcon_data():
         logging.error(f"Failed to fetch Doughcon data: {e}")
     return None
 
-def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None):
+def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None, yield_curve_data=None):
     logging.info(f"Sending {len(final_items)} tickers, {len(topics)} topics, {len(polymarket_data)} polymarket, {len(reddit_data or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -801,6 +801,34 @@ def fetch_sahm_rule():
         logging.warning(f"Failed to fetch Sahm Rule: {e}")
     return None
 
+def fetch_yield_curve():
+    try:
+        url = "https://fred.stlouisfed.org/series/T10Y2Y"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            val_el = soup.find(class_="series-meta-observation-value")
+            if val_el:
+                val = float(val_el.get_text(strip=True))
+                # Yield Curve Logic
+                # < 0: Inverted (Danger)
+                # 0 - 0.2: Flattening (Warning)
+                # > 0.2: Normal (Safe)
+                state = "Normal"
+                if val < 0: state = "Inverted"
+                elif val < 0.2: state = "Flattening"
+                
+                return {
+                    "value": val,
+                    "state": state
+                }
+    except Exception as e:
+        logging.warning(f"Failed to fetch Yield Curve: {e}")
+    return None
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
@@ -926,15 +954,22 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     # Limit top 20 for storing/sending is usually done by slice later
     # but final_items is effectively sorted now.
     
-    # Save State for Next Run
-    current_state = {
-        "timestamp": time.time(),
-        "rankings": final_items[:20], # Context for next run needs top 20 to track movement
-        "fear_greed": fear_greed,
-        "radar": radar_data,
-        "doughcon": doughcon_data,
-        "sahm_rule": sahm_data
-    }
+    # Crisis Indicators
+    doughcon_data = fetch_doughcon_level()
+    sahm_data = fetch_sahm_rule()
+    yield_curve_data = fetch_yield_curve()
+
+    # Save to last_run.json
+    try:
+        current_state = {
+            "timestamp": time.time(),
+            "rankings": final_items[:20],
+            "fear_greed": fear_greed,
+            "radar": radar_data,
+            "doughcon": doughcon_data,
+            "sahm_rule": sahm_data,
+            "yield_curve": yield_curve_data
+        }
     save_current_state(current_state)
     
     logging.info("--- Top 20 Tickers ---")
@@ -948,7 +983,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data)
+    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data, yield_curve_data=yield_curve_data)
 
 if __name__ == "__main__":
     import argparse

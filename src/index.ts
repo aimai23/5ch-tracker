@@ -133,6 +133,7 @@ export default {
         cnn_fear_greed: body.cnn_fear_greed,
         doughcon: body.doughcon,
         sahm_rule: body.sahm_rule,
+        yield_curve: body.yield_curve,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

@@ -43,6 +43,7 @@ export type RankingPayload = {
   cnn_fear_greed?: { score: number; rating: string; timestamp?: string };
   doughcon?: { level: number; description: string };
   sahm_rule?: { value: number; state: string };
+  yield_curve?: { value: number; state: string };
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -102,6 +103,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     cnn_fear_greed: meta.cnn_fear_greed,
     doughcon: meta.doughcon,
     sahm_rule: meta.sahm_rule,
+    yield_curve: meta.yield_curve,
     sources: meta.sources || [],
   };
 }
@@ -137,6 +139,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     cnn_fear_greed: payload.cnn_fear_greed,
     doughcon: payload.doughcon,
     sahm_rule: payload.sahm_rule,
+    yield_curve: payload.yield_curve,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

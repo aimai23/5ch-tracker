@@ -245,6 +245,11 @@ async function main() {
       updateSahmRule(data.sahm_rule);
     }
 
+    // NEW: YIELD CURVE
+    if (data.yield_curve) {
+      updateYieldCurve(data.yield_curve);
+    }
+
     // Breaking News Ticker
     const tickerContainer = document.getElementById("breaking-news-container");
     const tickerText = document.getElementById("news-marquee");
@@ -775,6 +780,24 @@ function updateSahmRule(data) {
   let color = "#00ff00";
   if (data.value >= 0.50) color = "#ff0000";
   else if (data.value >= 0.30) color = "#ffff00";
+
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 30px ${color}`;
+}
+
+function updateYieldCurve(data) {
+  const levelEl = document.getElementById("yield-level");
+  const descEl = document.getElementById("yield-desc");
+
+  if (!data || !levelEl) return;
+
+  levelEl.textContent = data.state.toUpperCase();
+  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}%`;
+
+  // Color Logic (Inverted (<0) = Danger/Red, Flattening (<0.2) = Warning/Yellow, Normal = Safe/Green)
+  let color = "#00ff00"; // Green
+  if (data.value < 0) color = "#ff0000";       // Inverted
+  else if (data.value < 0.2) color = "#ffff00"; // Flattening
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
