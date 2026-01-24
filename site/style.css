@@ -1091,7 +1091,7 @@ footer a {
   border-radius: 6px;
   padding: 10px;
   position: absolute;
-  z-index: 10;
+  z-index: 100;
   top: 125%;
   right: 0;
   opacity: 0;
