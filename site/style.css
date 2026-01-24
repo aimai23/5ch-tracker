@@ -967,7 +967,15 @@ footer a {
   font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s ease;
+}
+
+@media (max-width: 400px) {
+  .source-tab {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
 }
 
 .source-tab:hover {
