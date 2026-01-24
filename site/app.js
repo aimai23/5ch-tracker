@@ -748,13 +748,15 @@ function updateDoughcon(data) {
   levelEl.textContent = `DEFCON ${data.level}`;
   if (descEl) descEl.textContent = data.description;
 
-  // Color Logic (1=Red/Danger, 5=Green/Safe)
+  // Color Logic (1=Red, 2=Orange, 3=Yellow, 4=Blue, 5=Green)
   let color = "#fff";
-  if (data.level <= 1) color = "#ff0000";       // Critical
-  else if (data.level <= 2) color = "#ff4500";  // High
-  else if (data.level <= 3) color = "#ffa500";  // Elevated
-  else if (data.level <= 4) color = "#ffff00";  // Moderate
-  else color = "#00ff00";                       // Low
+  const level = parseInt(data.level);
+
+  if (level === 1) color = "#ff0000";       // Critical (Red)
+  else if (level <= 2) color = "#ff6600";   // High (Orange)
+  else if (level <= 3) color = "#ffff00";   // High (Yellow)
+  else if (level <= 4) color = "#00aaff";   // Elevated (Blue)
+  else color = "#00ff00";                   // Low (Green)
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
@@ -763,17 +765,17 @@ function updateDoughcon(data) {
 function updateSahmRule(data) {
   const levelEl = document.getElementById("sahm-level");
   const descEl = document.getElementById("sahm-desc");
-  
+
   if (!data || !levelEl) return;
-  
+
   levelEl.textContent = data.value.toFixed(2);
   if (descEl) descEl.textContent = data.state.toUpperCase();
-  
+
   // Color Logic (0.50+ = Recession/Red, 0.40+ = Warning/Yellow, <0.40 = Safe/Green)
   let color = "#00ff00";
-  if (data.value >= 0.50) color = "#ff0000";       
+  if (data.value >= 0.50) color = "#ff0000";
   else if (data.value >= 0.40) color = "#ffff00";
-  
+
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
 }
