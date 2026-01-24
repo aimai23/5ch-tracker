@@ -550,7 +550,7 @@ function renderWordCloud() {
     list: currentTopics,
     gridSize: 10,
     weightFactor: function (size) {
-      return Math.max((size * scale) * 1.5, 10); // Minimum 10px
+      return Math.max((size * scale) * 2.5, 12); // Minimum 12px
     },
     fontFamily: '"Inter", "JetBrains Mono", sans-serif',
     color: function (word, weight) {
