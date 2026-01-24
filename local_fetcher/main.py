@@ -437,7 +437,7 @@ def fetch_doughcon_data():
         logging.error(f"Failed to fetch Doughcon data: {e}")
     return None
 
-def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None):
+def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None):
     logging.info(f"Sending {len(final_items)} tickers, {len(topics)} topics, {len(polymarket_data)} polymarket, {len(reddit_data or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -460,7 +460,8 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
         "polymarket": polymarket or [],
         "reddit_rankings": reddit_rankings or [],
         "cnn_fear_greed": cnn_fear_greed,
-        "doughcon": doughcon_data
+        "doughcon": doughcon_data,
+        "sahm_rule": sahm_data
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -766,6 +767,31 @@ def fetch_doughcon_level():
         logging.warning(f"Failed to fetch DOUGHCON: {e}")
     return None
 
+def fetch_sahm_rule():
+    try:
+        url = "https://fred.stlouisfed.org/series/SAHMREALTIME"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            val_el = soup.find(class_="series-meta-observation-value")
+            if val_el:
+                val = float(val_el.get_text(strip=True))
+                # Sahm Rule Logic: 0.50 is the trigger
+                state = "Safe"
+                if val >= 0.50: state = "Recession Signal"
+                elif val >= 0.40: state = "Warning"
+                
+                return {
+                    "value": val,
+                    "state": state
+                }
+    except Exception as e:
+        logging.warning(f"Failed to fetch Sahm Rule: {e}")
+    return None
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
@@ -781,6 +807,11 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     doughcon_data = fetch_doughcon_level()
     if doughcon_data:
         logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
+
+    # Sahm Rule Fetch
+    sahm_data = fetch_sahm_rule()
+    if sahm_data:
+        logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
     
     
     if poly_only:

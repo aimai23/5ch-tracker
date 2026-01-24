@@ -240,6 +240,11 @@ async function main() {
       updateDoughcon(data.doughcon);
     }
 
+    // NEW: SAHM RULE
+    if (data.sahm_rule) {
+      updateSahmRule(data.sahm_rule);
+    }
+
     // Breaking News Ticker
     const tickerContainer = document.getElementById("breaking-news-container");
     const tickerText = document.getElementById("news-marquee");
@@ -737,12 +742,12 @@ if (tooltipOverlay) {
 function updateDoughcon(data) {
   const levelEl = document.getElementById("doughcon-level");
   const descEl = document.getElementById("doughcon-desc");
-  
+
   if (!data || !levelEl) return;
-  
+
   levelEl.textContent = `DEFCON ${data.level}`;
   if (descEl) descEl.textContent = data.description;
-  
+
   // Color Logic (1=Red/Danger, 5=Green/Safe)
   let color = "#fff";
   if (data.level <= 1) color = "#ff0000";       // Critical
@@ -750,6 +755,24 @@ function updateDoughcon(data) {
   else if (data.level <= 3) color = "#ffa500";  // Elevated
   else if (data.level <= 4) color = "#ffff00";  // Moderate
   else color = "#00ff00";                       // Low
+
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 30px ${color}`;
+}
+
+function updateSahmRule(data) {
+  const levelEl = document.getElementById("sahm-level");
+  const descEl = document.getElementById("sahm-desc");
+  
+  if (!data || !levelEl) return;
+  
+  levelEl.textContent = data.value.toFixed(2);
+  if (descEl) descEl.textContent = data.state.toUpperCase();
+  
+  // Color Logic (0.50+ = Recession/Red, 0.40+ = Warning/Yellow, <0.40 = Safe/Green)
+  let color = "#00ff00";
+  if (data.value >= 0.50) color = "#ff0000";       
+  else if (data.value >= 0.40) color = "#ffff00";
   
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;

@@ -175,10 +175,12 @@
           <canvas id="ongi-history-chart"></canvas>
         </div>
 
-        <!-- Bottom: DOUGHCON Card -->
-        <div style="display: flex; justify-content: center; margin-top: 2rem;">
+        <!-- Bottom Row: DOUGHCON & SAHM RULE -->
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; margin-top: 2rem; gap: 1rem;">
+
+          <!-- DOUGHCON -->
           <div class="doughcon-wrapper"
-            style="flex: 1; min-width: 250px; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 16px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center;">
+            style="flex: 1; min-width: 250px; max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 16px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center;">
             <div
               style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
               🍕 PIZZA INTEL (DOUGHCON)
@@ -201,6 +203,33 @@
                 style="color:#666; text-decoration:none;">pizzint.watch</a>
             </div>
           </div>
+
+          <!-- SAHM RULE -->
+          <div class="sahm-wrapper"
+            style="flex: 1; min-width: 250px; max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 16px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center;">
+            <div
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              📉 RECESSION MONITOR (SAHM)
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:250px; bottom: 120%;">
+                  サーム・ルール景気後退指標。<br>失業率の直近3ヶ月移動平均が、過去12ヶ月の最低値より0.50ポイント上昇すると景気後退シグナルとされます。
+                </div>
+              </div>
+            </div>
+            <div id="sahm-level"
+              style="font-size: 3.5rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5);">
+              --</div>
+            <div id="sahm-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://fred.stlouisfed.org/series/SAHMREALTIME" target="_blank"
+                style="color:#666; text-decoration:none;">FRED (St. Louis Fed)</a>
+            </div>
+          </div>
+
         </div>
 
       </section>
