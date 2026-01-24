@@ -746,7 +746,7 @@ function updateDoughcon(data) {
   if (!data || !levelEl) return;
 
   levelEl.textContent = data.description;
-  if (descEl) descEl.textContent = `LEVEL ${data.level}`;
+  if (descEl) descEl.textContent = `DEFCON ${data.level}`;
 
   // Color Logic (1=Red, 2=Orange, 3=Yellow, 4=Blue, 5=Green)
   let color = "#fff";
