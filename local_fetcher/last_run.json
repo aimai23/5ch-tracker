@@ -1,153 +1,118 @@
 {
-  "timestamp": 1769256056.1224294,
+  "timestamp": 1769257614.2563264,
   "rankings": [
     {
       "ticker": "SLV",
-      "count": 25,
-      "sentiment": 0.9,
-      "rank_delta": 2,
+      "count": 42,
+      "sentiment": 0.85,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "MU",
-      "count": 22,
-      "sentiment": -0.7,
-      "rank_delta": -1,
+      "count": 38,
+      "sentiment": -0.45,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "IREN",
-      "count": 18,
-      "sentiment": 0.8,
-      "rank_delta": -1,
+      "count": 35,
+      "sentiment": 0.75,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "GLD",
-      "count": 16,
-      "sentiment": 0.9,
+      "count": 31,
+      "sentiment": 0.82,
       "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "SNDK",
-      "count": 12,
-      "sentiment": -0.8,
+      "count": 28,
+      "sentiment": -0.65,
       "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "NVDA",
-      "count": 10,
-      "sentiment": 0.3,
-      "rank_delta": 1,
-      "is_new": false
-    },
-    {
-      "ticker": "QQQ",
-      "count": 10,
-      "sentiment": -0.5,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "AVGO",
-      "count": 9,
-      "sentiment": 0.4,
-      "rank_delta": 3,
-      "is_new": false
-    },
-    {
-      "ticker": "NFLX",
-      "count": 8,
-      "sentiment": 0.6,
-      "rank_delta": -3,
       "is_new": false
     },
     {
       "ticker": "INTC",
-      "count": 7,
-      "sentiment": -0.9,
-      "rank_delta": -2,
+      "count": 25,
+      "sentiment": -0.72,
+      "rank_delta": 4,
+      "is_new": false
+    },
+    {
+      "ticker": "NVDA",
+      "count": 22,
+      "sentiment": 0.25,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "NFLX",
+      "count": 18,
+      "sentiment": 0.55,
+      "rank_delta": 1,
+      "is_new": false
+    },
+    {
+      "ticker": "AVGO",
+      "count": 15,
+      "sentiment": 0.35,
+      "rank_delta": -1,
       "is_new": false
     },
     {
       "ticker": "BTC",
-      "count": 7,
-      "sentiment": 0.1,
-      "rank_delta": -2,
+      "count": 14,
+      "sentiment": 0.2,
+      "rank_delta": 1,
       "is_new": false
     },
     {
       "ticker": "PLTR",
-      "count": 5,
-      "sentiment": 0.5,
-      "rank_delta": 2,
-      "is_new": false
-    },
-    {
-      "ticker": "SOXL",
-      "count": 5,
-      "sentiment": -0.4,
-      "rank_delta": 0,
+      "count": 12,
+      "sentiment": 0.15,
+      "rank_delta": 1,
       "is_new": false
     },
     {
       "ticker": "TSLA",
-      "count": 4,
-      "sentiment": 0.2,
-      "rank_delta": -4,
-      "is_new": false
-    },
-    {
-      "ticker": "GS",
-      "count": 4,
-      "sentiment": -0.6,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "META",
-      "count": 3,
-      "sentiment": 0.3,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "LMND",
-      "count": 2,
-      "sentiment": 0.7,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "EWY",
-      "count": 2,
-      "sentiment": 0.6,
+      "count": 10,
+      "sentiment": -0.1,
       "rank_delta": 2,
       "is_new": false
     },
     {
-      "ticker": "MRAM",
-      "count": 2,
-      "sentiment": -0.5,
+      "ticker": "QQQ",
+      "count": 9,
+      "sentiment": -0.3,
+      "rank_delta": -6,
+      "is_new": false
+    },
+    {
+      "ticker": "SPY",
+      "count": 7,
+      "sentiment": -0.2,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "NBIS",
-      "count": 2,
-      "sentiment": 0.0,
-      "rank_delta": -8,
+      "ticker": "SOXL",
+      "count": 6,
+      "sentiment": -0.5,
+      "rank_delta": -2,
       "is_new": false
     }
   ],
-  "fear_greed": 32,
+  "fear_greed": 42,
   "radar": {
-    "hype": 9,
-    "panic": 8,
-    "faith": 4,
-    "gamble": 10,
-    "iq": 4
+    "hype": 8,
+    "panic": 9,
+    "faith": 3,
+    "gamble": 9,
+    "iq": 2
   }
 }

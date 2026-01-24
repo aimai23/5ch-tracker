@@ -292,7 +292,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
 
     6. COMPARATIVE INSIGHT (JP 5ch vs US Reddit):
        - Compare the "JP 5ch Trends" (from your analysis of the text) vs "US Reddit Trends" (provided in Context).
-       - Provide a "Deep Strategic Contrast" (Max 300 chars, Japanese).
+       - Provide a "Deep Strategic Contrast" (Max 250 chars, Japanese).
        - Go beyond listing names. Analyze the *underlying psychology* or *sector preference* divergence.
        - Example: "Japan is defensive on Semis due to currency fears, while US is aggressively leveraging into Crypto miners."
        - Why is there a gap? what does it imply for the next 24h?
@@ -317,7 +317,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     """
 
     # Use fast and cost-effective models
-    models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    models = ["gemini-3-flash-preview", "gemini-2.5-flash"]
     
     for model_name in models:
         logging.info(f"Trying model: {model_name}...")
