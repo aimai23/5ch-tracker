@@ -159,9 +159,26 @@
           </div>
 
 
-          <!-- DOUGHCON Card -->
+
+
+          <!-- Radar -->
+          <div class="radar-chart-container"
+            style="flex: 1; min-width: 300px; max-width: 400px; position: relative; text-align: center;">
+            <canvas id="sentiment-radar"></canvas>
+          </div>
+        </div>
+
+        <!-- Middle Row: History Chart -->
+        <div class="history-chart-container"
+          style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
+          <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (30 DAYS)</h3>
+          <canvas id="ongi-history-chart"></canvas>
+        </div>
+
+        <!-- Bottom: DOUGHCON Card -->
+        <div style="display: flex; justify-content: center; margin-top: 2rem;">
           <div class="doughcon-wrapper"
-            style="flex: 1; min-width: 250px; max-width: 300px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 16px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center;">
+            style="flex: 1; min-width: 250px; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 16px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center;">
             <div
               style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
               🍕 PIZZA INTEL (DOUGHCON)
@@ -184,19 +201,6 @@
                 style="color:#666; text-decoration:none;">pizzint.watch</a>
             </div>
           </div>
-
-          <!-- Radar -->
-          <div class="radar-chart-container"
-            style="flex: 1; min-width: 300px; max-width: 400px; position: relative; text-align: center;">
-            <canvas id="sentiment-radar"></canvas>
-          </div>
-        </div>
-
-        <!-- Middle Row: History Chart -->
-        <div class="history-chart-container"
-          style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
-          <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (30 DAYS)</h3>
-          <canvas id="ongi-history-chart"></canvas>
         </div>
 
       </section>
