@@ -220,33 +220,50 @@ body {
     order: 3;
     width: 100%;
     justify-content: space-between;
-    /* Distribute evenly */
-    padding-top: 0.5rem;
+    padding-top: 2px;
+    /* Minimal padding */
     border-top: 1px solid rgba(255, 255, 255, 0.05);
-    height: 40px;
-    /* Specific height for touch targets */
+    height: 32px;
+    /* Compress height */
   }
 
   .nav-tab {
-    font-size: 0.85rem;
-    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    /* Smaller font */
+    padding: 0 0.2rem;
     flex: 1;
-    /* Equal width */
     justify-content: center;
   }
 
   /* Adjust elements for mobile */
   .nav-title {
-    display: none;
-    /* Hide title to ensure Logo fits with Status on one line */
+    display: block;
+    /* Restore Title */
+    font-size: 0.9rem;
+    /* Compact size */
+  }
+
+  /* Compact Logo */
+  .nav-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Tiny Live Status */
+  .live-status {
+    padding: 2px 6px;
+    gap: 4px;
   }
 
   .live-text {
-    display: none;
+    display: block;
+    /* Show text but tiny */
+    font-size: 0.6rem;
   }
 
-  .live-status {
-    padding: 4px;
+  .live-indicator {
+    width: 6px;
+    height: 6px;
   }
 
   /* Hide specific time on very small screens if needed */
