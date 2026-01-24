@@ -987,56 +987,52 @@ footer a {
   box-shadow: 0 0 10px rgba(255, 69, 0, 0.4);
 }
 
-/* Comparative Insight Accordion */
-.comparative-insight-container {
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.2);
+/* Comparative Insight Compact */
+.ranking-header {
+  position: relative;
+  /* Ensure flex container behaviors if needed, though default is flex center */
+  gap: 10px;
 }
 
-.comparative-toggle {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.03);
+.comparative-toggle-mini {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
   color: var(--accent-gold);
-  border: none;
-  padding: 8px 12px;
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
+  border-radius: 50%;
+  /* Circle or rounded square */
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.comparative-toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
+.comparative-toggle-mini:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
-.comparative-toggle::after {
-  content: '+';
-  margin-left: auto;
-  font-size: 1.1rem;
-  opacity: 0.7;
-}
-
-.comparative-toggle.open::after {
-  content: '-';
+.comparative-toggle-mini.open {
+  background: var(--accent-gold);
+  color: #000;
 }
 
 .comparative-content {
+  margin-top: 10px;
   padding: 12px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 1.5;
-  color: #ccc;
-  border-top: 1px solid var(--border-color);
-  background: #111;
+  color: #fff;
+  border-left: 2px solid var(--accent-gold);
+  background: rgba(0, 0, 0, 0.3);
   font-family: "JetBrains Mono", monospace;
   animation: slideDown 0.3s ease-out;
+  border-radius: 4px;
+  width: 100%;
 }
 
 @keyframes slideDown {
