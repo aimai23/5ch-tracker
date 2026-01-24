@@ -349,107 +349,150 @@ async function main() {
       updatedEl.textContent = `LAST: ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
     }
 
-    loadingEl.style.display = "none";
-    tableEl.style.display = "table";
+    // Store global data
+    let globalData = data;
+    let currentSource = "5ch";
 
-    const maxCount = items.length > 0 ? items[0].count : 1;
-
-    // Set initial ticker (first item or default)
-    if (items.length > 0) {
-      loadChart(items[0].ticker);
-    } else {
-      loadChart("SPX");
-    }
-
-    tbody.innerHTML = ""; // Clear existing
-
-    items.forEach((item, index) => {
-      const rank = index + 1;
-      const row = document.createElement("tr");
-      row.className = "ranking-row";
-      if (index === 0) row.classList.add("selected"); // Select first by default
-      if (rank <= 3) row.classList.add(`rank-${rank}`);
-
-      // Calculate bar width percentage
-      const barPercent = Math.max((item.count / maxCount) * 100, 1);
-
-      // Sentiment Logic
-      let moodClass = "neutral";
-      let moodIcon = "😐";
-      let moodText = "NEUTRAL";
-      const score = item.sentiment || 0;
-
-      if (score >= 0.1) {
-        moodClass = "bullish";
-        moodIcon = "🚀";
-        moodText = "BULL";
-      } else if (score <= -0.1) {
-        moodClass = "bearish";
-        moodIcon = "🐻";
-        moodText = "BEAR";
-      }
-
-      // Trend Logic
-      let trendHtml = "";
-      if (item.is_new) {
-        trendHtml = `<span class="trend-new">NEW</span>`;
-      } else if (item.rank_delta !== undefined && item.rank_delta !== 0) {
-        const isUp = item.rank_delta > 0;
-        const arrow = isUp ? "▲" : "▼";
-        const colorClass = isUp ? "trend-up" : "trend-down";
-        trendHtml = `<span class="${colorClass}">${arrow}</span>`;
-      } else {
-        trendHtml = `<span class="trend-stay">─</span>`;
-      }
-
-      row.innerHTML = `
-        <td>
-          <div style="display:flex; flex-direction:column; align-items:center; line-height:1.1; gap:3px;">
-            <span>${rank}</span>
-            ${trendHtml}
-          </div>
-        </td>
-        <td>
-          <div class="ticker-cell">
-            <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${item.ticker}?format=png" loading="lazy" onerror="this.style.display='none'">
-            <div class="ticker-info">
-                <span class="ticker-name">${item.ticker}</span>
-                <span class="mood-badge ${moodClass}">${moodIcon} ${moodText}</span>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="count-cell">
-            <div class="count-val">${item.count}</div>
-            <div class="bar-container">
-              <div class="bar-fill" style="width: ${barPercent}%"></div>
-            </div>
-          </div>
-        </td>
-      `;
-
-      // Click event to update chart
-      row.addEventListener("click", () => {
-        // Remove select from all
-        document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
-        // Add to current
-        row.classList.add("selected");
-        // Update chart
-        loadChart(item.ticker);
-
-        // Mobile: Show chart panel
-        document.querySelector(".chart-panel").classList.add("active");
+    // Source Tabs Logic
+    document.querySelectorAll(".source-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".source-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentSource = tab.dataset.source;
+        updateTable();
       });
-
-      tbody.appendChild(row);
     });
 
-    if (items.length === 0) {
-      loadingEl.textContent = "No Data Available";
-      loadingEl.style.display = "block";
-      tableEl.style.display = "none";
+    function updateTable() {
+      if (!globalData) return;
+
+      let items = [];
+      if (currentSource === "reddit") {
+        items = globalData.reddit_rankings || [];
+      } else {
+        items = globalData.items || [];
+      }
+
+      renderTable(items, currentSource);
     }
 
+    function renderTable(items, source) {
+      const tbody = document.getElementById("ranking-body");
+      const loadingEl = document.getElementById("loading");
+      const tableEl = document.getElementById("ranking-table");
+
+      if (!items || items.length === 0) {
+        loadingEl.textContent = "No Data Available";
+        loadingEl.style.display = "block";
+        tableEl.style.display = "none";
+        return;
+      }
+
+      loadingEl.style.display = "none";
+      tableEl.style.display = "table";
+      tbody.innerHTML = "";
+
+      const maxCount = items.length > 0 ? items[0].count : 1;
+
+      // Set initial chart if 5ch (main workflow), or just first item
+      if (items.length > 0 && source === "5ch") {
+        // Keep existing chart logic? Or update chart on tab switch?
+        // Maybe better to only update chart on CLICK to avoid jumping around freely
+      }
+
+      items.forEach((item, index) => {
+        // Rank logic: ApeWisdom provides 'rank', 5ch uses index+1.
+        // For consistency, use index+1 unless 'rank' property is explicit and valuable?
+        // Actually index+1 is safer for visual list order.
+        const rank = index + 1;
+
+        const row = document.createElement("tr");
+        row.className = "ranking-row";
+        if (index === 0) row.classList.add("selected");
+        if (rank <= 3) row.classList.add(`rank-${rank}`);
+
+        const barPercent = Math.max((item.count / maxCount) * 100, 1);
+
+        // Sentiment / Mood
+        let moodHtml = "";
+
+        if (source === "5ch") {
+          let moodClass = "neutral";
+          let moodIcon = "😐";
+          let moodText = "NEUTRAL";
+          const score = item.sentiment || 0;
+          if (score >= 0.1) {
+            moodClass = "bullish"; moodIcon = "🚀"; moodText = "BULL";
+          } else if (score <= -0.1) {
+            moodClass = "bearish"; moodIcon = "🐻"; moodText = "BEAR";
+          }
+          moodHtml = `<span class="mood-badge ${moodClass}">${moodIcon} ${moodText}</span>`;
+        } else if (source === "reddit") {
+          // Reddit specific badge (e.g. Upvotes)
+          const ups = new Intl.NumberFormat('en-US', { notation: "compact" }).format(item.upvotes || 0);
+          moodHtml = `<span class="mood-badge" style="border-color:#ff4500; color:#ff4500;">🔥 ${ups} Ups</span>`;
+        }
+
+        // Trend Logic
+        let trendHtml = "";
+        let delta = item.rank_delta; // 5ch
+
+        if (source === "reddit" && item.rank_24h_ago) {
+          // Calculate delta for Reddit: (Prev - Current)
+          // e.g. Prev 5, Curr 1 -> Delta +4
+          delta = item.rank_24h_ago - item.rank;
+        }
+
+        if (item.is_new) {
+          trendHtml = `<span class="trend-new">NEW</span>`;
+        } else if (delta !== undefined && delta !== 0 && delta !== null) {
+          const isUp = delta > 0;
+          const arrow = isUp ? "▲" : "▼";
+          const colorClass = isUp ? "trend-up" : "trend-down";
+          trendHtml = `<span class="${colorClass}">${arrow}</span>`;
+        } else {
+          trendHtml = `<span class="trend-stay">─</span>`;
+        }
+
+        row.innerHTML = `
+                <td>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.1; gap:3px;">
+                    <span>${rank}</span>
+                    ${trendHtml}
+                </div>
+                </td>
+                <td>
+                <div class="ticker-cell">
+                    <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${item.ticker}?format=png" loading="lazy" onerror="this.style.display='none'">
+                    <div class="ticker-info">
+                        <span class="ticker-name">${item.ticker}</span>
+                        ${moodHtml}
+                    </div>
+                </div>
+                </td>
+                <td>
+                <div class="count-cell">
+                    <div class="count-val">${item.count}</div>
+                    <div class="bar-container">
+                    <div class="bar-fill" style="width: ${barPercent}%"></div>
+                    </div>
+                </div>
+                </td>
+            `;
+
+        row.addEventListener("click", () => {
+          document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
+          row.classList.add("selected");
+          loadChart(item.ticker);
+          document.querySelector(".chart-panel").classList.add("active");
+        });
+
+        tbody.appendChild(row);
+      });
+    }
+
+    // Initial render
+    updateTable();
   } catch (err) {
     console.error(err);
     loadingEl.textContent = "System Offline";

@@ -939,3 +939,50 @@ footer a {
   letter-spacing: 0.05em;
   animation: pulse 2s infinite;
 }
+
+/* RANKING HEADER & TABS */
+.ranking-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.source-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.source-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.source-tab:hover {
+  color: var(--text-primary);
+}
+
+.source-tab.active {
+  background: var(--accent-cyan);
+  color: #000;
+  box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+}
+
+.source-tab[data-source="reddit"].active {
+  background: #ff4500;
+  /* Reddit Orange */
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 69, 0, 0.4);
+}

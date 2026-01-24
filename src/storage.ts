@@ -30,6 +30,15 @@ export type RankingPayload = {
   radar?: RadarData;
   breaking_news?: string[];
   polymarket?: Array<{ title: string; title_ja?: string; outcomes: string; url: string; volume: number }>;
+  reddit_rankings?: Array<{
+    rank: number;
+    ticker: string;
+    name: string;
+    count: number;
+    upvotes: number;
+    rank_24h_ago?: number;
+    mentions_24h_ago?: number;
+  }>;
   cnn_fear_greed?: { score: number; rating: string; timestamp?: string };
   sources: Array<{ name: string; url: string }>;
 };
@@ -79,12 +88,13 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     updatedAt: meta.updatedAt ?? null,
     items: items,
     topics: meta.topics || [],
-    overview: meta.overview || null,
-    ongi_comment: meta.ongi_comment || null,
+    overview: meta.overview || undefined,
+    ongi_comment: meta.ongi_comment || undefined,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
     breaking_news: meta.breaking_news || [],
     polymarket: meta.polymarket || [],
+    reddit_rankings: meta.reddit_rankings || [],
     cnn_fear_greed: meta.cnn_fear_greed,
     sources: meta.sources || [],
   };
@@ -116,6 +126,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     radar: payload.radar,
     breaking_news: payload.breaking_news,
     polymarket: payload.polymarket,
+    reddit_rankings: payload.reddit_rankings,
     cnn_fear_greed: payload.cnn_fear_greed,
   };
   statements.push(
@@ -196,7 +207,7 @@ export async function getOngiHistory(env: Env): Promise<OngiHistoryItem[]> {
 
   if (!results.results) return [];
 
-  return results.results.map(r => {
+  return results.results.map((r: any) => {
     let parsedMetrics: RadarData = { hype: 0, panic: 0, faith: 0, gamble: 0, iq: 0 };
     try {
       parsedMetrics = JSON.parse(r.metrics);

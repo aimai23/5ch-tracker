@@ -127,6 +127,7 @@ export default {
         radar: body.radar,
         breaking_news: body.breaking_news,
         polymarket: body.polymarket,
+        reddit_rankings: body.reddit_rankings,
         cnn_fear_greed: body.cnn_fear_greed,
         sources: Array.isArray(body.sources) ? body.sources : []
       };

@@ -378,13 +378,14 @@ def analyze_topics(text, stopwords_list=[]):
         
     return top_words
 
-def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None):
-    logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, {len(polymarket)} polymarket items to Worker...")
+def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None, reddit_rankings=None):
+    logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, {len(polymarket)} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
         return
 
     payload = {
+        "updatedAt": datetime.datetime.now().isoformat(),
         "window": "24h",
         "items": items,
         "topics": topics,
@@ -394,7 +395,8 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
         "fear_greed": fear_greed,
         "radar": radar,
         "breaking_news": breaking_news,
-        "polymarket": polymarket,
+        "polymarket": polymarket or [],
+        "reddit_rankings": reddit_rankings or [],
         "cnn_fear_greed": cnn_fear_greed
     }
     
@@ -684,6 +686,10 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     polymarket_raw = fetch_polymarket_events()
     polymarket_data = translate_polymarket_events(polymarket_raw)
     
+    # Reddit Fetch
+    reddit_data = fetch_apewisdom_rankings()
+    
+    
     if poly_only:
         logging.info("--- POLYMARKET ONLY MODE ---")
         logging.info(json.dumps(polymarket_data, indent=2, ensure_ascii=False))
@@ -804,7 +810,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg)
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg, reddit_rankings=reddit_data)
 
 if __name__ == "__main__":
     import argparse
