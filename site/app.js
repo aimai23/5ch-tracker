@@ -191,6 +191,10 @@ async function main() {
     if (!res.ok) throw new Error("API Connection Failed");
 
     const data = await res.json();
+    console.log("Fetcher API Response:", data); // DEBUG
+    if (data.yield_curve) console.log("Yield Curve Data Received:", data.yield_curve);
+    else console.warn("No Yield Curve data in response.");
+
     const items = data.items || [];
     currentItems = items;
 
@@ -789,7 +793,10 @@ function updateYieldCurve(data) {
   const levelEl = document.getElementById("yield-level");
   const descEl = document.getElementById("yield-desc");
 
-  if (!data || !levelEl) return;
+  if (!data || !levelEl) {
+    console.warn("updateYieldCurve: Missing data or element", { data, levelEl });
+    return;
+  }
 
   levelEl.textContent = data.state.toUpperCase();
   if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}%`;

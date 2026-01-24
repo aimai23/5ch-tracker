@@ -451,6 +451,8 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
         logging.warning("Worker config missing. Skipping upload.")
         return
 
+    logging.info(f"Payload Indicators: Pizza={doughcon_data is not None}, Sahm={sahm_data is not None}, Yield={yield_curve_data is not None}")
+
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
         "window": "24h",
@@ -467,7 +469,8 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
         "reddit_rankings": reddit_data or [],
         "cnn_fear_greed": cnn_fg,
         "doughcon": doughcon_data,
-        "sahm_rule": sahm_data
+        "sahm_rule": sahm_data,
+        "yield_curve": yield_curve_data
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -983,7 +986,9 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "sahm_rule": sahm_data,
             "yield_curve": yield_curve_data
         }
-    save_current_state(current_state)
+        save_current_state(current_state)
+    except Exception as e:
+        logging.error(f"Failed to save state: {e}")
     
     logging.info("--- Top 20 Tickers ---")
     for i in final_items[:20]:
