@@ -745,7 +745,7 @@ function updateDoughcon(data) {
 
   if (!data || !levelEl) return;
 
-  levelEl.textContent = `PIZZA LEVEL ${data.level}`;
+  levelEl.textContent = `LEVEL ${data.level}`;
   if (descEl) descEl.textContent = data.description;
 
   // Color Logic (1=Red, 2=Orange, 3=Yellow, 4=Blue, 5=Green)
