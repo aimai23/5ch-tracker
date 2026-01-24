@@ -699,12 +699,14 @@ function renderPolymarket(data) {
 
 // Mobile Tooltip Logic
 document.addEventListener('click', (e) => {
-  const container = e.target.closest('.tooltip-container');
+  const container = e.target.closest('.tooltip-container') || e.target.closest('.header-help-container');
   if (container && window.innerWidth <= 768) {
     e.preventDefault();
     e.stopPropagation();
 
-    const textEl = container.querySelector('.tooltip-text');
+    // Try both selectors
+    const textEl = container.querySelector('.tooltip-text') || container.querySelector('.header-help-text');
+
     if (textEl) {
       const text = textEl.innerHTML;
       const overlay = document.getElementById('mobile-tooltip-overlay');
