@@ -748,22 +748,41 @@ def fetch_cnn_fear_greed():
         logging.warning(f"Failed to fetch CNN F&G: {e}")
     return None
 
+def fetch_with_retry(url, retries=3, delay=2):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.google.com/"
+    }
+    
+    for i in range(retries):
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+            if resp.status_code == 200:
+                return resp
+            logging.warning(f"Fetch failed {url}: Status {resp.status_code}")
+        except Exception as e:
+            logging.warning(f"Fetch error {url}: {e}")
+        
+        if i < retries - 1:
+            time.sleep(delay)
+            
+    return None
+
 def fetch_doughcon_level():
     try:
         url = "https://www.pizzint.watch/api/dashboard-data?nocache=1"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        }
-        resp = requests.get(url, headers=headers, timeout=10)
-        if resp.status_code == 200:
+        resp = fetch_with_retry(url)
+        if resp:
             data = resp.json()
             level = data.get("defcon_level")
             descriptions = {
-                1: "CRITICAL",
-                2: "SEVERE",
-                3: "ELEVATED",
-                4: "MODERATE",
-                5: "LOW"
+                1: "EMERGENCY",
+                2: "DANGER",
+                3: "WARNING",
+                4: "CAUTION",
+                5: "SAFE"
             }
             return {
                 "level": level,
@@ -776,11 +795,8 @@ def fetch_doughcon_level():
 def fetch_sahm_rule():
     try:
         url = "https://fred.stlouisfed.org/series/SAHMREALTIME"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        resp = requests.get(url, headers=headers, timeout=10)
-        if resp.status_code == 200:
+        resp = fetch_with_retry(url)
+        if resp:
             soup = BeautifulSoup(resp.text, "html.parser")
             val_el = soup.find(class_="series-meta-observation-value")
             if val_el:
@@ -804,11 +820,8 @@ def fetch_sahm_rule():
 def fetch_yield_curve():
     try:
         url = "https://fred.stlouisfed.org/series/T10Y2Y"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        resp = requests.get(url, headers=headers, timeout=10)
-        if resp.status_code == 200:
+        resp = fetch_with_retry(url)
+        if resp:
             soup = BeautifulSoup(resp.text, "html.parser")
             val_el = soup.find(class_="series-meta-observation-value")
             if val_el:
