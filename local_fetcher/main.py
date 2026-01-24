@@ -785,10 +785,13 @@ def fetch_sahm_rule():
             val_el = soup.find(class_="series-meta-observation-value")
             if val_el:
                 val = float(val_el.get_text(strip=True))
-                # Sahm Rule Logic: 0.50 is the trigger
+                # Sahm Rule Logic
+                # >= 0.50: Danger
+                # >= 0.30: Warning
+                # < 0.30: Safe
                 state = "Safe"
                 if val >= 0.50: state = "Recession Signal"
-                elif val >= 0.40: state = "Warning"
+                elif val >= 0.30: state = "Warning"
                 
                 return {
                     "value": val,

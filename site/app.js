@@ -771,10 +771,10 @@ function updateSahmRule(data) {
   levelEl.textContent = data.value.toFixed(2);
   if (descEl) descEl.textContent = data.state.toUpperCase();
 
-  // Color Logic (0.50+ = Recession/Red, 0.40+ = Warning/Yellow, <0.40 = Safe/Green)
+  // Color Logic (0.50+ = Danger/Red, 0.30+ = Warning/Yellow, <0.30 = Safe/Green)
   let color = "#00ff00";
   if (data.value >= 0.50) color = "#ff0000";
-  else if (data.value >= 0.40) color = "#ffff00";
+  else if (data.value >= 0.30) color = "#ffff00";
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
