@@ -967,14 +967,25 @@ footer a {
   font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
-  white-space: nowrap;
+  /* Removed white-space: nowrap to allow shrink logic, but handled via font-size instead */
   transition: all 0.2s ease;
+  flex: 1 1 auto;
+  /* Allow shrinking/growing */
+  justify-content: center;
+  display: flex;
+  align-items: center;
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .source-tab {
-    padding: 6px 10px;
-    font-size: 0.7rem;
+    padding: 6px 8px;
+    /* Very tight padding */
+    font-size: 0.65rem;
+    /* Smaller font to fit MISSISSIPPI */
+    min-width: 0;
+    /* Allow flex item to shrink below content size if absolutely needed (though we want to avoid cutting) */
+    white-space: nowrap;
+    /* Keep nowrap but ensure it fits via size */
   }
 }
 
