@@ -378,6 +378,31 @@ def analyze_topics(text, stopwords_list=[]):
         
     return top_words
 
+def fetch_apewisdom_rankings():
+    """Fetch Top 20 stocks from ApeWisdom (Reddit sentiment)"""
+    url = "https://apewisdom.io/api/v1.0/filter/all-stocks/page/1"
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            items = []
+            for item in data.get("results", [])[:20]:
+                items.append({
+                    "rank": item.get("rank"),
+                    "ticker": item.get("ticker"),
+                    "name": item.get("name"),
+                    "count": item.get("mentions"),   # Use mentions as count equivalent
+                    "upvotes": item.get("upvotes"),
+                    "rank_24h_ago": item.get("rank_24h_ago"),
+                    "mentions_24h_ago": item.get("mentions_24h_ago")
+                })
+            logging.info(f"Fetched {len(items)} Reddit rankings from ApeWisdom.")
+            return items
+    except Exception as e:
+        logging.error(f"Failed to fetch ApeWisdom data: {e}")
+    
+    return []
+
 def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None, reddit_rankings=None):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, {len(polymarket)} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
