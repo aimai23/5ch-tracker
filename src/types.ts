@@ -40,3 +40,19 @@ export interface ScheduledEvent {
   type: string;
   scheduledTime: number;
 }
+
+// Global Worker Types Stubs (if not picked up by tsconfig)
+export interface Request {
+  url: string;
+  method: string;
+  headers: Headers;
+  json(): Promise<any>;
+  text(): Promise<string>;
+}
+
+export interface Response {
+  status: number;
+  headers: Headers;
+  json(): Promise<any>;
+  text(): Promise<string>;
+}

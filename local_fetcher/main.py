@@ -220,9 +220,9 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
+def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[]):
     """
-    Combined analysis: Extracts tickers AND generates a summary in one shot.
+    Combined analysis: Extracts tickers, Generates Summary, AND Comparative Insight.
     """
     logging.info("Analyzing with Gemini (Combined Ticker Extraction & Summary & Breaking News)...")
     
@@ -236,16 +236,23 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
             context_info = f"Previous Rankings: {prev_rank}. Previous Ongi Score: {prev_ongi}. Previous Radar: {json.dumps(prev_radar)}."
         except:
             pass
+    
+    # Format Reddit Data for Context
+    reddit_context = "No Reddit data available."
+    if reddit_rankings:
+        top_reddit = ", ".join([f"{r.get('ticker')}" for r in reddit_rankings[:15]])
+        reddit_context = f"CURRENT US REDDIT TRENDS (WallStreetBets): {top_reddit}"
 
     prompt_text = f"""
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
     LANGUAGE: JAPANESE ONLY (for all text outputs like summaries and news).
-    Analyze the following text to extract US stock trends, a general summary, a vibe check, and 5 specific sentiment metrics.
-
-    CONTEXT FROM PREVIOUS RUN (Use this for "Breaking News" comparison):
-    {context_info}
+    Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
+    
+    CONTEXT:
+    1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
+    2. {reddit_context}
 
     1. Identify US stock tickers:
        - Map company names to valid US tickers (e.g. "Apple","アップル","林檎" -> AAPL).
@@ -283,6 +290,14 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
          - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
          - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
+    6. COMPARATIVE INSIGHT (JP 5ch vs US Reddit):
+       - Compare the "JP 5ch Trends" (from your analysis of the text) vs "US Reddit Trends" (provided in Context).
+       - Provide a "Deep Strategic Contrast" (Max 300 chars, Japanese).
+       - Go beyond listing names. Analyze the *underlying psychology* or *sector preference* divergence.
+       - Example: "Japan is defensive on Semis due to currency fears, while US is aggressively leveraging into Crypto miners."
+       - Why is there a gap? what does it imply for the next 24h?
+       - Tone: Professional Analyst, Insightful, Slightly Cynical.
+
     Output STRICT JSON format:
     {{
       "tickers": [
@@ -293,7 +308,8 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
       "radar": {{ "hype": 5, "panic": 5, "faith": 5, "gamble": 5, "iq": 5 }},
       "summary": "...",
       "ongi_comment": "...",
-      "breaking_news": ["Headline 1", "Headline 2"]
+      "breaking_news": ["Headline 1", "Headline 2"],
+      "comparative_insight": "..."
     }}
 
     Text:
@@ -324,7 +340,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", [])
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", "")
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -334,7 +350,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None):
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}, "", []
+    return [], "要約生成失敗", 50, {}, "", [], ""
 
 def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -378,50 +394,7 @@ def analyze_topics(text, stopwords_list=[]):
         
     return top_words
 
-def analyze_comparative_insight(japan_stocks, us_stocks):
-    """
-    Generate a comparative insight between 5ch (Japan) and Reddit (US).
-    """
-    logging.info("Generating Comparative Insight (5ch vs Reddit)...")
-    
-    # Prepare lists for prompt
-    jp_list = ", ".join([f"{t.get('ticker')}" for t in japan_stocks[:10]])
-    us_list = ", ".join([f"{t.get('ticker')}" for t in us_stocks[:10]])
-    
-    prompt = f"""
-    Compare these two stock trends (Top 10):
-    
-    [🇯🇵 5CH (Japan)]: {jp_list}
-    [🇺🇸 Reddit (US)]: {us_list}
-    
-    Provide a "Deep Strategic Contrast" of the two markets (Max 300 chars, Japanese).
-    - Go beyond listing names. Analyze the *underlying psychology* or *sector preference* divergence.
-    - Example: "Japan is defensive on Semis due to currency fears, while US is aggressively leveraging into Crypto miners."
-    - Why is there a gap? what does it imply for the next 24h?
-    - Tone: Professional Analyst, Insightful, Slightly Cynical.
-    - No preamble.
-    """
-    
-    # Use efficient models for this simpler task
-    models = ["gemini-2.5-flash-lite", "gemma-3-27b"]
-    
-    for model_name in models:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-        payload = { "contents": [{"parts": [{"text": prompt}]}] }
-        
-        try:
-            resp = requests.post(url, headers=headers, json=payload, timeout=20)
-            if resp.status_code == 200:
-                res_json = resp.json()
-                if "candidates" in res_json and res_json["candidates"]:
-                    text = res_json["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    return text
-        except Exception as e:
-            logging.warning(f"Comparative insight failed with {model_name}: {e}")
-            continue
-    
-    return None
+
 
 def fetch_apewisdom_rankings():
     """Fetch Top 20 stocks from ApeWisdom (WallStreetBets)"""
@@ -793,7 +766,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news = analyze_market_data(all_text, exclude, nicknames, prev_state)
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight = analyze_market_data(all_text, exclude, nicknames, prev_state, reddit_data)
     
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
@@ -881,10 +854,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
 
-    # Comparative Analysis
-    comparative_insight = None
-    if reddit_data:
-        comparative_insight = analyze_comparative_insight(final_items, reddit_data)
+    if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
     send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg, reddit_rankings=reddit_data, comparative_insight=comparative_insight)
