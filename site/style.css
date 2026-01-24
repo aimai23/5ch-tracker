@@ -1196,3 +1196,82 @@ footer a {
     opacity: 1;
   }
 }
+/* Polymarket Grid */
+.polymarket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.polymarket-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.polymarket-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+}
+
+.poly-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.poly-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.poly-outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.poly-outcome-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Word Cloud Sizing */
+#wordcloud-container {
+  width: 100%;
+  height: 500px; /* Increased from default */
+  min-height: 400px;
+}
+
+#topic-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .polymarket-grid {
+    grid-template-columns: 1fr; /* Force 1 column on mobile */
+  }
+
+  /* Ensure wordcloud is not too small on mobile */
+  #wordcloud-container {
+    height: 350px; 
+    min-height: 300px;
+  }
+}
+
