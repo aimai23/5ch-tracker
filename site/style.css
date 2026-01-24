@@ -237,9 +237,8 @@ body {
 
   /* Adjust elements for mobile */
   .nav-title {
-    display: block;
-    /* Show title again but smaller */
-    font-size: 1rem;
+    display: none;
+    /* Hide title to ensure Logo fits with Status on one line */
   }
 
   .live-text {
