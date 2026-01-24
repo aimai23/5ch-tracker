@@ -1102,6 +1102,22 @@ footer a {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   line-height: 1.4;
   font-family: var(--font-main);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.help-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 3px;
+}
+
+.help-row {
+  color: #fff !important;
+  opacity: 1 !important;
+  margin-bottom: 2px;
 }
 
 .header-help-container:hover .header-help-text {
