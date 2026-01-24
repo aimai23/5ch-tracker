@@ -759,11 +759,11 @@ def fetch_doughcon_level():
             data = resp.json()
             level = data.get("defcon_level")
             descriptions = {
-                1: "CRITICAL (WAR IMMINENT?)",
-                2: "SEVERE (HIGH ACTIVITY)",
-                3: "ELEVATED (BUSY)",
-                4: "MODERATE (ABOVE AVERAGE)",
-                5: "LOW (NORMAL)"
+                1: "CRITICAL",
+                2: "SEVERE",
+                3: "ELEVATED",
+                4: "MODERATE",
+                5: "LOW"
             }
             return {
                 "level": level,
