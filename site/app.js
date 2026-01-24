@@ -768,8 +768,8 @@ function updateSahmRule(data) {
 
   if (!data || !levelEl) return;
 
-  levelEl.textContent = data.value.toFixed(2);
-  if (descEl) descEl.textContent = data.state.toUpperCase();
+  levelEl.textContent = data.state.toUpperCase();
+  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}`;
 
   // Color Logic (0.50+ = Danger/Red, 0.30+ = Warning/Yellow, <0.30 = Safe/Green)
   let color = "#00ff00";
