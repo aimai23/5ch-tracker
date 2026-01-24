@@ -235,6 +235,11 @@ async function main() {
       updateRadarChart({ hype: 5, panic: 5, faith: 5, gamble: 5, iq: 5 });
     }
 
+    // NEW: DOUGHCON
+    if (data.doughcon) {
+      updateDoughcon(data.doughcon);
+    }
+
     // Breaking News Ticker
     const tickerContainer = document.getElementById("breaking-news-container");
     const tickerText = document.getElementById("news-marquee");
@@ -727,4 +732,25 @@ if (tooltipOverlay) {
       tooltipOverlay.style.display = 'none';
     }
   });
+}
+
+function updateDoughcon(data) {
+  const levelEl = document.getElementById("doughcon-level");
+  const descEl = document.getElementById("doughcon-desc");
+  
+  if (!data || !levelEl) return;
+  
+  levelEl.textContent = `DEFCON ${data.level}`;
+  if (descEl) descEl.textContent = data.description;
+  
+  // Color Logic (1=Red/Danger, 5=Green/Safe)
+  let color = "#fff";
+  if (data.level <= 1) color = "#ff0000";       // Critical
+  else if (data.level <= 2) color = "#ff4500";  // High
+  else if (data.level <= 3) color = "#ffa500";  // Elevated
+  else if (data.level <= 4) color = "#ffff00";  // Moderate
+  else color = "#00ff00";                       // Low
+  
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 30px ${color}`;
 }

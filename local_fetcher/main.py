@@ -421,8 +421,24 @@ def fetch_apewisdom_rankings():
     
     return []
 
-def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None, reddit_rankings=None, comparative_insight=None):
-    logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, {len(polymarket)} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
+def fetch_doughcon_data():
+    """Fetch Doughcon data from the API."""
+    logging.info("Fetching Doughcon data...")
+    url = "https://doughcon.com/api/v1/data" # Placeholder URL
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            logging.info("Successfully fetched Doughcon data.")
+            return data
+        else:
+            logging.warning(f"Doughcon API returned status: {resp.status_code}")
+    except Exception as e:
+        logging.error(f"Failed to fetch Doughcon data: {e}")
+    return None
+
+def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None):
+    logging.info(f"Sending {len(final_items)} tickers, {len(topics)} topics, {len(polymarket_data)} polymarket, {len(reddit_data or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
         return
@@ -441,7 +457,10 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
         "breaking_news": breaking_news,
         "polymarket": polymarket or [],
         "reddit_rankings": reddit_rankings or [],
-        "cnn_fear_greed": cnn_fear_greed
+        "polymarket": polymarket or [],
+        "reddit_rankings": reddit_rankings or [],
+        "cnn_fear_greed": cnn_fear_greed,
+        "doughcon": doughcon_data
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -722,6 +741,31 @@ def fetch_cnn_fear_greed():
         logging.warning(f"Failed to fetch CNN F&G: {e}")
     return None
 
+def fetch_doughcon_level():
+    try:
+        url = "https://www.pizzint.watch/api/dashboard-data?nocache=1"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            level = data.get("defcon_level")
+            descriptions = {
+                1: "MAXIMUM READINESS",
+                2: "NEXT STEP TO MAX READINESS",
+                3: "INCREASE IN FORCE READINESS",
+                4: "INCREASED INTEL WATCH",
+                5: "LOWEST STATE OF READINESS"
+            }
+            return {
+                "level": level,
+                "description": descriptions.get(level, "Unknown")
+            }
+    except Exception as e:
+        logging.warning(f"Failed to fetch DOUGHCON: {e}")
+    return None
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
@@ -732,6 +776,11 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     
     # Reddit Fetch
     reddit_data = fetch_apewisdom_rankings()
+
+    # DOUGHCON Fetch
+    doughcon_data = fetch_doughcon_level()
+    if doughcon_data:
+        logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
     
     
     if poly_only:
