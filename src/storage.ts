@@ -41,6 +41,8 @@ export type RankingPayload = {
     mentions_24h_ago?: number;
   }>;
   cnn_fear_greed?: { score: number; rating: string; timestamp?: string };
+  doughcon?: { level: number; description: string };
+  sahm_rule?: { value: number; state: string };
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -98,6 +100,8 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     polymarket: meta.polymarket || [],
     reddit_rankings: meta.reddit_rankings || [],
     cnn_fear_greed: meta.cnn_fear_greed,
+    doughcon: meta.doughcon,
+    sahm_rule: meta.sahm_rule,
     sources: meta.sources || [],
   };
 }
@@ -131,6 +135,8 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     polymarket: payload.polymarket,
     reddit_rankings: payload.reddit_rankings,
     cnn_fear_greed: payload.cnn_fear_greed,
+    doughcon: payload.doughcon,
+    sahm_rule: payload.sahm_rule,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

@@ -131,6 +131,8 @@ export default {
         polymarket: body.polymarket,
         reddit_rankings: body.reddit_rankings,
         cnn_fear_greed: body.cnn_fear_greed,
+        doughcon: body.doughcon,
+        sahm_rule: body.sahm_rule,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 
