@@ -401,20 +401,24 @@ def analyze_comparative_insight(japan_stocks, us_stocks):
     - No preamble. Just the insight.
     """
     
-    model_name = "gemini-2.0-flash-exp" # Fast model
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
-    payload = { "contents": [{"parts": [{"text": prompt}]}] }
+    # Use efficient models for this simpler task
+    models = ["gemini-2.5-flash-lite", "gemma-3-27b"]
     
-    try:
-        resp = requests.post(url, headers=headers, json=payload, timeout=20)
-        if resp.status_code == 200:
-            res_json = resp.json()
-            if "candidates" in res_json and res_json["candidates"]:
-                text = res_json["candidates"][0]["content"]["parts"][0]["text"].strip()
-                return text
-    except Exception as e:
-        logging.warning(f"Comparative insight failed: {e}")
+    for model_name in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = { "contents": [{"parts": [{"text": prompt}]}] }
+        
+        try:
+            resp = requests.post(url, headers=headers, json=payload, timeout=20)
+            if resp.status_code == 200:
+                res_json = resp.json()
+                if "candidates" in res_json and res_json["candidates"]:
+                    text = res_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    return text
+        except Exception as e:
+            logging.warning(f"Comparative insight failed with {model_name}: {e}")
+            continue
     
     return None
 
