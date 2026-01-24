@@ -1,153 +1,161 @@
 {
-  "timestamp": 1769266857.2096472,
+  "timestamp": 1769269696.8195882,
   "rankings": [
     {
       "ticker": "GLD",
       "count": 28,
       "sentiment": 0.9,
-      "rank_delta": 3,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "SLV",
-      "count": 25,
-      "sentiment": 0.95,
-      "rank_delta": -1,
-      "is_new": false
-    },
-    {
-      "ticker": "MU",
-      "count": 18,
-      "sentiment": 0.6,
-      "rank_delta": -1,
-      "is_new": false
-    },
-    {
-      "ticker": "SNDK",
-      "count": 14,
-      "sentiment": -0.4,
-      "rank_delta": 1,
+      "count": 22,
+      "sentiment": 0.85,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "INTC",
+      "count": 18,
+      "sentiment": -0.6,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
+      "ticker": "NVDA",
       "count": 12,
-      "sentiment": -0.8,
-      "rank_delta": 1,
+      "sentiment": 0.4,
+      "rank_delta": 5,
+      "is_new": false
+    },
+    {
+      "ticker": "MU",
+      "count": 9,
+      "sentiment": 0.5,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "QQQ",
+      "count": 9,
+      "sentiment": -0.3,
+      "rank_delta": -3,
       "is_new": false
     },
     {
       "ticker": "TSLA",
-      "count": 11,
+      "count": 7,
       "sentiment": 0.1,
       "rank_delta": 6,
       "is_new": false
     },
     {
-      "ticker": "NVDA",
-      "count": 10,
-      "sentiment": 0.4,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "IREN",
-      "count": 9,
-      "sentiment": 0.7,
-      "rank_delta": -5,
-      "is_new": false
-    },
-    {
       "ticker": "AVGO",
-      "count": 8,
-      "sentiment": 0.5,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "SOXL",
-      "count": 7,
-      "sentiment": -0.3,
-      "rank_delta": 5,
-      "is_new": false
-    },
-    {
-      "ticker": "MSFT",
       "count": 6,
       "sentiment": 0.2,
-      "rank_delta": 0,
-      "is_new": true
+      "rank_delta": -1,
+      "is_new": false
     },
     {
-      "ticker": "QQQ",
-      "count": 6,
+      "ticker": "NFLX",
+      "count": 5,
       "sentiment": -0.1,
+      "rank_delta": -3,
+      "is_new": false
+    },
+    {
+      "ticker": "BTC",
+      "count": 5,
+      "sentiment": 0.3,
       "rank_delta": 1,
       "is_new": false
     },
     {
-      "ticker": "PLTR",
+      "ticker": "IREN",
       "count": 4,
-      "sentiment": 0.3,
-      "rank_delta": -2,
+      "sentiment": 0.4,
+      "rank_delta": -3,
       "is_new": false
     },
     {
-      "ticker": "AAPL",
+      "ticker": "SOXL",
+      "count": 4,
+      "sentiment": -0.5,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "MSFT",
+      "count": 3,
+      "sentiment": 0.3,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
+      "ticker": "META",
       "count": 3,
       "sentiment": 0.2,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
+      "ticker": "PLTR",
+      "count": 3,
+      "sentiment": 0.4,
       "rank_delta": 0,
       "is_new": true
     },
     {
       "ticker": "LMND",
-      "count": 3,
+      "count": 2,
       "sentiment": 0.6,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "META",
-      "count": 3,
-      "sentiment": 0.3,
+      "ticker": "MRAM",
+      "count": 2,
+      "sentiment": -0.4,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "RKLB",
+      "ticker": "SNDK",
       "count": 2,
-      "sentiment": 0.5,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "NBIS",
-      "count": 2,
-      "sentiment": 0.2,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "NFLX",
-      "count": 2,
-      "sentiment": -0.2,
-      "rank_delta": -11,
+      "sentiment": -0.7,
+      "rank_delta": -6,
       "is_new": false
     },
     {
-      "ticker": "RTX",
+      "ticker": "TMF",
       "count": 2,
-      "sentiment": 0.6,
+      "sentiment": 0.1,
       "rank_delta": 0,
       "is_new": true
+    },
+    {
+      "ticker": "SOFI",
+      "count": 1,
+      "sentiment": 0.5,
+      "rank_delta": -2,
+      "is_new": false
     }
   ],
-  "fear_greed": 35,
+  "fear_greed": 42,
   "radar": {
-    "hype": 6,
+    "hype": 9,
     "panic": 8,
     "faith": 4,
-    "gamble": 7,
-    "iq": 3
+    "gamble": 9,
+    "iq": 2
+  },
+  "doughcon": {
+    "level": 4,
+    "description": "INCREASED INTEL WATCH"
+  },
+  "sahm_rule": {
+    "value": 0.35,
+    "state": "Safe"
   }
 }

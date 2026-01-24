@@ -220,7 +220,7 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[]):
+def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[], doughcon_data=None, sahm_data=None):
     """
     Combined analysis: Extracts tickers, Generates Summary, AND Comparative Insight.
     """
@@ -243,6 +243,13 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
         top_reddit = ", ".join([f"{r.get('ticker')}" for r in reddit_rankings[:15]])
         reddit_context = f"CURRENT US REDDIT TRENDS (WallStreetBets): {top_reddit}"
 
+    # Crisis Indicators Context
+    crisis_context = "Crisis Indicators: "
+    if doughcon_data:
+        crisis_context += f"DOUGHCON PENTAGON PIZZA INDEX: {doughcon_data.get('level')} ({doughcon_data.get('description')}). "
+    if sahm_data:
+        crisis_context += f"SAHM RULE RECESSION SIGNAL: {sahm_data.get('value')} (Status: {sahm_data.get('state')})."
+
     prompt_text = f"""
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
@@ -253,6 +260,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     CONTEXT:
     1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
     2. {reddit_context}
+    3. {crisis_context}
 
     1. Identify US stock tickers:
        - Map company names to valid US tickers (e.g. "Apple","アップル","林檎" -> AAPL).
@@ -446,20 +454,18 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
         "window": "24h",
-        "items": items,
+        "items": final_items,
         "topics": topics,
-        "sources": sources,
-        "overview": overview,
+        "sources": source_meta,
+        "overview": market_summary,
         "ongi_comment": ongi_comment,
         "comparative_insight": comparative_insight,
         "fear_greed": fear_greed,
-        "radar": radar,
+        "radar": radar_data,
         "breaking_news": breaking_news,
-        "polymarket": polymarket or [],
-        "reddit_rankings": reddit_rankings or [],
-        "polymarket": polymarket or [],
-        "reddit_rankings": reddit_rankings or [],
-        "cnn_fear_greed": cnn_fear_greed,
+        "polymarket": polymarket_data or [],
+        "reddit_rankings": reddit_data or [],
+        "cnn_fear_greed": cnn_fg,
         "doughcon": doughcon_data,
         "sahm_rule": sahm_data
     }
@@ -846,7 +852,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight = analyze_market_data(all_text, exclude, nicknames, prev_state, reddit_data)
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight = analyze_market_data(all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data)
     
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
@@ -922,7 +928,9 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         "timestamp": time.time(),
         "rankings": final_items[:20], # Context for next run needs top 20 to track movement
         "fear_greed": fear_greed,
-        "radar": radar_data
+        "radar": radar_data,
+        "doughcon": doughcon_data,
+        "sahm_rule": sahm_data
     }
     save_current_state(current_state)
     
@@ -937,7 +945,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg, reddit_rankings=reddit_data, comparative_insight=comparative_insight)
+    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data)
 
 if __name__ == "__main__":
     import argparse
