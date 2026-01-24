@@ -986,3 +986,67 @@ footer a {
   color: #fff;
   box-shadow: 0 0 10px rgba(255, 69, 0, 0.4);
 }
+
+/* Comparative Insight Accordion */
+.comparative-insight-container {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.comparative-toggle {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-gold);
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.comparative-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.comparative-toggle::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+.comparative-toggle.open::after {
+  content: '-';
+}
+
+.comparative-content {
+  padding: 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #ccc;
+  border-top: 1px solid var(--border-color);
+  background: #111;
+  font-family: "JetBrains Mono", monospace;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

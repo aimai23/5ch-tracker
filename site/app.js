@@ -343,6 +343,33 @@ async function main() {
       }
     }
 
+    // Comparative Insight Logic
+    const compToggle = document.getElementById("comparative-toggle");
+    const compContent = document.getElementById("comparative-content");
+    const compText = document.getElementById("comparative-text");
+
+    // Populate data if exists (check metadata directly or data root depending on API structure)
+    // Based on storage.ts: payload.comparative_insight is at root of response object due to flattening in getRanking
+    const insightText = data.comparative_insight;
+
+    if (compToggle && compText) {
+      if (insightText) {
+        compText.innerHTML = insightText.replace(/\n/g, "<br>"); // Simple formatting
+        // Add click listener if not already added (simple check: clone or just ensure idempotent)
+        // Better: Remove old listener or just assign onclick
+        compToggle.onclick = () => {
+          const isHidden = compContent.style.display === "none";
+          compContent.style.display = isHidden ? "block" : "none";
+          compToggle.classList.toggle("open", isHidden);
+        };
+        // Ensure container is visible (if we hid it by default in CSS, but here we just populate)
+      } else {
+        compText.textContent = "Analyzing global trends...";
+        // Optional: Hide entire container if no data?
+        // document.querySelector(".comparative-insight-container").style.display = "none";
+      }
+    }
+
     // Update timestamp
     if (data.updatedAt) {
       const date = new Date(data.updatedAt);

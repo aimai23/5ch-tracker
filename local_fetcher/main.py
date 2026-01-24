@@ -378,6 +378,46 @@ def analyze_topics(text, stopwords_list=[]):
         
     return top_words
 
+def analyze_comparative_insight(japan_stocks, us_stocks):
+    """
+    Generate a comparative insight between 5ch (Japan) and Reddit (US).
+    """
+    logging.info("Generating Comparative Insight (5ch vs Reddit)...")
+    
+    # Prepare lists for prompt
+    jp_list = ", ".join([f"{t.get('ticker')}" for t in japan_stocks[:10]])
+    us_list = ", ".join([f"{t.get('ticker')}" for t in us_stocks[:10]])
+    
+    prompt = f"""
+    Compare these two stock trends (Top 10):
+    
+    [🇯🇵 5CH (Japan)]: {jp_list}
+    [🇺🇸 Reddit (US)]: {us_list}
+    
+    Generate a short, witty "Cross-Culture Market Insight" (Max 150 chars, Japanese).
+    - Highlight the GAP: What is Japan obsessed with vs US? (e.g. "Japan is clinging to Semis while US is gambling on Meme coins").
+    - Or shared panic/hype.
+    - Style: Intellectual but sharp. "Looking at the gap..."
+    - No preamble. Just the insight.
+    """
+    
+    model_name = "gemini-2.0-flash-exp" # Fast model
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = { "contents": [{"parts": [{"text": prompt}]}] }
+    
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=20)
+        if resp.status_code == 200:
+            res_json = resp.json()
+            if "candidates" in res_json and res_json["candidates"]:
+                text = res_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+                return text
+    except Exception as e:
+        logging.warning(f"Comparative insight failed: {e}")
+    
+    return None
+
 def fetch_apewisdom_rankings():
     """Fetch Top 20 stocks from ApeWisdom (Reddit sentiment)"""
     url = "https://apewisdom.io/api/v1.0/filter/all-stocks/page/1"
@@ -403,7 +443,7 @@ def fetch_apewisdom_rankings():
     
     return []
 
-def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None, reddit_rankings=None):
+def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_greed=50, radar={}, breaking_news=[], polymarket=[], cnn_fear_greed=None, reddit_rankings=None, comparative_insight=None):
     logging.info(f"Sending {len(items)} tickers, {len(topics)} topics, {len(polymarket)} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
@@ -417,6 +457,7 @@ def send_to_worker(items, topics, sources, overview="", ongi_comment="", fear_gr
         "sources": sources,
         "overview": overview,
         "ongi_comment": ongi_comment,
+        "comparative_insight": comparative_insight,
         "fear_greed": fear_greed,
         "radar": radar,
         "breaking_news": breaking_news,
@@ -835,7 +876,13 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     logging.info(f"Breaking News: {breaking_news}")
     logging.info(f"Fear & Ongi: {fear_greed}")
 
-    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg, reddit_rankings=reddit_data)
+    # Comparative Analysis
+    comparative_insight = None
+    if reddit_data:
+        comparative_insight = analyze_comparative_insight(final_items, reddit_data)
+        logging.info(f"Comparative Insight: {comparative_insight}")
+
+    send_to_worker(final_items, topics, source_meta, overview=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar=radar_data, breaking_news=breaking_news, polymarket=polymarket_data, cnn_fear_greed=cnn_fg, reddit_rankings=reddit_data, comparative_insight=comparative_insight)
 
 if __name__ == "__main__":
     import argparse

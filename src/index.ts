@@ -123,6 +123,7 @@ export default {
         topics: Array.isArray(body.topics) ? body.topics : [],
         overview: body.overview,
         ongi_comment: body.ongi_comment,
+        comparative_insight: body.comparative_insight,
         fear_greed: body.fear_greed,
         radar: body.radar,
         breaking_news: body.breaking_news,

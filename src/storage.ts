@@ -26,6 +26,7 @@ export type RankingPayload = {
   topics: TopicItem[];
   overview?: string;
   ongi_comment?: string; // New separate comment for Ongi tab
+  comparative_insight?: string; // New Cross-Analysis text
   fear_greed?: number;
   radar?: RadarData;
   breaking_news?: string[];
@@ -90,6 +91,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     topics: meta.topics || [],
     overview: meta.overview || undefined,
     ongi_comment: meta.ongi_comment || undefined,
+    comparative_insight: meta.comparative_insight || undefined,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
     breaking_news: meta.breaking_news || [],
@@ -122,6 +124,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     topics: payload.topics,
     overview: payload.overview,
     ongi_comment: payload.ongi_comment,
+    comparative_insight: payload.comparative_insight,
     fear_greed: payload.fear_greed,
     radar: payload.radar,
     breaking_news: payload.breaking_news,
