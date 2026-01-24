@@ -1,5 +1,5 @@
-import type { Env } from "./types";
-import { getMeta, getRanking, putMeta, putRanking, getAllPrices, type RankingPayload, getOngiHistory, saveOngiHistory } from "./storage";
+import type { Env, ScheduledEvent, ExecutionContext } from "./types";
+import { getMeta, getRanking, putMeta, putRanking, type RankingPayload, getOngiHistory, saveOngiHistory } from "./storage";
 import { scheduled as scheduledImpl } from "./cron";
 import { handleScheduled } from "./scheduler";
 
@@ -79,7 +79,8 @@ export default {
         items: [],
         topics: [],
         overview: null, // Added overview to match original structure
-        sources: []
+        sources: [],
+        reddit_rankings: []
       };
 
       const responseData = { ...safeRanking };

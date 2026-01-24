@@ -1,4 +1,4 @@
-import type { Env } from "./types";
+import type { Env, ScheduledEvent, ExecutionContext } from "./types";
 
 /**
  * NOTE:

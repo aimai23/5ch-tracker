@@ -394,11 +394,12 @@ def analyze_comparative_insight(japan_stocks, us_stocks):
     [🇯🇵 5CH (Japan)]: {jp_list}
     [🇺🇸 Reddit (US)]: {us_list}
     
-    Generate a short, witty "Cross-Culture Market Insight" (Max 150 chars, Japanese).
-    - Highlight the GAP: What is Japan obsessed with vs US? (e.g. "Japan is clinging to Semis while US is gambling on Meme coins").
-    - Or shared panic/hype.
-    - Style: Intellectual but sharp. "Looking at the gap..."
-    - No preamble. Just the insight.
+    Provide a "Deep Strategic Contrast" of the two markets (Max 300 chars, Japanese).
+    - Go beyond listing names. Analyze the *underlying psychology* or *sector preference* divergence.
+    - Example: "Japan is defensive on Semis due to currency fears, while US is aggressively leveraging into Crypto miners."
+    - Why is there a gap? what does it imply for the next 24h?
+    - Tone: Professional Analyst, Insightful, Slightly Cynical.
+    - No preamble.
     """
     
     # Use efficient models for this simpler task
@@ -423,8 +424,8 @@ def analyze_comparative_insight(japan_stocks, us_stocks):
     return None
 
 def fetch_apewisdom_rankings():
-    """Fetch Top 20 stocks from ApeWisdom (Reddit sentiment)"""
-    url = "https://apewisdom.io/api/v1.0/filter/all-stocks/page/1"
+    """Fetch Top 20 stocks from ApeWisdom (WallStreetBets)"""
+    url = "https://apewisdom.io/api/v1.0/filter/wallstreetbets/page/1"
     try:
         resp = requests.get(url, timeout=10)
         if resp.status_code == 200:
