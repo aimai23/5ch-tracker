@@ -1101,7 +1101,7 @@ footer a {
   border: 1px solid var(--border-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   line-height: 1.4;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-main);
 }
 
 .header-help-container:hover .header-help-text {
