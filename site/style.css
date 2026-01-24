@@ -194,23 +194,52 @@ body {
 }
 
 /* Mobile Nav */
+/* Mobile Nav: Double Decker Layout */
 @media (max-width: 768px) {
-  .nav-title {
-    display: none;
-    /* Hide title on small screens */
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
   }
 
-  .nav-center {
-    gap: 1rem;
-  }
-
-  .nav-tab {
-    font-size: 0.8rem;
-    padding: 0 0.2rem;
+  /* Row 1: Logo (Left) & Status (Right) */
+  .nav-left {
+    order: 1;
   }
 
   .nav-right {
-    gap: 0.5rem;
+    order: 2;
+    margin-left: auto;
+    /* Push to right */
+    gap: 0.8rem;
+  }
+
+  /* Row 2: Tabs */
+  .nav-center {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    /* Distribute evenly */
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    height: 40px;
+    /* Specific height for touch targets */
+  }
+
+  .nav-tab {
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
+    flex: 1;
+    /* Equal width */
+    justify-content: center;
+  }
+
+  /* Adjust elements for mobile */
+  .nav-title {
+    display: block;
+    /* Show title again but smaller */
+    font-size: 1rem;
   }
 
   .live-text {
@@ -219,6 +248,11 @@ body {
 
   .live-status {
     padding: 4px;
+  }
+
+  /* Hide specific time on very small screens if needed */
+  #last-updated {
+    font-size: 0.75rem;
   }
 }
 
