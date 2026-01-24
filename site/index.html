@@ -25,32 +25,35 @@
   </div>
 
   <div class="container">
-    <header>
-      <div class="logo-container">
-        <img src="./picture/gold_tanuki.png" alt="Arakawa Tracker Logo" class="title-logo" />
-        <h1>ARAKAWA TRACKER</h1>
+    <header class="navbar">
+      <div class="nav-left">
+        <img src="./picture/gold_tanuki.png" alt="Logo" class="nav-logo" />
+        <h1 class="nav-title">ARAKAWA TRACKER</h1>
       </div>
-      <div class="subtitle">
-        <span class="live-indicator"></span>
-        <span>5CH US STOCK BOARD</span>
-        <div class="tooltip-container">
-          <span class="tooltip-icon"
-            style="margin-left: 5px; font-size: 0.8rem; width: 16px; height: 16px; line-height: 16px;">?</span>
-          <div class="tooltip-text" style="width: 140px; bottom: 130%; left: 50%; transform: translateX(-50%);">
-            24時間集計<br>3時間毎に更新
-            <div class="tooltip-arrow" style="left: 50%;"></div>
+
+      <div class="nav-center">
+        <button class="nav-tab active" data-tab="dashboard">MARKET BOARD</button>
+        <button class="nav-tab" data-tab="topics">HOT TOPICS</button>
+        <button class="nav-tab" data-tab="ongi_greed">Ongi & Greed</button>
+      </div>
+
+      <div class="nav-right">
+        <div class="live-status">
+          <span class="live-indicator"></span>
+          <span class="live-text">LIVE</span>
+        </div>
+        <div class="nav-meta">
+          <span id="last-updated">--:--</span>
+          <div class="tooltip-container header-help-container">
+            <span class="tooltip-icon help-icon">?</span>
+            <div class="tooltip-text help-dropdown">
+              <div>24時間集計 / 3時間毎更新</div>
+              <div class="help-arrow"></div>
+            </div>
           </div>
         </div>
-        <span id="last-updated">Updating...</span>
       </div>
     </header>
-
-    <!-- Navigation Tabs -->
-    <div class="tab-container">
-      <button class="tab-btn active" data-tab="dashboard">MARKET BOARD</button>
-      <button class="tab-btn" data-tab="topics">HOT TOPICS</button>
-      <button class="tab-btn" data-tab="ongi_greed">Ongi & Greed</button>
-    </div>
 
     <main class="dashboard-grid" id="view-dashboard">
       <!-- Left Panel: Ranking -->

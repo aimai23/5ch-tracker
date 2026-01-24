@@ -9,7 +9,7 @@ let currentPolymarket = null;
 
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
-  const tabBtns = document.querySelectorAll(".tab-btn");
+  const tabBtns = document.querySelectorAll(".nav-tab");
 
   tabBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Set initial active tab (dashboard by default)
-  const initialTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  const initialTabBtn = document.querySelector('.nav-tab[data-tab="dashboard"]');
   if (initialTabBtn) {
     initialTabBtn.classList.add('active');
     document.getElementById("view-dashboard").style.display = "grid";
