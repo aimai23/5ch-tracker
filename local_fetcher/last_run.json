@@ -1,152 +1,152 @@
 {
-  "timestamp": 1769278251.3997004,
+  "timestamp": 1769310059.569224,
   "rankings": [
     {
       "ticker": "GLD",
-      "count": 28,
+      "count": 45,
       "sentiment": 0.9,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "SLV",
-      "count": 22,
-      "sentiment": 0.9,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "INTC",
-      "count": 18,
-      "sentiment": -0.7,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "MU",
-      "count": 15,
-      "sentiment": 0.4,
       "rank_delta": 1,
       "is_new": false
     },
     {
-      "ticker": "NVDA",
-      "count": 12,
-      "sentiment": 0.3,
+      "ticker": "SLV",
+      "count": 38,
+      "sentiment": 0.9,
       "rank_delta": -1,
       "is_new": false
     },
     {
       "ticker": "TSLA",
-      "count": 10,
+      "count": 25,
+      "sentiment": -0.4,
+      "rank_delta": 5,
+      "is_new": false
+    },
+    {
+      "ticker": "NFLX",
+      "count": 18,
       "sentiment": 0.1,
       "rank_delta": 1,
       "is_new": false
     },
     {
-      "ticker": "SNDK",
-      "count": 9,
+      "ticker": "MU",
+      "count": 15,
+      "sentiment": 0.3,
+      "rank_delta": -2,
+      "is_new": false
+    },
+    {
+      "ticker": "INTC",
+      "count": 12,
       "sentiment": -0.2,
-      "rank_delta": 11,
+      "rank_delta": -2,
       "is_new": false
     },
     {
-      "ticker": "AVGO",
+      "ticker": "NVDA",
+      "count": 10,
+      "sentiment": 0.2,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
+      "ticker": "AMD",
       "count": 8,
-      "sentiment": 0.2,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "TQQQ",
-      "count": 7,
-      "sentiment": 0.5,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "IREN",
-      "count": 6,
-      "sentiment": 0.4,
-      "rank_delta": 1,
-      "is_new": false
-    },
-    {
-      "ticker": "BTC",
-      "count": 6,
-      "sentiment": 0.2,
+      "sentiment": 0.3,
       "rank_delta": -1,
       "is_new": false
     },
     {
       "ticker": "META",
-      "count": 5,
-      "sentiment": 0.3,
-      "rank_delta": 2,
-      "is_new": false
-    },
-    {
-      "ticker": "MSFT",
-      "count": 5,
-      "sentiment": 0.3,
+      "count": 7,
+      "sentiment": 0.4,
       "rank_delta": 0,
-      "is_new": false
+      "is_new": true
     },
     {
-      "ticker": "NFLX",
-      "count": 5,
+      "ticker": "BTC",
+      "count": 7,
       "sentiment": 0.1,
-      "rank_delta": -5,
-      "is_new": false
-    },
-    {
-      "ticker": "AAPL",
-      "count": 4,
-      "sentiment": 0.2,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "GOOGL",
-      "count": 4,
-      "sentiment": 0.1,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "CWEB",
-      "count": 4,
-      "sentiment": -0.8,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "TMF",
-      "count": 3,
-      "sentiment": -0.4,
       "rank_delta": 1,
       "is_new": false
     },
     {
-      "ticker": "MRAM",
-      "count": 3,
-      "sentiment": -0.5,
+      "ticker": "ICE",
+      "count": 6,
+      "sentiment": -0.9,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "AVGO",
+      "count": 5,
+      "sentiment": 0.5,
       "rank_delta": -2,
       "is_new": false
     },
     {
-      "ticker": "LMND",
+      "ticker": "SNDK",
+      "count": 4,
+      "sentiment": -0.6,
+      "rank_delta": -1,
+      "is_new": false
+    },
+    {
+      "ticker": "TQQQ",
+      "count": 3,
+      "sentiment": -0.3,
+      "rank_delta": 3,
+      "is_new": false
+    },
+    {
+      "ticker": "SOXL",
+      "count": 3,
+      "sentiment": -0.5,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "SPY",
+      "count": 2,
+      "sentiment": -0.2,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "MSFT",
+      "count": 2,
+      "sentiment": 0.3,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "GOOG",
+      "count": 2,
+      "sentiment": 0.1,
+      "rank_delta": 0,
+      "is_new": true
+    },
+    {
+      "ticker": "IREN",
       "count": 2,
       "sentiment": 0.2,
-      "rank_delta": -4,
+      "rank_delta": -13,
       "is_new": false
+    },
+    {
+      "ticker": "AAPL",
+      "count": 1,
+      "sentiment": 0.2,
+      "rank_delta": 0,
+      "is_new": true
     }
   ],
   "fear_greed": 32,
   "radar": {
-    "hype": 6,
-    "panic": 8,
-    "faith": 3,
+    "hype": 8,
+    "panic": 9,
+    "faith": 2,
     "gamble": 7,
     "iq": 3
   },

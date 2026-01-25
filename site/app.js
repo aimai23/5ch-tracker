@@ -565,9 +565,15 @@ function renderWordCloud() {
   const baseSize = canvas.width > 600 ? 60 : 30; // Base font size
   const scale = baseSize / maxCount;
 
+  // Mobile Optimization
+  const isMobile = window.innerWidth <= 768;
+  const displayList = isMobile ? currentTopics.slice(0, 40) : currentTopics; // Limit items on mobile
+  const gridSize = isMobile ? 18 : 10; // Larger grid = Faster but less precise
+  const rotationRatio = isMobile ? 0 : 0.5; // No rotation on mobile to save calc time
+
   WordCloud(canvas, {
-    list: currentTopics,
-    gridSize: 10,
+    list: displayList,
+    gridSize: gridSize,
     weightFactor: function (size) {
       return Math.max((size * scale) * 2.5, 12); // Minimum 12px
     },
@@ -576,11 +582,12 @@ function renderWordCloud() {
       const colors = ['#00f0ff', '#ffd700', '#ffffff', '#ff003c', '#adff00'];
       return colors[Math.floor(Math.random() * colors.length)];
     },
-    rotateRatio: 0.5,
+    rotateRatio: rotationRatio,
     rotationSteps: 2,
     backgroundColor: 'transparent',
     shrinkToFit: true,
-    drawOutOfBound: false
+    drawOutOfBound: false,
+    wait: isMobile ? 10 : 0 // Small delay to unblock UI on mobile
   });
 
   loading.style.display = 'none';
