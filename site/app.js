@@ -562,11 +562,12 @@ function renderWordCloud() {
 
   // Calculate scaling factor
   const maxCount = Math.max(...currentTopics.map(t => t[1]));
-  const baseSize = canvas.width > 600 ? 60 : 30; // Base font size
-  const scale = baseSize / maxCount;
 
   // Mobile Optimization
   const isMobile = window.innerWidth <= 768;
+  const baseSize = isMobile ? 16 : (canvas.width > 600 ? 60 : 30); // Reduced mobile size (30->16)
+  const scale = baseSize / maxCount;
+
   const displayList = isMobile ? currentTopics.slice(0, 40) : currentTopics; // Limit items on mobile
   const gridSize = isMobile ? 18 : 10; // Larger grid = Faster but less precise
   const rotationRatio = isMobile ? 0 : 0.5; // No rotation on mobile to save calc time
