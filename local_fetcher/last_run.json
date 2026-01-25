@@ -1,158 +1,123 @@
 {
-  "timestamp": 1769310059.569224,
+  "timestamp": 1769320877.9195247,
   "rankings": [
     {
       "ticker": "GLD",
-      "count": 45,
+      "count": 28,
       "sentiment": 0.9,
-      "rank_delta": 1,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "SLV",
-      "count": 38,
-      "sentiment": 0.9,
-      "rank_delta": -1,
+      "count": 22,
+      "sentiment": 1.0,
+      "rank_delta": 0,
       "is_new": false
+    },
+    {
+      "ticker": "QQQ",
+      "count": 18,
+      "sentiment": -0.7,
+      "rank_delta": 0,
+      "is_new": true
     },
     {
       "ticker": "TSLA",
-      "count": 25,
-      "sentiment": -0.4,
-      "rank_delta": 5,
-      "is_new": false
-    },
-    {
-      "ticker": "NFLX",
-      "count": 18,
-      "sentiment": 0.1,
-      "rank_delta": 1,
+      "count": 15,
+      "sentiment": 0.4,
+      "rank_delta": -1,
       "is_new": false
     },
     {
       "ticker": "MU",
-      "count": 15,
-      "sentiment": 0.3,
-      "rank_delta": -2,
-      "is_new": false
-    },
-    {
-      "ticker": "INTC",
       "count": 12,
-      "sentiment": -0.2,
-      "rank_delta": -2,
-      "is_new": false
-    },
-    {
-      "ticker": "NVDA",
-      "count": 10,
-      "sentiment": 0.2,
-      "rank_delta": 2,
+      "sentiment": 0.3,
+      "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "AMD",
-      "count": 8,
-      "sentiment": 0.3,
-      "rank_delta": -1,
+      "count": 9,
+      "sentiment": -0.3,
+      "rank_delta": 2,
       "is_new": false
-    },
-    {
-      "ticker": "META",
-      "count": 7,
-      "sentiment": 0.4,
-      "rank_delta": 0,
-      "is_new": true
     },
     {
       "ticker": "BTC",
-      "count": 7,
-      "sentiment": 0.1,
-      "rank_delta": 1,
+      "count": 8,
+      "sentiment": -0.5,
+      "rank_delta": 3,
       "is_new": false
     },
     {
-      "ticker": "ICE",
-      "count": 6,
-      "sentiment": -0.9,
-      "rank_delta": 0,
-      "is_new": true
+      "ticker": "NFLX",
+      "count": 7,
+      "sentiment": 0.2,
+      "rank_delta": -4,
+      "is_new": false
     },
     {
-      "ticker": "AVGO",
-      "count": 5,
-      "sentiment": 0.5,
-      "rank_delta": -2,
+      "ticker": "AAPL",
+      "count": 6,
+      "sentiment": 0.1,
+      "rank_delta": 11,
       "is_new": false
     },
     {
       "ticker": "SNDK",
-      "count": 4,
-      "sentiment": -0.6,
-      "rank_delta": -1,
+      "count": 5,
+      "sentiment": -0.1,
+      "rank_delta": 3,
       "is_new": false
     },
     {
-      "ticker": "TQQQ",
+      "ticker": "META",
+      "count": 4,
+      "sentiment": 0.0,
+      "rank_delta": -2,
+      "is_new": false
+    },
+    {
+      "ticker": "AVGO",
+      "count": 4,
+      "sentiment": -0.4,
+      "rank_delta": 0,
+      "is_new": false
+    },
+    {
+      "ticker": "INTC",
       "count": 3,
-      "sentiment": -0.3,
-      "rank_delta": 3,
+      "sentiment": -0.2,
+      "rank_delta": -7,
       "is_new": false
     },
     {
       "ticker": "SOXL",
       "count": 3,
-      "sentiment": -0.5,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "SPY",
-      "count": 2,
-      "sentiment": -0.2,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "MSFT",
-      "count": 2,
-      "sentiment": 0.3,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "GOOG",
-      "count": 2,
-      "sentiment": 0.1,
-      "rank_delta": 0,
-      "is_new": true
-    },
-    {
-      "ticker": "IREN",
-      "count": 2,
-      "sentiment": 0.2,
-      "rank_delta": -13,
+      "sentiment": -0.1,
+      "rank_delta": 1,
       "is_new": false
     },
     {
-      "ticker": "AAPL",
-      "count": 1,
-      "sentiment": 0.2,
+      "ticker": "TMF",
+      "count": 2,
+      "sentiment": -0.6,
       "rank_delta": 0,
       "is_new": true
     }
   ],
-  "fear_greed": 32,
+  "fear_greed": 45,
   "radar": {
     "hype": 8,
-    "panic": 9,
-    "faith": 2,
-    "gamble": 7,
-    "iq": 3
+    "panic": 7,
+    "faith": 4,
+    "gamble": 8,
+    "iq": 4
   },
   "doughcon": {
-    "level": 4,
-    "description": "CAUTION"
+    "level": 3,
+    "description": "WARNING"
   },
   "sahm_rule": {
     "value": 0.35,

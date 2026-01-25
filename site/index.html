@@ -17,12 +17,14 @@
 
   <!-- Removed Body -->
   <!-- Breaking News Ticker -->
+  <!--
   <div id="breaking-news-container" style="display: none;">
     <div class="news-label">LIVE</div>
     <div class="news-content">
       <div id="news-marquee">Generating Market Commentary...</div>
     </div>
   </div>
+  -->
 
   <div class="container">
     <header class="navbar">
@@ -283,6 +285,24 @@
             <span class="overview-blink">_</span>
           </div>
           <p id="overview-text" class="overview-text">Loading analysis...</p>
+        </div>
+
+        <!-- NEW: Imakita Sangyo (TL;DR) -->
+        <div id="imakita-container" class="market-overview"
+          style="display: none; margin-bottom: 1rem; border-color: var(--accent-cyan);">
+          <div class="overview-header">
+            <span class="overview-title" style="color: var(--accent-cyan);">⚡ 今北産業 (TL;DR)</span>
+          </div>
+          <div id="imakita-content"
+            style="display: flex; flex-direction: column; gap: 0.5rem; color: #ccc; font-size: 0.9rem; font-family: 'JetBrains Mono', sans-serif;">
+            <!-- Lines injected by JS -->
+            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
+              Loading...</div>
+            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
+              Loading...</div>
+            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
+              Loading...</div>
+          </div>
         </div>
 
         <div id="wordcloud-container"

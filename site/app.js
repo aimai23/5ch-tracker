@@ -254,18 +254,21 @@ async function main() {
       updateYieldCurve(data.yield_curve);
     }
 
-    // Breaking News Ticker
-    const tickerContainer = document.getElementById("breaking-news-container");
-    const tickerText = document.getElementById("news-marquee");
+    // Imakita Sangyo (TL;DR)
+    const imakitaContainer = document.getElementById("imakita-container");
+    const imakitaContent = document.getElementById("imakita-content");
 
     if (data.breaking_news && Array.isArray(data.breaking_news) && data.breaking_news.length > 0) {
-      if (tickerContainer) tickerContainer.style.display = "flex";
-      if (tickerText) {
-        // Join with spacing - Duplicate for length safety
-        tickerText.textContent = data.breaking_news.join("        ") + "        " + data.breaking_news.join("        ");
+      if (imakitaContainer) imakitaContainer.style.display = "block";
+      if (imakitaContent) {
+        // Take top 3 items
+        const top3 = data.breaking_news.slice(0, 3);
+        imakitaContent.innerHTML = top3.map(news =>
+          `<div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">- ${news}</div>`
+        ).join("");
       }
     } else {
-      if (tickerContainer) tickerContainer.style.display = "none";
+      if (imakitaContainer) imakitaContainer.style.display = "none";
     }
 
     // AI Overview
