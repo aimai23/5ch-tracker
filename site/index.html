@@ -293,6 +293,20 @@
           </div>
         </h2>
 
+        <!-- NEW: Imakita Sangyo (TL;DR) - Moved Top & Accordion -->
+        <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem; cursor: pointer;"
+          onclick="document.getElementById('imakita-content').style.display = document.getElementById('imakita-content').style.display === 'none' ? 'flex' : 'none'; this.querySelector('.arrow').textContent = document.getElementById('imakita-content').style.display === 'none' ? '▶' : '▼';">
+          <div class="overview-header" style="justify-content: space-between; border-bottom: none; margin-bottom: 0;">
+            <span class="overview-title">⚡ 今北産業</span>
+            <span class="arrow" style="color: var(--accent-cyan); font-size: 0.8rem;">▶</span>
+          </div>
+          <div id="imakita-content"
+            style="display: none; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; font-family: 'JetBrains Mono', sans-serif; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(0, 240, 255, 0.2);">
+            <!-- Lines injected by JS -->
+            <div class="imakita-line">Loading...</div>
+          </div>
+        </div>
+
         <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
           <div class="overview-header">
             <span class="overview-title">🤖 AI MARKET INSIGHT</span>
@@ -301,19 +315,7 @@
           <p id="overview-text" class="overview-text">Loading analysis...</p>
         </div>
 
-        <!-- NEW: Imakita Sangyo (TL;DR) -->
-        <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem;">
-          <div class="overview-header">
-            <span class="overview-title">⚡ 今北産業</span>
-          </div>
-          <div id="imakita-content"
-            style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; font-family: 'JetBrains Mono', sans-serif;">
-            <!-- Lines injected by JS -->
-            <div class="imakita-line">Loading...</div>
-            <div class="imakita-line">Loading...</div>
-            <div class="imakita-line">Loading...</div>
-          </div>
-        </div>
+
 
         <div id="wordcloud-container"
           style="flex: 1; min-height: 350px; position: relative; background: rgba(0,0,0,0.2); border-radius: 8px;">
