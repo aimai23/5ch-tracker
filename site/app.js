@@ -264,7 +264,7 @@ async function main() {
         // Take top 3 items
         const top3 = data.breaking_news.slice(0, 3);
         imakitaContent.innerHTML = top3.map(news =>
-          `<div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">- ${news}</div>`
+          `<div class="imakita-line">- ${news}</div>`
         ).join("");
       }
     } else {

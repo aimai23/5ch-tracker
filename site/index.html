@@ -15,6 +15,28 @@
 
 <body>
 
+  <style>
+    /* Imakita Line Styles */
+    .imakita-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 600px) {
+      .imakita-line {
+        white-space: normal;
+        /* Allow wrap on mobile */
+        font-size: 0.85rem;
+        /* Slightly smaller text */
+        line-height: 1.4;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+      }
+    }
+  </style>
+
   <!-- Removed Body -->
   <!-- Breaking News Ticker -->
   <!--
@@ -288,20 +310,16 @@
         </div>
 
         <!-- NEW: Imakita Sangyo (TL;DR) -->
-        <div id="imakita-container" class="market-overview"
-          style="display: none; margin-bottom: 1rem; border-color: var(--accent-cyan);">
+        <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem;">
           <div class="overview-header">
-            <span class="overview-title" style="color: var(--accent-cyan);">⚡ 今北産業 (TL;DR)</span>
+            <span class="overview-title">⚡ 今北産業</span>
           </div>
           <div id="imakita-content"
-            style="display: flex; flex-direction: column; gap: 0.5rem; color: #ccc; font-size: 0.9rem; font-family: 'JetBrains Mono', sans-serif;">
+            style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; font-family: 'JetBrains Mono', sans-serif;">
             <!-- Lines injected by JS -->
-            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
-              Loading...</div>
-            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
-              Loading...</div>
-            <div class="imakita-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-
-              Loading...</div>
+            <div class="imakita-line">- Loading...</div>
+            <div class="imakita-line">- Loading...</div>
+            <div class="imakita-line">- Loading...</div>
           </div>
         </div>
 
