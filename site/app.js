@@ -565,7 +565,7 @@ function renderWordCloud() {
 
   // Mobile Optimization
   const isMobile = window.innerWidth <= 768;
-  const baseSize = isMobile ? 16 : (canvas.width > 600 ? 60 : 30); // Reduced mobile size (30->16)
+  const baseSize = isMobile ? 16 : (canvas.width > 600 ? 40 : 24); // PC: 60->40, Tablet: 30->24
   const scale = baseSize / maxCount;
 
   const displayList = isMobile ? currentTopics.slice(0, 40) : currentTopics; // Limit items on mobile
