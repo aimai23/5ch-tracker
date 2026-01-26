@@ -41,6 +41,7 @@ export type RankingPayload = {
     mentions_24h_ago?: number;
   }>;
   cnn_fear_greed?: { score: number; rating: string; timestamp?: string };
+  crypto_fear_greed?: { value: number; classification: string };
   doughcon?: { level: number; description: string };
   sahm_rule?: { value: number; state: string };
   yield_curve?: { value: number; state: string };
@@ -101,6 +102,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     polymarket: meta.polymarket || [],
     reddit_rankings: meta.reddit_rankings || [],
     cnn_fear_greed: meta.cnn_fear_greed,
+    crypto_fear_greed: meta.crypto_fear_greed,
     doughcon: meta.doughcon,
     sahm_rule: meta.sahm_rule,
     yield_curve: meta.yield_curve,
@@ -137,6 +139,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     polymarket: payload.polymarket,
     reddit_rankings: payload.reddit_rankings,
     cnn_fear_greed: payload.cnn_fear_greed,
+    crypto_fear_greed: payload.crypto_fear_greed,
     doughcon: payload.doughcon,
     sahm_rule: payload.sahm_rule,
     yield_curve: payload.yield_curve,

@@ -445,13 +445,13 @@ def fetch_doughcon_data():
         logging.error(f"Failed to fetch Doughcon data: {e}")
     return None
 
-def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None, yield_curve_data=None):
+def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None, yield_curve_data=None, crypto_fg=None):
     logging.info(f"Sending {len(final_items)} tickers, {len(topics)} topics, {len(polymarket_data)} polymarket, {len(reddit_data or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
         return
 
-    logging.info(f"Payload Indicators: Pizza={doughcon_data is not None}, Sahm={sahm_data is not None}, Yield={yield_curve_data is not None}")
+    logging.info(f"Payload Indicators: Pizza={doughcon_data is not None}, Sahm={sahm_data is not None}, Yield={yield_curve_data is not None}, CryptoFG={crypto_fg is not None}")
 
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
@@ -468,6 +468,7 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
         "polymarket": polymarket_data or [],
         "reddit_rankings": reddit_data or [],
         "cnn_fear_greed": cnn_fg,
+        "crypto_fear_greed": crypto_fg,
         "doughcon": doughcon_data,
         "sahm_rule": sahm_data,
         "yield_curve": yield_curve_data
@@ -820,6 +821,23 @@ def fetch_sahm_rule():
         logging.warning(f"Failed to fetch Sahm Rule: {e}")
     return None
 
+def fetch_crypto_fear_greed():
+    """Fetch Crypto Fear & Greed Index from Alternative.me"""
+    try:
+        url = "https://api.alternative.me/fng/?limit=1"
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data['data']:
+                item = data['data'][0]
+                return {
+                    "value": int(item['value']),
+                    "classification": item['value_classification']
+                }
+    except Exception as e:
+        logging.warning(f"Failed to fetch Crypto F&G: {e}")
+    return None
+
 def fetch_yield_curve():
     try:
         url = "https://fred.stlouisfed.org/series/T10Y2Y"
@@ -865,6 +883,13 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     sahm_data = fetch_sahm_rule()
     if sahm_data:
         logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
+    if sahm_data:
+        logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
+    
+    # Crypto Fear & Greed Fetch
+    crypto_fg = fetch_crypto_fear_greed()
+    if crypto_fg:
+        logging.info(f"Crypto F&G Fetched: {crypto_fg['value']} ({crypto_fg['classification']})")
     
     
     if poly_only:
@@ -984,7 +1009,8 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "radar": radar_data,
             "doughcon": doughcon_data,
             "sahm_rule": sahm_data,
-            "yield_curve": yield_curve_data
+            "yield_curve": yield_curve_data,
+            "crypto_fear_greed": crypto_fg
         }
         save_current_state(current_state)
     except Exception as e:
@@ -1001,7 +1027,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data, yield_curve_data=yield_curve_data)
+    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data, yield_curve_data=yield_curve_data, crypto_fg=crypto_fg)
 
 if __name__ == "__main__":
     import argparse
