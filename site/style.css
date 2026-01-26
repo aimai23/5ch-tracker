@@ -356,9 +356,24 @@ body {
 /* Mobile Title Reduction */
 @media (max-width: 768px) {
   .status-title {
-    font-size: 0.6rem !important;
-    gap: 3px;
-    letter-spacing: 0.05em;
+    font-size: 0.5rem !important;
+    gap: 2px;
+    letter-spacing: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    display: block;
+    /* Flexbox ellipsis workaround */
+    /* If display:block is used, we need to center text manually since flex gap/justify won't work same way */
+    text-align: center;
+  }
+
+  /* Adjust the icon/tooltip positioning if display is block */
+  .status-title .tooltip-container {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 2px;
   }
 }
 
