@@ -185,10 +185,14 @@
         </div>
 
         <!-- Middle Row: History Chart -->
-        <div class="history-chart-container"
-          style="width: 100%; height: 300px; margin-bottom: 1rem; text-align: center;">
-          <h3 style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">ONGI & GREED INDEX HISTORY (30 DAYS)</h3>
-          <canvas id="ongi-history-chart"></canvas>
+        <div class="history-chart-container" style="width: 100%; margin-bottom: 1rem; text-align: center;">
+          <h3 id="history-header" onclick="toggleHistoryChart()" class="history-header">
+            <span id="history-toggle-icon" style="display:inline-block; transition: transform 0.3s;">▼</span> ONGI &
+            GREED INDEX HISTORY (30 DAYS)
+          </h3>
+          <div id="history-content" class="history-content expanded">
+            <canvas id="ongi-history-chart"></canvas>
+          </div>
         </div>
 
         <!-- Bottom Row: DOUGHCON & SAHM RULE -->

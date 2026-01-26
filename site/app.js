@@ -853,3 +853,23 @@ function updateCryptoFG(data) {
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 8px ${color}`;
 }
+
+// History Chart Toggle
+function toggleHistoryChart() {
+  const content = document.getElementById('history-content');
+  const icon = document.getElementById('history-toggle-icon');
+
+  if (!content || !icon) return;
+
+  const isCollapsed = content.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    // Expand
+    content.classList.remove('collapsed');
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    // Collapse
+    content.classList.add('collapsed');
+    icon.style.transform = 'rotate(-90deg)';
+  }
+}

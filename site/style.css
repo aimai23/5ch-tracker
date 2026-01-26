@@ -1538,3 +1538,38 @@ footer a {
     min-height: 300px;
   }
 }
+
+/* History Chart Collapse Styles */
+.history-header {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: color 0.2s;
+}
+
+.history-header:hover {
+  color: var(--accent-cyan);
+}
+
+.history-content {
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), opacity 0.4s ease;
+  max-height: 500px;
+  /* Arbitrary large enough height */
+  opacity: 1;
+}
+
+.history-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+#history-toggle-icon {
+  font-size: 0.7rem;
+}
