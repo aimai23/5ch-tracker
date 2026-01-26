@@ -807,7 +807,7 @@ function updateSahmRule(data) {
   else if (data.value >= 0.30) color = "#ffff00";
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 8px ${color}`;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
 
 function updateYieldCurve(data) {
@@ -828,7 +828,7 @@ function updateYieldCurve(data) {
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 8px ${color}`;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
 
 function updateCryptoFG(data) {
@@ -841,7 +841,7 @@ function updateCryptoFG(data) {
   if (descEl) descEl.textContent = `Value: ${data.value}`;
 
   // Color Logic (Typically 0-24 Extreme Fear, 25-49 Fear, 50-74 Greed, 75-100 Extreme Greed)
-  let color = "#fff";
+  let color = "#ffffff";
   const val = parseInt(data.value);
 
   if (val <= 25) color = "#ff0000";       // Extreme Fear (Red)
@@ -851,7 +851,7 @@ function updateCryptoFG(data) {
   else color = "#00ff00";                 // Extreme Greed (Green)
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 8px ${color}`;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
 
 // History Chart Toggle
