@@ -322,7 +322,8 @@ body {
     grid-template-columns: 1fr 1fr;
     /* 2 columns */
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 3rem;
+    /* Increased margin to prevent overlap */
     width: 100%;
     box-sizing: border-box;
   }
