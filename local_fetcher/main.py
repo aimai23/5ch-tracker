@@ -114,7 +114,7 @@ def discover_threads():
             candidates.append({"name": title, "url": url, "num": thread_num})
     
     candidates.sort(key=lambda x: x["num"], reverse=True)
-    top_threads = candidates[:4]
+    top_threads = candidates[:5]
     for t in top_threads:
         logging.info(f"Found: {t['name']} (No.{t['num']})")
         
