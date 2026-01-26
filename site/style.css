@@ -341,8 +341,14 @@ body {
   /* Scale down text inside cards for mobile */
   .status-card div[id$="-level"] {
     font-size: 1.3rem !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    /* Was hidden, now visible for wrapping */
+    text-overflow: clip;
+    /* Remove ellipsis for wrapping */
+    white-space: normal !important;
+    /* Allow wrap */
+    line-height: 1.1;
+    height: auto !important;
   }
 
   .status-card div[id$="-desc"] {
