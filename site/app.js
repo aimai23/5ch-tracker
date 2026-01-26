@@ -789,7 +789,7 @@ function updateDoughcon(data) {
   else color = "#00ff00";                   // Low (Green)
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 30px ${color}`;
+  levelEl.style.textShadow = `0 0 15px ${color}`;
 }
 
 function updateSahmRule(data) {
@@ -807,7 +807,7 @@ function updateSahmRule(data) {
   else if (data.value >= 0.30) color = "#ffff00";
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 30px ${color}`;
+  levelEl.style.textShadow = `0 0 15px ${color}`;
 }
 
 function updateYieldCurve(data) {
@@ -828,7 +828,7 @@ function updateYieldCurve(data) {
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 30px ${color}`;
+  levelEl.style.textShadow = `0 0 15px ${color}`;
 }
 
 function updateCryptoFG(data) {
@@ -851,5 +851,5 @@ function updateCryptoFG(data) {
   else color = "#00ff00";                 // Extreme Greed (Green)
 
   levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 30px ${color}`;
+  levelEl.style.textShadow = `0 0 15px ${color}`;
 }

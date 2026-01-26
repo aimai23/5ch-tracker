@@ -289,6 +289,42 @@ body {
   }
 }
 
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 2 columns */
+    gap: 0.8rem;
+    margin-top: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .status-card {
+    min-width: 0 !important;
+    /* Force shrinking */
+    width: auto !important;
+    max-width: none;
+    padding: 0.8rem 0.5rem;
+  }
+
+  /* Scale down text inside cards for mobile */
+  .status-card div[id$="-level"] {
+    font-size: 1.5rem !important;
+  }
+
+  .status-card div[id$="-desc"] {
+    font-size: 0.7rem !important;
+    height: 30px !important;
+  }
+
+  /* Hide description helper text to save space if needed, or keep small */
+  .status-card .tooltip-container {
+    display: inline-block;
+  }
+}
+
 /* DASHBOARD GRID LAYOUT */
 .dashboard-grid {
   display: grid;
