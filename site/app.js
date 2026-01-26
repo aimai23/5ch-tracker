@@ -827,6 +827,7 @@ function updateYieldCurve(data) {
   if (data.value < 0) color = "#ff0000";       // Inverted
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
 
+  levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
 }
 
