@@ -340,6 +340,28 @@ body {
   }
 }
 
+/* Status Title Styles (Default) */
+.status-title {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Mobile Title Reduction */
+@media (max-width: 768px) {
+  .status-title {
+    font-size: 0.6rem !important;
+    gap: 3px;
+    letter-spacing: 0.05em;
+  }
+}
+
 /* DASHBOARD GRID LAYOUT */
 .dashboard-grid {
   display: grid;
