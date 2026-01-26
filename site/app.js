@@ -254,6 +254,16 @@ async function main() {
       updateYieldCurve(data.yield_curve);
     }
 
+    // NEW: CRYPTO FEAR & GREED
+    if (data.crypto_fear_greed) {
+      updateCryptoFG(data.crypto_fear_greed);
+    }
+
+    // NEW: CRYPTO FEAR & GREED
+    if (data.crypto_fear_greed) {
+      updateCryptoFG(data.crypto_fear_greed);
+    }
+
     // Imakita Sangyo (TL;DR)
     const imakitaContainer = document.getElementById("imakita-container");
     const imakitaContent = document.getElementById("imakita-content");
@@ -816,6 +826,28 @@ function updateYieldCurve(data) {
   let color = "#00ff00"; // Green
   if (data.value < 0) color = "#ff0000";       // Inverted
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
+
+  levelEl.style.textShadow = `0 0 30px ${color}`;
+}
+
+function updateCryptoFG(data) {
+  const levelEl = document.getElementById("crypto-fg-level");
+  const descEl = document.getElementById("crypto-fg-desc");
+
+  if (!data || !levelEl) return;
+
+  levelEl.textContent = data.classification.toUpperCase();
+  if (descEl) descEl.textContent = `Value: ${data.value}`;
+
+  // Color Logic (Typically 0-24 Extreme Fear, 25-49 Fear, 50-74 Greed, 75-100 Extreme Greed)
+  let color = "#fff";
+  const val = parseInt(data.value);
+
+  if (val <= 25) color = "#ff0000";       // Extreme Fear (Red)
+  else if (val <= 46) color = "#ff6600";  // Fear (Orange)
+  else if (val <= 54) color = "#ffff00";  // Neutral (Yellow)
+  else if (val <= 75) color = "#ccff00";  // Greed (Light Green)
+  else color = "#00ff00";                 // Extreme Greed (Green)
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 30px ${color}`;
