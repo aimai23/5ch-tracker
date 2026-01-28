@@ -1862,20 +1862,29 @@ footer a {
 
 /* Trade View Header */
 .trade-view-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  margin-top: 0;
   color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Subheader for Desc and Model Info */
+.trade-view-subheader {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
 }
 
 .trade-view-desc {
   font-size: 0.95rem;
   color: #aaa;
   font-weight: 400;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0;
   font-family: "JetBrains Mono", sans-serif;
   letter-spacing: 0.05em;
 }
@@ -1888,7 +1897,6 @@ footer a {
   font-family: var(--font-mono);
   white-space: nowrap;
   align-self: flex-start;
-  margin-top: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 2px 8px;
   border-radius: 4px;
