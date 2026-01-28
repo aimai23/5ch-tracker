@@ -298,6 +298,15 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
          - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
+    7. TRADE RECOMMENDATIONS (AI Analyst Picks):
+       - Based on the thread's consensus and sentiment, identify:
+         1. "bullish_pick": The token/stock with the most solid "Buy" conviction or "Hype".
+         2. "bearish_pick": The token/stock that is being ridiculed or sold off ("Cut Loss" candidate).
+       - Provide a "reason" for each (Max 60 chars).
+       - Tone: Calm, Logical, Unreserved, Cold. (Cool Japanese).
+       - If no clear candidate, use null.
+
+
     6. COMPARATIVE INSIGHT (JP 5ch vs US Reddit):
        - Compare the "JP 5ch Trends" (from your analysis of the text) vs "US Reddit Trends" (provided in Context).
        - Provide a "Deep Strategic Contrast" (Max 250 chars, Japanese).
@@ -317,7 +326,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
       "summary": "...",
       "ongi_comment": "...",
       "breaking_news": ["Headline 1", "Headline 2"],
-      "comparative_insight": "..."
+      "comparative_insight": "...",
+      "trade_recommendations": {{
+        "bullish": {{ "ticker": "NVDA", "reason": "決算期待で脳汁全開" }},
+        "bearish": {{ "ticker": "INTC", "reason": "遺産相続したおばあちゃん専用株" }}
+      }}
     }}
 
     Text:
@@ -348,7 +361,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", "")
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("trade_recommendations", {})
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -358,7 +371,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}, "", [], ""
+    return [], "要約生成失敗", 50, {}, "", [], "", {}
 
 def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -445,8 +458,10 @@ def fetch_doughcon_data():
         logging.error(f"Failed to fetch Doughcon data: {e}")
     return None
 
-def send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, doughcon_data=None, sahm_data=None, yield_curve_data=None, crypto_fg=None):
-    logging.info(f"Sending {len(final_items)} tickers, {len(topics)} topics, {len(polymarket_data)} polymarket, {len(reddit_data or [])} reddit items to Worker...")
+def    send_to_worker(
+        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, trade_recs, doughcon_data, sahm_data, yield_curve_data, crypto_fg
+    ):
+    logging.info(f"Sending {len(tickers)} tickers, {len(topics)} topics, {len(polymarket or [])} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
         return
@@ -456,17 +471,18 @@ def send_to_worker(final_items, topics, source_meta, market_summary, ongi_commen
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
         "window": "24h",
-        "items": final_items,
+        "items": tickers,
         "topics": topics,
         "sources": source_meta,
-        "overview": market_summary,
+        "overview": summary,
         "ongi_comment": ongi_comment,
         "comparative_insight": comparative_insight,
+        "trade_recommendations": trade_recs,
         "fear_greed": fear_greed,
-        "radar": radar_data,
+        "radar": radar,
         "breaking_news": breaking_news,
-        "polymarket": polymarket_data or [],
-        "reddit_rankings": reddit_data or [],
+        "polymarket": polymarket or [],
+        "reddit_rankings": reddit_rankings or [],
         "cnn_fear_greed": cnn_fg,
         "crypto_fear_greed": crypto_fg,
         "doughcon": doughcon_data,
@@ -924,8 +940,9 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight = analyze_market_data(all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data)
-    
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, trade_recs = analyze_market_data(
+        all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data
+    )
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
         
@@ -1027,7 +1044,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary=market_summary, ongi_comment=ongi_comment, fear_greed=fear_greed, radar_data=radar_data, breaking_news=breaking_news, polymarket_data=polymarket_data, cnn_fg=cnn_fg, reddit_data=reddit_data, comparative_insight=comparative_insight, doughcon_data=doughcon_data, sahm_data=sahm_data, yield_curve_data=yield_curve_data, crypto_fg=crypto_fg)
+    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, trade_recs, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
 
 if __name__ == "__main__":
     import argparse

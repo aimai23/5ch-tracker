@@ -1730,3 +1730,118 @@ footer a {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- TRADE RECOMMENDATIONS STYLES --- */
+.trade-rec-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .trade-rec-container {
+    flex-direction: row;
+    gap: 2rem;
+  }
+}
+
+.trade-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.trade-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Bullish Theme */
+.bullish-card {
+  border-top: 4px solid var(--accent-green);
+  background: linear-gradient(180deg, rgba(76, 175, 80, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.bullish-card:hover {
+  border-color: var(--accent-green);
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.1);
+}
+
+/* Bearish Theme */
+.bearish-card {
+  border-top: 4px solid var(--accent-red);
+  background: linear-gradient(180deg, rgba(255, 82, 82, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.bearish-card:hover {
+  border-color: var(--accent-red);
+  box-shadow: 0 10px 30px rgba(255, 82, 82, 0.1);
+}
+
+.trade-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.trade-icon {
+  font-size: 2rem;
+}
+
+.trade-label {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.bullish-card .trade-label { color: var(--accent-green); }
+.bearish-card .trade-label { color: var(--accent-red); }
+
+.trade-ticker {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.bullish-card .trade-ticker { 
+  color: #fff;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.bearish-card .trade-ticker { 
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 82, 82, 0.5);
+}
+
+.trade-reason {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  min-height: 3em;
+}
+
+.trade-confidence {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.confidence-bar {
+  height: 100%;
+  border-radius: 2px;
+  box-shadow: 0 0 10px currentColor;
+}
+

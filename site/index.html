@@ -385,7 +385,7 @@
         <div class="about-content" style="line-height: 1.8; color: var(--text-primary);">
           <p>
             <strong>ARAKAWA TRACKER</strong> は、5ちゃんねるの市況板や米国株スレ、Redditなどのコミュニティから
-            投資家の感情や注目銘柄をリアルタイムで収集・分析するダッシュボードです。
+            投資家の感情や注目銘柄を収集・分析するダッシュボードです。
           </p>
 
           <h3 style="color: var(--accent-cyan); margin-top: 2rem;">📊 データ更新について</h3>
@@ -394,16 +394,56 @@
             常に最新の市場の熱量をお届けすることを目指していますが、APIの状況により遅延が発生する場合があります。
           </p>
 
-          <h3 style="color: var(--accent-cyan); margin-top: 2rem;">🤖 AI分析について</h3>
-          <p>
-            収集された投稿データは、最新のAIモデルによって感情分析（ポジティブ/ネガティブ）され、
-            "Ongi & Greed Index" として数値化されます。
-          </p>
-
           <div
             style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
             <p>Disclaimer: 本サイトの情報は投資勧誘を目的としたものではありません。投資の最終決定はご自身の判断で行ってください。</p>
           </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Trade Recommendations View -->
+    <div id="view-trade-indepth" style="display: none;">
+      <section class="panel" style="padding: 1rem; max-width: 900px; margin: 0 auto;">
+        <h2
+          style="margin-bottom: 2rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid rgba(0,240,255,0.2); padding-bottom: 1rem;">
+          🧠 AI TRADE ANALYST
+          <span
+            style="font-size: 0.8rem; color: var(--text-secondary); opacity: 0.7; font-weight: normal; margin-left: auto; font-family: var(--font-mono);">
+            POWERED BY GEMINI 2.0
+          </span>
+        </h2>
+
+        <div class="trade-rec-container">
+          <!-- BULLISH -->
+          <div class="trade-card bullish-card">
+            <div class="trade-header">
+              <span class="trade-icon">🐂</span>
+              <span class="trade-label">BULLISH PICK</span>
+            </div>
+            <div class="trade-ticker" id="bullish-ticker">--</div>
+            <div class="trade-reason" id="bullish-reason">Analyzing market sentiment...</div>
+            <div class="trade-confidence">
+              <div class="confidence-bar" style="width: 80%; background: var(--accent-green);"></div>
+            </div>
+          </div>
+
+          <!-- BEARISH -->
+          <div class="trade-card bearish-card">
+            <div class="trade-header">
+              <span class="trade-icon">🐻</span>
+              <span class="trade-label">BEARISH PICK (CUT LOSS)</span>
+            </div>
+            <div class="trade-ticker" id="bearish-ticker">--</div>
+            <div class="trade-reason" id="bearish-reason">Analyzing market sentiment...</div>
+            <div class="trade-confidence">
+              <div class="confidence-bar" style="width: 80%; background: var(--accent-red);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; font-size: 0.8rem; color: #666; text-align: center;">
+          ※ This is AI-generated entertainment content. Not financial advice. DYOR.
         </div>
       </section>
     </div>
@@ -419,6 +459,7 @@
         <li><a href="#" class="slide-menu-item" data-target="dashboard">📊 MARKET BOARD</a></li>
         <li><a href="#" class="slide-menu-item" data-target="topics">🔥 HOT TOPICS</a></li>
         <li><a href="#" class="slide-menu-item" data-target="ongi-greed">😱 ONGI & GREED</a></li>
+        <li><a href="#" class="slide-menu-item" data-target="trade-indepth">🧠 TRADE RECOMMENDATIONS</a></li>
         <li class="menu-divider"></li>
         <li><a href="#" class="slide-menu-item" data-target="about">ℹ️ ABOUT SITE</a></li>
       </ul>

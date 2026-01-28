@@ -249,6 +249,11 @@ async function main() {
       }
     }
 
+    // Trade Recommendations
+    if (data.trade_recommendations) {
+      renderTradeRecommendations(data.trade_recommendations);
+    }
+
     // NEW: Polymarket
     if (data.polymarket) {
       currentPolymarket = data.polymarket;
@@ -915,3 +920,33 @@ function toggleHistoryChart() {
     icon.style.transform = 'rotate(-90deg)';
   }
 }
+
+function renderTradeRecommendations(tradeData) {
+  if (!tradeData) return;
+
+  const bullishEl = document.getElementById("bullish-ticker");
+  const bullishReasonEl = document.getElementById("bullish-reason");
+  const bearishEl = document.getElementById("bearish-ticker");
+  const bearishReasonEl = document.getElementById("bearish-reason");
+
+  // Bullish
+  if (tradeData.bullish) {
+    if (tradeData.bullish.ticker) bullishEl.textContent = tradeData.bullish.ticker;
+    if (tradeData.bullish.reason) bullishReasonEl.textContent = tradeData.bullish.reason;
+  } else {
+    bullishEl.textContent = "N/A";
+    bullishReasonEl.textContent = "Market is indecisive.";
+  }
+
+  // Bearish
+  if (tradeData.bearish) {
+    if (tradeData.bearish.ticker) bearishEl.textContent = tradeData.bearish.ticker;
+    if (tradeData.bearish.reason) bearishReasonEl.textContent = tradeData.bearish.reason;
+  } else {
+    bearishEl.textContent = "N/A";
+    bearishReasonEl.textContent = "No clear sell signal.";
+  }
+}
+
+// Ensure global scope access if needed, or just let it exist in the module
+window.renderTradeRecommendations = renderTradeRecommendations;
