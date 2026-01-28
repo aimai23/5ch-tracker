@@ -60,12 +60,12 @@
         </div>
         <div class="nav-meta">
           <span id="last-updated">--:--</span>
-          <div class="tooltip-container header-help-container">
-            <span class="tooltip-icon help-icon">?</span>
-            <div class="tooltip-text help-dropdown">
-              <div>24時間集計 / 3時間毎更新</div>
-              <div class="help-arrow"></div>
-            </div>
+          <div class="menu-container">
+            <button class="menu-btn" id="menu-toggle" aria-label="Menu">
+              <span class="menu-bar"></span>
+              <span class="menu-bar"></span>
+              <span class="menu-bar"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -372,6 +372,61 @@
 
       </section>
     </div>
+
+
+    <!-- About View -->
+    <div id="view-about" style="display: none;">
+      <section class="panel about-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+        <h2
+          style="color: var(--accent-gold); border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-top: 0;">
+          ℹ️ About This Site
+        </h2>
+
+        <div class="about-content" style="line-height: 1.8; color: var(--text-primary);">
+          <p>
+            <strong>ARAKAWA TRACKER</strong> は、5ちゃんねるの市況板や米国株スレ、Redditなどのコミュニティから
+            投資家の感情や注目銘柄をリアルタイムで収集・分析するダッシュボードです。
+          </p>
+
+          <h3 style="color: var(--accent-cyan); margin-top: 2rem;">📊 データ更新について</h3>
+          <p>
+            当サイトのデータは <strong style="color: var(--accent-gold);">3時間ごと</strong> に集計・更新されます。<br>
+            常に最新の市場の熱量をお届けすることを目指していますが、APIの状況により若干の遅延が発生する場合があります。
+          </p>
+
+          <h3 style="color: var(--accent-cyan); margin-top: 2rem;">🤖 AI分析について</h3>
+          <p>
+            収集された投稿データは、最新のAIモデルによって感情分析（ポジティブ/ネガティブ）され、
+            "Ongi & Greed Index" として数値化されます。
+          </p>
+
+          <div
+            style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
+            <p>Disclaimer: 本サイトの情報は投資勧誘を目的としたものではありません。投資の最終決定はご自身の判断で行ってください。</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Slide Menu Structure -->
+    <div class="slide-menu-overlay" id="menu-overlay"></div>
+    <nav class="slide-menu" id="slide-menu">
+      <div class="slide-menu-header">
+        <span class="slide-menu-title">NAVIGATE</span>
+        <button class="slide-menu-close" id="menu-close">✕</button>
+      </div>
+      <ul class="slide-menu-list">
+        <li><a href="#" class="slide-menu-item" data-target="dashboard">📊 MARKET BOARD</a></li>
+        <li><a href="#" class="slide-menu-item" data-target="topics">🔥 HOT TOPICS</a></li>
+        <li><a href="#" class="slide-menu-item" data-target="ongi_greed">😱 ONGI & GREED</a></li>
+        <li class="menu-divider"></li>
+        <li><a href="#" class="slide-menu-item" data-target="about">ℹ️ ABOUT SITE</a></li>
+      </ul>
+      <div class="slide-menu-footer">
+        ARAKAWA TRACKER<br>
+        v1.0
+      </div>
+    </nav>
 
 
     <!-- Mobile Tooltip Overlay -->

@@ -9,34 +9,76 @@ let currentPolymarket = null;
 
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
-  const tabBtns = document.querySelectorAll(".nav-tab");
+  // --- Slide Menu Logic ---
+  const menuToggle = document.getElementById("menu-toggle");
+  const menuClose = document.getElementById("menu-close");
+  const menuOverlay = document.getElementById("menu-overlay");
+  const slideMenu = document.getElementById("slide-menu");
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      // Remove active class
-      tabBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+  function toggleMenu(show) {
+    if (show) {
+      slideMenu.classList.add("active");
+      menuOverlay.classList.add("active");
+    } else {
+      slideMenu.classList.remove("active");
+      menuOverlay.classList.remove("active");
+    }
+  }
 
-      const tabId = btn.getAttribute("data-tab");
+  if (menuToggle) menuToggle.addEventListener("click", () => toggleMenu(true));
+  if (menuClose) menuClose.addEventListener("click", () => toggleMenu(false));
+  if (menuOverlay) menuOverlay.addEventListener("click", () => toggleMenu(false));
 
-      // Hide all views
-      document.getElementById("view-dashboard").style.display = "none";
-      document.getElementById("view-topics").style.display = "none";
-      document.getElementById("view-ongi-greed").style.display = "none";
+  // --- View Switching Logic ---
+  const allViews = ["view-dashboard", "view-topics", "view-ongi-greed", "view-about"];
 
-      // Show selected view
-      if (tabId === 'dashboard') {
-        document.getElementById("view-dashboard").style.display = "grid";
-      } else if (tabId === 'topics') {
-        document.getElementById("view-topics").style.display = "block";
-        setTimeout(() => {
-          renderWordCloud();
-          if (currentPolymarket) renderPolymarket(currentPolymarket);
-        }, 50);
-      } else if (tabId === 'ongi_greed') {
-        document.getElementById("view-ongi-greed").style.display = "block";
-        fetchOngiHistory(); // NEW CALL
-      }
+  function switchView(targetId) {
+    // Hide all
+    allViews.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+
+    // Show target
+    const targetEl = document.getElementById(`view-${targetId}`);
+    if (targetEl) {
+      if (targetId === 'dashboard') targetEl.style.display = "grid"; // Dashboard uses grid
+      else targetEl.style.display = "block";
+    }
+
+    // Update Header Tabs Focus
+    document.querySelectorAll(".nav-tab").forEach(t => {
+      if (t.dataset.tab === targetId) t.classList.add("active");
+      else t.classList.remove("active");
+    });
+
+    // Specific Logics
+    if (targetId === 'topics') {
+      setTimeout(() => {
+        renderWordCloud();
+        if (currentPolymarket) renderPolymarket(currentPolymarket);
+      }, 50);
+    } else if (targetId === 'ongi_greed') {
+      fetchOngiHistory();
+    }
+
+    // Close menu if open
+    toggleMenu(false);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Bind to Header Tabs
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.addEventListener("click", () => switchView(btn.dataset.tab));
+  });
+
+  // Bind to Menu Items
+  document.querySelectorAll(".slide-menu-item").forEach(item => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchView(item.dataset.target);
     });
   });
 
