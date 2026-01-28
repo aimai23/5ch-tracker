@@ -107,12 +107,42 @@ body {
   border-bottom-color: var(--accent-cyan);
 }
 
+
+/* Nav Tabs Container */
+.nav-center {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  /* Enable scroll */
+  white-space: nowrap;
+  /* Prevent wrap */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scroll iOS */
+  padding-bottom: 2px;
+  /* Avoid scrollbar overlap if any */
+  max-width: 100%;
+  /* Ensure it doesn't break layout */
+}
+
+/* Hide Scrollbar but keep functionality */
+.nav-center::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-center {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
 /* Nav Right: Status */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 1.5rem;
 }
+
 
 .live-status {
   display: flex;
