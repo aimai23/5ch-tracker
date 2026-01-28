@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuOverlay) menuOverlay.addEventListener("click", () => toggleMenu(false));
 
   // --- View Switching Logic ---
-  const allViews = ["view-dashboard", "view-topics", "view-ongi-greed", "view-about"];
+  const allViews = ["view-dashboard", "view-topics", "view-ongi-greed", "view-about", "view-trade-indepth"];
 
   function switchView(targetId) {
     // Hide all
