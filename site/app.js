@@ -962,3 +962,95 @@ function renderTradeRecommendations(tradeData) {
 
 // Ensure global scope access if needed, or just let it exist in the module
 window.renderTradeRecommendations = renderTradeRecommendations;
+
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Back to Top Logic ---
+  const backToTopBtn = document.getElementById("back-to-top");
+
+  if (backToTopBtn) {
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add("show");
+      } else {
+        backToTopBtn.classList.remove("show");
+      }
+    });
+
+    backToTopBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  }
+
+  // --- Swipe Navigation Logic ---
+  const tabs = ['dashboard', 'topics', 'ongi-greed'];
+
+  // Use a minimum threshold to avoid accidental swipes while scrolling vertically
+  const SWIPE_THRESHOLD = 50;
+  const ANGLE_THRESHOLD = 30; // Degrees to allow for vertical tolerance
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+
+  document.body.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  document.body.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+  }, { passive: true });
+
+  function handleSwipe() {
+    const diffX = touchEndX - touchStartX;
+    const diffY = touchEndY - touchStartY;
+
+    // Check if horizontal distance greater than threshold
+    if (Math.abs(diffX) < SWIPE_THRESHOLD) return;
+
+    // Check angle (if mostly vertical, ignore)
+    const angle = Math.abs((Math.atan2(diffY, diffX) * 180) / Math.PI);
+    // Left swipe (0-30 or -30 to 0) or Right swipe (150-180 or -180 to -150)
+    // Angles: 0 is Right, 180 is Left, 90 is Down, -90 is Up
+
+    // We only care if swipe is mostly horizontal
+    // Left Swipe: diffX < 0. Angle approx 180.
+    // Right Swipe: diffX > 0. Angle approx 0.
+
+    // Simplified: Check if horizontal movement is significantly larger than vertical
+    if (Math.abs(diffX) <= Math.abs(diffY)) return;
+
+    // Find current active tab
+    const activeTab = document.querySelector('.nav-tab.active');
+    if (!activeTab) return;
+
+    const currentTabName = activeTab.dataset.tab;
+    const currentIndex = tabs.indexOf(currentTabName);
+
+    if (currentIndex === -1) return; // Not on a main tab
+
+    let nextIndex = -1;
+
+    if (diffX > 0) {
+      // Swiped Right -> Go to Previous Tab (e.g. Topics -> Dashboard)
+      if (currentIndex > 0) nextIndex = currentIndex - 1;
+    } else {
+      // Swiped Left -> Go to Next Tab (e.g. Dashboard -> Topics)
+      if (currentIndex < tabs.length - 1) nextIndex = currentIndex + 1;
+    }
+
+    if (nextIndex !== -1) {
+      const nextTabName = tabs[nextIndex];
+      const nextTabBtn = document.querySelector(`.nav-tab[data-tab="${nextTabName}"]`);
+      if (nextTabBtn) {
+        nextTabBtn.click(); // Reuse existing click handler
+      }
+    }
+  }
+});
