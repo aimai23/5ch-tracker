@@ -1034,7 +1034,13 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "doughcon": doughcon_data,
             "sahm_rule": sahm_data,
             "yield_curve": yield_curve_data,
-            "crypto_fear_greed": crypto_fg
+            "crypto_fear_greed": crypto_fg,
+            "trade_recommendations": trade_recs,
+            "comparative_insight": comparative_insight,
+            "ongi_comment": ongi_comment,
+            "summary": market_summary,
+            "breaking_news": breaking_news,
+            "ai_model": ai_model
         }
         save_current_state(current_state)
     except Exception as e:
