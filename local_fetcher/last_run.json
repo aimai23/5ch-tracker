@@ -1,154 +1,154 @@
 {
-  "timestamp": 1769590896.7452369,
+  "timestamp": 1769602619.0038283,
   "rankings": [
     {
       "ticker": "MU",
       "count": 28,
-      "sentiment": 0.8,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "GLD",
-      "count": 25,
-      "sentiment": 0.9,
-      "rank_delta": 5,
-      "is_new": false
-    },
-    {
-      "ticker": "SLV",
-      "count": 22,
-      "sentiment": 0.75,
-      "rank_delta": 0,
-      "is_new": false
-    },
-    {
-      "ticker": "RDW",
-      "count": 18,
       "sentiment": 0.9,
       "rank_delta": 0,
       "is_new": false
     },
     {
       "ticker": "SOXL",
-      "count": 16,
+      "count": 22,
       "sentiment": 0.85,
-      "rank_delta": -3,
+      "rank_delta": 3,
       "is_new": false
     },
     {
-      "ticker": "UNH",
-      "count": 14,
-      "sentiment": -0.9,
+      "ticker": "SLV",
+      "count": 20,
+      "sentiment": 0.9,
       "rank_delta": 0,
       "is_new": false
     },
     {
-      "ticker": "NVDA",
-      "count": 13,
-      "sentiment": 0.7,
+      "ticker": "GLD",
+      "count": 18,
+      "sentiment": 0.8,
       "rank_delta": -2,
       "is_new": false
     },
     {
+      "ticker": "NVDA",
+      "count": 15,
+      "sentiment": 0.75,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
       "ticker": "SNDK",
-      "count": 10,
-      "sentiment": 0.8,
+      "count": 12,
+      "sentiment": 0.9,
       "rank_delta": 2,
       "is_new": false
     },
     {
       "ticker": "STX",
-      "count": 9,
-      "sentiment": 0.85,
-      "rank_delta": 7,
+      "count": 10,
+      "sentiment": 0.95,
+      "rank_delta": 2,
       "is_new": false
     },
     {
-      "ticker": "GLW",
+      "ticker": "UNH",
       "count": 8,
-      "sentiment": 0.9,
-      "rank_delta": 8,
-      "is_new": false
-    },
-    {
-      "ticker": "CRWV",
-      "count": 7,
-      "sentiment": 0.6,
-      "rank_delta": 1,
-      "is_new": false
-    },
-    {
-      "ticker": "TSLA",
-      "count": 6,
-      "sentiment": 0.5,
-      "rank_delta": 5,
-      "is_new": false
-    },
-    {
-      "ticker": "IREN",
-      "count": 6,
-      "sentiment": 0.3,
+      "sentiment": -0.85,
       "rank_delta": -2,
       "is_new": false
     },
     {
-      "ticker": "RKLB",
+      "ticker": "IREN",
+      "count": 7,
+      "sentiment": 0.4,
+      "rank_delta": 4,
+      "is_new": false
+    },
+    {
+      "ticker": "RDW",
+      "count": 6,
+      "sentiment": 0.8,
+      "rank_delta": -6,
+      "is_new": false
+    },
+    {
+      "ticker": "GEV",
       "count": 5,
       "sentiment": 0.7,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "META",
-      "count": 4,
-      "sentiment": 0.6,
+      "ticker": "NBIS",
+      "count": 5,
+      "sentiment": 0.2,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "AAPL",
-      "count": 4,
-      "sentiment": 0.7,
-      "rank_delta": 3,
+      "ticker": "TSLA",
+      "count": 5,
+      "sentiment": 0.3,
+      "rank_delta": -1,
       "is_new": false
     },
     {
-      "ticker": "WDC",
-      "count": 3,
-      "sentiment": 0.6,
+      "ticker": "BTC",
+      "count": 5,
+      "sentiment": 0.5,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "IONQ",
-      "count": 3,
-      "sentiment": -0.4,
+      "ticker": "CLS",
+      "count": 4,
+      "sentiment": 0.8,
       "rank_delta": 0,
       "is_new": true
+    },
+    {
+      "ticker": "RKLB",
+      "count": 4,
+      "sentiment": 0.6,
+      "rank_delta": -2,
+      "is_new": false
     },
     {
       "ticker": "PLTR",
-      "count": 2,
-      "sentiment": -0.2,
+      "count": 3,
+      "sentiment": -0.3,
+      "rank_delta": 2,
+      "is_new": false
+    },
+    {
+      "ticker": "ASML",
+      "count": 3,
+      "sentiment": 0.1,
       "rank_delta": 0,
       "is_new": true
     },
     {
-      "ticker": "SOFI",
+      "ticker": "META",
       "count": 2,
-      "sentiment": -0.3,
+      "sentiment": 0.2,
+      "rank_delta": -4,
+      "is_new": false
+    },
+    {
+      "ticker": "MSFT",
+      "count": 2,
+      "sentiment": 0.1,
       "rank_delta": 0,
       "is_new": true
     }
   ],
-  "fear_greed": 62,
+  "fear_greed": 72,
   "radar": {
     "hype": 9,
-    "panic": 5,
-    "faith": 7,
-    "gamble": 9,
-    "iq": 3
+    "panic": 4,
+    "faith": 8,
+    "gamble": 7,
+    "iq": 2
   },
   "doughcon": {
     "level": 4,

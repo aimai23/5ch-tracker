@@ -467,6 +467,11 @@ def    send_to_worker(
         return
 
     logging.info(f"Payload Indicators: Pizza={doughcon_data is not None}, Sahm={sahm_data is not None}, Yield={yield_curve_data is not None}, CryptoFG={crypto_fg is not None}")
+    
+    if trade_recs:
+        logging.info(f"Trade Recommendations to Send: {json.dumps(trade_recs, ensure_ascii=False)}")
+    else:
+        logging.warning("Trade Recommendations are empty or None.")
 
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
@@ -501,6 +506,7 @@ def    send_to_worker(
             logging.info("Success! Data uploaded.")
         else:
             logging.error(f"Worker Error: {resp.status_code}")
+            logging.error(f"Worker Response: {resp.text}")
     except Exception as e:
         logging.error(f"Upload failed: {e}")
 
