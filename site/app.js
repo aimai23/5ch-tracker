@@ -254,6 +254,12 @@ async function main() {
       renderTradeRecommendations(data.trade_recommendations);
     }
 
+    // NEW: Model Name
+    if (data.ai_model) {
+      const modelEl = document.getElementById("ai-model-name");
+      if (modelEl) modelEl.textContent = `POWERED BY ${data.ai_model.toUpperCase()}`;
+    }
+
     // NEW: Polymarket
     if (data.polymarket) {
       currentPolymarket = data.polymarket;

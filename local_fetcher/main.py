@@ -361,7 +361,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("trade_recommendations", {})
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("trade_recommendations", {}), model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -371,7 +371,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}, "", [], "", {}
+    return [], "要約生成失敗", 50, {}, "", [], "", {}, "Gemini (Fallback)"
 
 def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -459,7 +459,7 @@ def fetch_doughcon_data():
     return None
 
 def    send_to_worker(
-        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, trade_recs, doughcon_data, sahm_data, yield_curve_data, crypto_fg
+        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg
     ):
     logging.info(f"Sending {len(tickers)} tickers, {len(topics)} topics, {len(polymarket or [])} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
@@ -478,6 +478,7 @@ def    send_to_worker(
         "ongi_comment": ongi_comment,
         "comparative_insight": comparative_insight,
         "trade_recommendations": trade_recs,
+        "ai_model": ai_model,
         "fear_greed": fear_greed,
         "radar": radar,
         "breaking_news": breaking_news,
@@ -940,7 +941,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, trade_recs = analyze_market_data(
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, trade_recs, ai_model = analyze_market_data(
         all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data
     )
     if market_summary == "要約生成失敗":
@@ -1044,7 +1045,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, trade_recs, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
+    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
 
 if __name__ == "__main__":
     import argparse
