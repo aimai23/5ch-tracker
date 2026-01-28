@@ -19,16 +19,31 @@ export interface RadarData {
 }
 
 export type TopicItem = { word: string; count: number };
+
+export interface TradeRecommendation {
+  ticker: string;
+  reason: string;
+}
+
+export interface TradeRecommendations {
+  bullish: TradeRecommendation | null;
+  bearish: TradeRecommendation | null;
+}
+
 export type RankingPayload = {
   updatedAt: string | null;
   window: string;
   items: RankingItem[];
   topics: TopicItem[];
   overview?: string;
-  ongi_comment?: string; // New separate comment for Ongi tab
-  comparative_insight?: string; // New Cross-Analysis text
+  summary?: string;
+  ongi_comment?: string;
+  comparative_insight?: string;
   fear_greed?: number;
+  trade_recommendations?: TradeRecommendations;
+  ai_model?: string;
   radar?: RadarData;
+
   breaking_news?: string[];
   polymarket?: Array<{ title: string; title_ja?: string; outcomes: string; url: string; volume: number }>;
   reddit_rankings?: Array<{
@@ -94,8 +109,11 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     items: items,
     topics: meta.topics || [],
     overview: meta.overview || undefined,
+    summary: meta.summary || undefined,
     ongi_comment: meta.ongi_comment || undefined,
     comparative_insight: meta.comparative_insight || undefined,
+    trade_recommendations: meta.trade_recommendations || undefined,
+    ai_model: meta.ai_model || undefined,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
     breaking_news: meta.breaking_news || [],
@@ -131,8 +149,11 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     sources: payload.sources,
     topics: payload.topics,
     overview: payload.overview,
+    summary: payload.summary,
     ongi_comment: payload.ongi_comment,
     comparative_insight: payload.comparative_insight,
+    trade_recommendations: payload.trade_recommendations,
+    ai_model: payload.ai_model,
     fear_greed: payload.fear_greed,
     radar: payload.radar,
     breaking_news: payload.breaking_news,

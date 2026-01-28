@@ -906,8 +906,6 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     sahm_data = fetch_sahm_rule()
     if sahm_data:
         logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
-    if sahm_data:
-        logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
     
     # Crypto Fear & Greed Fetch
     crypto_fg = fetch_crypto_fear_greed()
