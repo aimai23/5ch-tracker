@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderWordCloud();
         if (currentPolymarket) renderPolymarket(currentPolymarket);
       }, 50);
-    } else if (targetId === 'ongi_greed') {
+    } else if (targetId === 'ongi-greed') {
       fetchOngiHistory();
     }
 
