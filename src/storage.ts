@@ -26,8 +26,8 @@ export interface TradeRecommendation {
 }
 
 export interface TradeRecommendations {
-  bullish: TradeRecommendation | null;
-  bearish: TradeRecommendation | null;
+  bullish: TradeRecommendation[];
+  bearish: TradeRecommendation[];
 }
 
 export type RankingPayload = {

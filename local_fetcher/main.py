@@ -299,12 +299,12 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
     7. TRADE RECOMMENDATIONS (AI Analyst Picks):
-       - Based on the thread's consensus and sentiment, identify:
-         1. "bullish_pick": The token/stock with the most solid "Buy" conviction or "Hype".
-         2. "bearish_pick": The token/stock that is being ridiculed or sold off ("Cut Loss" candidate).
+       - Based on the thread's consensus and sentiment, identify **TOP 3** candidates for each:
+         1. "bullish": The token/stock with the most solid "Buy" conviction or "Hype".
+         2. "bearish": The token/stock that is being ridiculed or sold off ("Cut Loss" candidate).
        - Provide a "reason" for each (Max 60 chars).
        - Tone: Calm, Logical, Unreserved, Cold. (Cool Japanese).
-       - If no clear candidate, use null.
+       - Return a LIST of objects. If fewer than 3, provide as many as possible.
 
 
     6. COMPARATIVE INSIGHT (JP 5ch vs US Reddit):
@@ -328,8 +328,15 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
       "breaking_news": ["Headline 1", "Headline 2"],
       "comparative_insight": "...",
       "trade_recommendations": {{
-        "bullish": {{ "ticker": "NVDA", "reason": "決算期待で脳汁全開" }},
-        "bearish": {{ "ticker": "INTC", "reason": "遺産相続したおばあちゃん専用株" }}
+        "bullish": [
+          {{ "ticker": "NVDA", "reason": "決算期待で脳汁全開" }},
+          {{ "ticker": "SOXL", "reason": "半導体祭りで上昇気流" }},
+          {{ "ticker": "TSLA", "reason": "マスク信者が結集" }}
+        ],
+        "bearish": [
+          {{ "ticker": "INTC", "reason": "遺産相続したおばあちゃん専用株" }},
+          {{ "ticker": "PYPL", "reason": "終わったフィンテック" }}
+        ]
       }}
     }}
 

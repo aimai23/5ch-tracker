@@ -413,31 +413,29 @@
         </h2>
 
         <div class="trade-rec-container">
-          <!-- BULLISH -->
-          <div class="trade-card bullish-card">
-            <div class="trade-header">
-              <span class="trade-icon">🐂</span>
-              <span class="trade-label">BULLISH PICK</span>
-            </div>
-            <div class="trade-ticker" id="bullish-ticker">--</div>
-            <div class="trade-reason" id="bullish-reason">Analyzing market sentiment...</div>
-            <div class="trade-confidence">
-              <div class="confidence-bar" style="width: 80%; background: var(--accent-green);"></div>
-            </div>
-          </div>
+          <!-- BULLISH SECTION -->
+           <div class="trade-section" id="bullish-section">
+              <div class="section-header bullish-header">
+                  <span class="section-icon">🐂</span>
+                  <span class="section-title">BULLISH PICKS</span>
+              </div>
+              <div class="trade-list" id="bullish-list">
+                  <!-- Injected by JS -->
+                  <div class="trade-placeholder">Waiting for AI...</div>
+              </div>
+           </div>
 
-          <!-- BEARISH -->
-          <div class="trade-card bearish-card">
-            <div class="trade-header">
-              <span class="trade-icon">🐻</span>
-              <span class="trade-label">BEARISH PICK (CUT LOSS)</span>
-            </div>
-            <div class="trade-ticker" id="bearish-ticker">--</div>
-            <div class="trade-reason" id="bearish-reason">Analyzing market sentiment...</div>
-            <div class="trade-confidence">
-              <div class="confidence-bar" style="width: 80%; background: var(--accent-red);"></div>
-            </div>
-          </div>
+          <!-- BEARISH SECTION -->
+           <div class="trade-section" id="bearish-section">
+              <div class="section-header bearish-header">
+                  <span class="section-icon">🐻</span>
+                  <span class="section-title">BEARISH PICKS (CUT LOSS)</span>
+              </div>
+              <div class="trade-list" id="bearish-list">
+                  <!-- Injected by JS -->
+                  <div class="trade-placeholder">Waiting for AI...</div>
+              </div>
+           </div>
         </div>
 
         <div style="margin-top: 2rem; font-size: 0.8rem; color: #666; text-align: center;">

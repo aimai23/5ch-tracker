@@ -1881,3 +1881,18 @@ footer a {
   }
 }
 
+
+/* Trade Analysis Multi-Pick Styles */
+.trade-rec-container { display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 1rem; }
+.trade-section { flex: 1; min-width: 300px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 1rem; border: 1px solid var(--border-color); }
+.bullish-header { color: var(--accent-green); border-bottom: 2px solid rgba(0,255,136,0.3); }
+.bearish-header { color: var(--accent-red); border-bottom: 2px solid rgba(255,68,68,0.3); }
+.section-header { display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.8rem; margin-bottom: 1rem; font-weight: 800; letter-spacing: 0.05em; }
+.trade-list { display: flex; flex-direction: column; gap: 1rem; }
+.trade-card-item { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; border-left: 4px solid #555; transition: transform 0.2s ease; }
+.trade-card-item:hover { transform: translateX(4px); background: rgba(255,255,255,0.05); }
+.trade-card-item.bullish-item { border-left-color: var(--accent-green); }
+.trade-card-item.bearish-item { border-left-color: var(--accent-red); }
+.item-ticker { font-size: 1.4rem; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 0.3rem; display: block; }
+.item-reason { font-size: 0.9rem; color: #ccc; line-height: 1.4; }
+.trade-placeholder { color: #666; font-style: italic; text-align: center; padding: 2rem; }

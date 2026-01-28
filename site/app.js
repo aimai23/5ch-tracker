@@ -930,28 +930,34 @@ function toggleHistoryChart() {
 function renderTradeRecommendations(tradeData) {
   if (!tradeData) return;
 
-  const bullishEl = document.getElementById("bullish-ticker");
-  const bullishReasonEl = document.getElementById("bullish-reason");
-  const bearishEl = document.getElementById("bearish-ticker");
-  const bearishReasonEl = document.getElementById("bearish-reason");
+  // Update Rendering for List of Picks
+  function renderList(containerId, items, type) {
+    const list = document.getElementById(containerId);
+    if (!list) return;
+
+    list.innerHTML = "";
+    if (items && items.length > 0) {
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = `trade-card-item ${type}-item`;
+        div.innerHTML = `
+          <span class="item-ticker">${item.ticker}</span>
+          <span class="item-reason">${item.reason}</span>
+        `;
+        list.appendChild(div);
+      });
+    } else {
+      list.innerHTML = '<div class="trade-placeholder">None identified.</div>';
+    }
+  }
 
   // Bullish
-  if (tradeData.bullish) {
-    if (tradeData.bullish.ticker) bullishEl.textContent = tradeData.bullish.ticker;
-    if (tradeData.bullish.reason) bullishReasonEl.textContent = tradeData.bullish.reason;
-  } else {
-    bullishEl.textContent = "N/A";
-    bullishReasonEl.textContent = "Market is indecisive.";
-  }
+  const bullishItems = Array.isArray(tradeData.bullish) ? tradeData.bullish : (tradeData.bullish ? [tradeData.bullish] : []);
+  renderList("bullish-list", bullishItems, "bullish");
 
   // Bearish
-  if (tradeData.bearish) {
-    if (tradeData.bearish.ticker) bearishEl.textContent = tradeData.bearish.ticker;
-    if (tradeData.bearish.reason) bearishReasonEl.textContent = tradeData.bearish.reason;
-  } else {
-    bearishEl.textContent = "N/A";
-    bearishReasonEl.textContent = "No clear sell signal.";
-  }
+  const bearishItems = Array.isArray(tradeData.bearish) ? tradeData.bearish : (tradeData.bearish ? [tradeData.bearish] : []);
+  renderList("bearish-list", bearishItems, "bearish");
 }
 
 // Ensure global scope access if needed, or just let it exist in the module
