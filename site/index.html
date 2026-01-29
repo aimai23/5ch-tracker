@@ -319,21 +319,6 @@
             </div>
           </div>
         </h2>
-        <div class="topic-history">
-          <span class="topic-history-label">HISTORY</span>
-          <div class="topic-history-controls">
-            <button id="topic-history-prev" class="topic-history-btn" type="button" aria-label="Previous snapshot">
-              ◀
-            </button>
-            <select id="topic-history-select" aria-label="Topic history">
-              <option value="latest">Latest</option>
-            </select>
-            <button id="topic-history-next" class="topic-history-btn" type="button" aria-label="Next snapshot">
-              ▶
-            </button>
-          </div>
-        </div>
-
         <!-- NEW: Imakita Sangyo (TL;DR) - Moved Top & Accordion -->
         <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem; cursor: pointer;"
           onclick="document.getElementById('imakita-content').style.display = document.getElementById('imakita-content').style.display === 'none' ? 'flex' : 'none'; this.querySelector('.arrow').textContent = document.getElementById('imakita-content').style.display === 'none' ? '▶' : '▼';">
@@ -349,9 +334,20 @@
         </div>
 
         <div id="market-overview" class="market-overview" style="display: none; margin-bottom: 1rem;">
-          <div class="overview-header">
-            <span class="overview-title">🤖 AI MARKET INSIGHT</span>
-            <span class="overview-blink">_</span>
+          <div class="overview-header overview-header-controls">
+            <div class="overview-title-group">
+              <span class="overview-title">&#129302; AI MARKET INSIGHT</span>
+              <span class="overview-blink">_</span>
+            </div>
+            <div class="overview-controls">
+              <button id="overview-history-prev" class="overview-btn" type="button" aria-label="Previous insight">
+                ?
+              </button>
+              <span id="overview-history-label" class="overview-history-label">--</span>
+              <button id="overview-history-next" class="overview-btn" type="button" aria-label="Next insight">
+                ?
+              </button>
+            </div>
           </div>
           <p id="overview-text" class="overview-text">Loading analysis...</p>
         </div>

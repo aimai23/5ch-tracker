@@ -7,11 +7,11 @@ let currentTopics = [];
 let currentItems = [];
 let currentPolymarket = null;
 let latestData = null;
-let topicHistory = [];
-let selectedTopicHistoryIndex = 0;
-let topicHistoryLoaded = false;
-let topicHistoryLoading = false;
-let topicHistoryBound = false;
+let insightHistory = [];
+let insightHistoryIndex = 0;
+let insightHistoryLoaded = false;
+let insightHistoryLoading = false;
+let insightHistoryBound = false;
 let lastHistoryUpdatedAt = null;
 
 function escapeHtml(value) {
@@ -42,162 +42,118 @@ function safeUrl(raw) {
   return "about:blank";
 }
 
-function formatHistoryLabel(snapshot, index) {
-  const payload = snapshot && snapshot.payload ? snapshot.payload : {};
-  let ts = null;
+function getSnapshotTime(snapshot) {
+  if (!snapshot) return null;
+  const payload = snapshot.payload || {};
   if (payload.updatedAt) {
     const d = new Date(payload.updatedAt);
-    if (!Number.isNaN(d.getTime())) ts = d;
+    if (!Number.isNaN(d.getTime())) return d;
   }
-  if (!ts && snapshot && snapshot.timestamp) {
+  if (snapshot.timestamp) {
     const d = new Date(snapshot.timestamp * 1000);
-    if (!Number.isNaN(d.getTime())) ts = d;
+    if (!Number.isNaN(d.getTime())) return d;
   }
-  const timeLabel = ts
-    ? `${ts.getMonth() + 1}/${ts.getDate()} ${String(ts.getHours()).padStart(2, "0")}:${String(ts.getMinutes()).padStart(2, "0")}`
-    : "Unknown";
-
-  if (index === 0) return `最新 (${timeLabel})`;
-  return `${index}回前 (${timeLabel})`;
+  return null;
 }
 
-function applyTopicSnapshot(snapshot) {
-  if (!snapshot) return;
+function formatInsightLabel(snapshot, index) {
+  const ts = getSnapshotTime(snapshot);
+  const timeLabel = ts
+    ? `${ts.getMonth() + 1}/${ts.getDate()} ${String(ts.getHours()).padStart(2, "0")}:${String(ts.getMinutes()).padStart(2, "0")}`
+    : "--";
+  if (index === 0) return `\u6700\u65b0 ${timeLabel}`;
+  return `${index}\u56de\u524d ${timeLabel}`;
+}
 
-  // Topics + wordcloud
-  if (snapshot.topics) {
-    currentTopics = snapshot.topics.map(t => [t.word, t.count]);
-  } else {
-    currentTopics = [];
-  }
+function applyInsightSnapshot(snapshot, index) {
+  if (!snapshot || !snapshot.payload) return;
+  const payload = snapshot.payload;
 
-  // Polymarket
-  currentPolymarket = Array.isArray(snapshot.polymarket) ? snapshot.polymarket : (snapshot.polymarket || null);
-
-  // Imakita (Breaking News)
-  const imakitaContainer = document.getElementById("imakita-container");
-  const imakitaContent = document.getElementById("imakita-content");
-  const breaking = Array.isArray(snapshot.breaking_news) ? snapshot.breaking_news : [];
-  if (breaking.length > 0) {
-    if (imakitaContainer) imakitaContainer.style.display = "block";
-    if (imakitaContent) {
-      imakitaContent.textContent = "";
-      breaking.slice(0, 3).forEach((news) => {
-        const div = document.createElement("div");
-        div.className = "imakita-line";
-        div.textContent = news == null ? "" : String(news);
-        imakitaContent.appendChild(div);
-      });
-    }
-  } else {
-    if (imakitaContainer) imakitaContainer.style.display = "none";
-  }
-
-  // Overview (topics view)
   const overviewEl = document.getElementById("market-overview");
   const overviewText = document.getElementById("overview-text");
+  const labelEl = document.getElementById("overview-history-label");
+
   if (overviewEl && overviewText) {
-    if (snapshot.overview) {
+    if (payload.overview) {
       overviewEl.style.display = "block";
-      overviewText.textContent = snapshot.overview;
+      overviewText.textContent = payload.overview;
     } else {
       overviewEl.style.display = "none";
       overviewText.textContent = "";
     }
   }
 
-  const topicsView = document.getElementById("view-topics");
-  if (topicsView && topicsView.style.display !== "none") {
-    renderWordCloud();
-    renderPolymarket(currentPolymarket);
+  if (labelEl) {
+    labelEl.textContent = formatInsightLabel(snapshot, index);
   }
 }
 
-async function loadTopicHistory(windowKey = "24h") {
-  if (topicHistoryLoading) return;
-  topicHistoryLoading = true;
+async function loadInsightHistory(windowKey = "24h") {
+  if (insightHistoryLoading) return;
+  insightHistoryLoading = true;
   try {
     const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=5`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
-      topicHistory = Array.isArray(json.history) ? json.history : [];
+      insightHistory = Array.isArray(json.history) ? json.history : [];
     } else {
-      topicHistory = [];
+      insightHistory = [];
     }
   } catch (e) {
-    topicHistory = [];
+    insightHistory = [];
   } finally {
-    topicHistoryLoading = false;
-    topicHistoryLoaded = true;
+    insightHistoryLoading = false;
+    insightHistoryLoaded = true;
   }
 
-  if (topicHistory.length === 0 && latestData) {
-    topicHistory = [{ payload: latestData, timestamp: Math.floor(Date.now() / 1000) }];
+  if (insightHistory.length === 0 && latestData) {
+    insightHistory = [{ payload: latestData, timestamp: Math.floor(Date.now() / 1000) }];
   }
 
-  const select = document.getElementById("topic-history-select");
-  if (select) {
-    select.textContent = "";
-    topicHistory.forEach((snap, idx) => {
-      const opt = document.createElement("option");
-      opt.value = String(idx);
-      opt.textContent = formatHistoryLabel(snap, idx);
-      select.appendChild(opt);
-    });
-    const safeIndex = Math.min(selectedTopicHistoryIndex, topicHistory.length - 1);
-    selectedTopicHistoryIndex = Math.max(0, safeIndex);
-    select.value = String(selectedTopicHistoryIndex);
-  }
+  const safeIndex = Math.min(insightHistoryIndex, insightHistory.length - 1);
+  insightHistoryIndex = Math.max(0, safeIndex);
 
-  if (topicHistory[selectedTopicHistoryIndex]) {
-    applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
+  if (insightHistory[insightHistoryIndex]) {
+    applyInsightSnapshot(insightHistory[insightHistoryIndex], insightHistoryIndex);
   }
-  updateTopicHistoryControls();
+  updateInsightControls();
 }
 
-function bindTopicHistorySelect() {
-  if (topicHistoryBound) return;
-  const select = document.getElementById("topic-history-select");
-  const prevBtn = document.getElementById("topic-history-prev");
-  const nextBtn = document.getElementById("topic-history-next");
-  if (!select) return;
-  select.addEventListener("change", () => {
-    const idx = Number.parseInt(select.value, 10);
-    if (!Number.isFinite(idx)) return;
-    if (!topicHistory[idx]) return;
-    selectedTopicHistoryIndex = idx;
-    applyTopicSnapshot(topicHistory[idx].payload);
-    updateTopicHistoryControls();
-  });
+function bindInsightControls() {
+  if (insightHistoryBound) return;
+  const prevBtn = document.getElementById("overview-history-prev");
+  const nextBtn = document.getElementById("overview-history-next");
   if (prevBtn) {
     prevBtn.addEventListener("click", () => {
-      if (selectedTopicHistoryIndex + 1 >= topicHistory.length) return;
-      selectedTopicHistoryIndex += 1;
-      select.value = String(selectedTopicHistoryIndex);
-      applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
-      updateTopicHistoryControls();
+      if (insightHistoryIndex + 1 >= insightHistory.length) return;
+      insightHistoryIndex += 1;
+      applyInsightSnapshot(insightHistory[insightHistoryIndex], insightHistoryIndex);
+      updateInsightControls();
     });
   }
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
-      if (selectedTopicHistoryIndex <= 0) return;
-      selectedTopicHistoryIndex -= 1;
-      select.value = String(selectedTopicHistoryIndex);
-      applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
-      updateTopicHistoryControls();
+      if (insightHistoryIndex <= 0) return;
+      insightHistoryIndex -= 1;
+      applyInsightSnapshot(insightHistory[insightHistoryIndex], insightHistoryIndex);
+      updateInsightControls();
     });
   }
-  topicHistoryBound = true;
+  insightHistoryBound = true;
 }
 
-function updateTopicHistoryControls() {
-  const prevBtn = document.getElementById("topic-history-prev");
-  const nextBtn = document.getElementById("topic-history-next");
+function updateInsightControls() {
+  const prevBtn = document.getElementById("overview-history-prev");
+  const nextBtn = document.getElementById("overview-history-next");
+  const labelEl = document.getElementById("overview-history-label");
   if (prevBtn) {
-    prevBtn.disabled = selectedTopicHistoryIndex + 1 >= topicHistory.length;
+    prevBtn.disabled = insightHistoryIndex + 1 >= insightHistory.length;
   }
   if (nextBtn) {
-    nextBtn.disabled = selectedTopicHistoryIndex <= 0;
+    nextBtn.disabled = insightHistoryIndex <= 0;
+  }
+  if (labelEl && insightHistory.length === 0) {
+    labelEl.textContent = "--";
   }
 }
 
@@ -249,17 +205,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Specific Logics
     if (targetId === 'topics') {
       setTimeout(() => {
-        bindTopicHistorySelect();
-        if (!topicHistoryLoaded) {
-          loadTopicHistory("24h").then(() => {
-            if (topicHistory[0] && selectedTopicHistoryIndex === 0) {
-              applyTopicSnapshot(topicHistory[0].payload);
-            }
-          });
-        } else {
-          renderWordCloud();
-          renderPolymarket(currentPolymarket);
+        bindInsightControls();
+        if (!insightHistoryLoaded) {
+          loadInsightHistory("24h");
+        } else if (insightHistory[insightHistoryIndex]) {
+          applyInsightSnapshot(insightHistory[insightHistoryIndex], insightHistoryIndex);
         }
+        renderWordCloud();
+        renderPolymarket(currentPolymarket);
       }, 50);
     } else if (targetId === 'ongi-greed') {
       fetchOngiHistory();
@@ -446,14 +399,49 @@ async function main() {
 
     if (data.updatedAt && data.updatedAt !== lastHistoryUpdatedAt) {
       lastHistoryUpdatedAt = data.updatedAt;
-      loadTopicHistory("24h");
+      loadInsightHistory("24h");
     }
 
-    bindTopicHistorySelect();
-    if (selectedTopicHistoryIndex === 0) {
-      applyTopicSnapshot(data);
+    bindInsightControls();
+    if (insightHistoryIndex === 0) {
+      applyInsightSnapshot({ payload: data, timestamp: Math.floor(Date.now() / 1000) }, 0);
     }
-    updateTopicHistoryControls();
+    updateInsightControls();
+
+    // Store topics
+    if (data.topics) {
+      currentTopics = data.topics.map(t => [t.word, t.count]);
+      if (document.getElementById("view-topics").style.display !== "none") {
+        renderWordCloud();
+      }
+    }
+
+    // Polymarket
+    if (data.polymarket) {
+      currentPolymarket = data.polymarket;
+      if (document.getElementById("view-topics").style.display !== "none") {
+        renderPolymarket(currentPolymarket);
+      }
+    }
+
+    // Imakita Sangyo (TL;DR) from latest data
+    const imakitaContainer = document.getElementById("imakita-container");
+    const imakitaContent = document.getElementById("imakita-content");
+    if (data.breaking_news && Array.isArray(data.breaking_news) && data.breaking_news.length > 0) {
+      if (imakitaContainer) imakitaContainer.style.display = "block";
+      if (imakitaContent) {
+        const top3 = data.breaking_news.slice(0, 3);
+        imakitaContent.textContent = "";
+        top3.forEach((news) => {
+          const div = document.createElement("div");
+          div.className = "imakita-line";
+          div.textContent = news == null ? "" : String(news);
+          imakitaContent.appendChild(div);
+        });
+      }
+    } else {
+      if (imakitaContainer) imakitaContainer.style.display = "none";
+    }
 
     // Trade Recommendations
     if (data.trade_recommendations) {
@@ -465,8 +453,6 @@ async function main() {
       const modelEl = document.getElementById("ai-model-name");
       if (modelEl) modelEl.textContent = `POWERED BY ${data.ai_model.toUpperCase()}`;
     }
-
-    // Polymarket is handled in applyTopicSnapshot for topics view
 
     // ... top of file
     let chartWidget = null;
