@@ -59,7 +59,22 @@ export default {
       return json(meta ?? { lastRunAt: null, lastStatus: null, lastError: null }, 200, commonCorsHeaders);
     }
 
-    if (url.pathname.startsWith("/api/ranking")) {
+    if (url.pathname === "/api/ongi-history") {
+      const history = await getOngiHistory(env);
+      return new Response(JSON.stringify(history), {
+        headers: { ...commonCorsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (url.pathname === "/api/ranking-history") {
+      const window = url.searchParams.get("window") || "24h";
+      const limitRaw = Number.parseInt(url.searchParams.get("limit") || "5", 10);
+      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(5, limitRaw)) : 5;
+      const history = await getRankingHistory(env, window, limit);
+      return json({ window, history }, 200, commonCorsHeaders);
+    }
+
+    if (url.pathname === "/api/ranking") {
       const window = url.searchParams.get("window") || "24h";
       const ranking = await getRanking(env, window);
 
@@ -79,21 +94,6 @@ export default {
       return new Response(JSON.stringify(responseData), {
         headers: { ...commonCorsHeaders, "Content-Type": "application/json" }
       });
-    }
-
-    if (url.pathname === "/api/ongi-history") {
-      const history = await getOngiHistory(env);
-      return new Response(JSON.stringify(history), {
-        headers: { ...commonCorsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    if (url.pathname === "/api/ranking-history") {
-      const window = url.searchParams.get("window") || "24h";
-      const limitRaw = Number.parseInt(url.searchParams.get("limit") || "5", 10);
-      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(5, limitRaw)) : 5;
-      const history = await getRankingHistory(env, window, limit);
-      return json({ window, history }, 200, commonCorsHeaders);
     }
 
     // Internal endpoint for GitHub Actions (or other fetchers)

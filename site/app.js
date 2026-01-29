@@ -95,7 +95,13 @@ async function loadInsightHistory(windowKey = "24h") {
     const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=5`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
-      insightHistory = Array.isArray(json.history) ? json.history : [];
+      if (Array.isArray(json.history)) {
+        insightHistory = json.history;
+      } else if (json && json.items) {
+        insightHistory = [{ payload: json, timestamp: Math.floor(Date.now() / 1000) }];
+      } else {
+        insightHistory = [];
+      }
     } else {
       insightHistory = [];
     }
