@@ -738,10 +738,43 @@ body {
   color: var(--text-secondary);
 }
 
+.topic-history-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .topic-history-label {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   color: var(--accent-cyan);
+}
+
+.topic-history-btn {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #e0f7ff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.topic-history-btn:hover {
+  border-color: rgba(0, 240, 255, 0.7);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.topic-history-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
 }
 
 #topic-history-select {

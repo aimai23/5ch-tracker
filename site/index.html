@@ -321,9 +321,17 @@
         </h2>
         <div class="topic-history">
           <span class="topic-history-label">HISTORY</span>
-          <select id="topic-history-select" aria-label="Topic history">
-            <option value="latest">Latest</option>
-          </select>
+          <div class="topic-history-controls">
+            <button id="topic-history-prev" class="topic-history-btn" type="button" aria-label="Previous snapshot">
+              ◀
+            </button>
+            <select id="topic-history-select" aria-label="Topic history">
+              <option value="latest">Latest</option>
+            </select>
+            <button id="topic-history-next" class="topic-history-btn" type="button" aria-label="Next snapshot">
+              ▶
+            </button>
+          </div>
         </div>
 
         <!-- NEW: Imakita Sangyo (TL;DR) - Moved Top & Accordion -->

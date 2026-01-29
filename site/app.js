@@ -152,11 +152,14 @@ async function loadTopicHistory(windowKey = "24h") {
   if (topicHistory[selectedTopicHistoryIndex]) {
     applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
   }
+  updateTopicHistoryControls();
 }
 
 function bindTopicHistorySelect() {
   if (topicHistoryBound) return;
   const select = document.getElementById("topic-history-select");
+  const prevBtn = document.getElementById("topic-history-prev");
+  const nextBtn = document.getElementById("topic-history-next");
   if (!select) return;
   select.addEventListener("change", () => {
     const idx = Number.parseInt(select.value, 10);
@@ -164,8 +167,38 @@ function bindTopicHistorySelect() {
     if (!topicHistory[idx]) return;
     selectedTopicHistoryIndex = idx;
     applyTopicSnapshot(topicHistory[idx].payload);
+    updateTopicHistoryControls();
   });
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      if (selectedTopicHistoryIndex + 1 >= topicHistory.length) return;
+      selectedTopicHistoryIndex += 1;
+      select.value = String(selectedTopicHistoryIndex);
+      applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
+      updateTopicHistoryControls();
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      if (selectedTopicHistoryIndex <= 0) return;
+      selectedTopicHistoryIndex -= 1;
+      select.value = String(selectedTopicHistoryIndex);
+      applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
+      updateTopicHistoryControls();
+    });
+  }
   topicHistoryBound = true;
+}
+
+function updateTopicHistoryControls() {
+  const prevBtn = document.getElementById("topic-history-prev");
+  const nextBtn = document.getElementById("topic-history-next");
+  if (prevBtn) {
+    prevBtn.disabled = selectedTopicHistoryIndex + 1 >= topicHistory.length;
+  }
+  if (nextBtn) {
+    nextBtn.disabled = selectedTopicHistoryIndex <= 0;
+  }
 }
 
 // Tab Switching
@@ -420,6 +453,7 @@ async function main() {
     if (selectedTopicHistoryIndex === 0) {
       applyTopicSnapshot(data);
     }
+    updateTopicHistoryControls();
 
     // Trade Recommendations
     if (data.trade_recommendations) {
