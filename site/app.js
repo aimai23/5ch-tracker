@@ -6,6 +6,13 @@ let currentTicker = null;
 let currentTopics = [];
 let currentItems = [];
 let currentPolymarket = null;
+let latestData = null;
+let topicHistory = [];
+let selectedTopicHistoryIndex = 0;
+let topicHistoryLoaded = false;
+let topicHistoryLoading = false;
+let topicHistoryBound = false;
+let lastHistoryUpdatedAt = null;
 
 function escapeHtml(value) {
   const s = value == null ? "" : String(value);
@@ -33,6 +40,132 @@ function safeUrl(raw) {
     }
   } catch { }
   return "about:blank";
+}
+
+function formatHistoryLabel(snapshot, index) {
+  const payload = snapshot && snapshot.payload ? snapshot.payload : {};
+  let ts = null;
+  if (payload.updatedAt) {
+    const d = new Date(payload.updatedAt);
+    if (!Number.isNaN(d.getTime())) ts = d;
+  }
+  if (!ts && snapshot && snapshot.timestamp) {
+    const d = new Date(snapshot.timestamp * 1000);
+    if (!Number.isNaN(d.getTime())) ts = d;
+  }
+  const timeLabel = ts
+    ? `${ts.getMonth() + 1}/${ts.getDate()} ${String(ts.getHours()).padStart(2, "0")}:${String(ts.getMinutes()).padStart(2, "0")}`
+    : "Unknown";
+
+  if (index === 0) return `最新 (${timeLabel})`;
+  return `${index}回前 (${timeLabel})`;
+}
+
+function applyTopicSnapshot(snapshot) {
+  if (!snapshot) return;
+
+  // Topics + wordcloud
+  if (snapshot.topics) {
+    currentTopics = snapshot.topics.map(t => [t.word, t.count]);
+  } else {
+    currentTopics = [];
+  }
+
+  // Polymarket
+  currentPolymarket = Array.isArray(snapshot.polymarket) ? snapshot.polymarket : (snapshot.polymarket || null);
+
+  // Imakita (Breaking News)
+  const imakitaContainer = document.getElementById("imakita-container");
+  const imakitaContent = document.getElementById("imakita-content");
+  const breaking = Array.isArray(snapshot.breaking_news) ? snapshot.breaking_news : [];
+  if (breaking.length > 0) {
+    if (imakitaContainer) imakitaContainer.style.display = "block";
+    if (imakitaContent) {
+      imakitaContent.textContent = "";
+      breaking.slice(0, 3).forEach((news) => {
+        const div = document.createElement("div");
+        div.className = "imakita-line";
+        div.textContent = news == null ? "" : String(news);
+        imakitaContent.appendChild(div);
+      });
+    }
+  } else {
+    if (imakitaContainer) imakitaContainer.style.display = "none";
+  }
+
+  // Overview (topics view)
+  const overviewEl = document.getElementById("market-overview");
+  const overviewText = document.getElementById("overview-text");
+  if (overviewEl && overviewText) {
+    if (snapshot.overview) {
+      overviewEl.style.display = "block";
+      overviewText.textContent = snapshot.overview;
+    } else {
+      overviewEl.style.display = "none";
+      overviewText.textContent = "";
+    }
+  }
+
+  const topicsView = document.getElementById("view-topics");
+  if (topicsView && topicsView.style.display !== "none") {
+    renderWordCloud();
+    renderPolymarket(currentPolymarket);
+  }
+}
+
+async function loadTopicHistory(windowKey = "24h") {
+  if (topicHistoryLoading) return;
+  topicHistoryLoading = true;
+  try {
+    const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=5`, { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      topicHistory = Array.isArray(json.history) ? json.history : [];
+    } else {
+      topicHistory = [];
+    }
+  } catch (e) {
+    topicHistory = [];
+  } finally {
+    topicHistoryLoading = false;
+    topicHistoryLoaded = true;
+  }
+
+  if (topicHistory.length === 0 && latestData) {
+    topicHistory = [{ payload: latestData, timestamp: Math.floor(Date.now() / 1000) }];
+  }
+
+  const select = document.getElementById("topic-history-select");
+  if (select) {
+    select.textContent = "";
+    topicHistory.forEach((snap, idx) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      opt.textContent = formatHistoryLabel(snap, idx);
+      select.appendChild(opt);
+    });
+    const safeIndex = Math.min(selectedTopicHistoryIndex, topicHistory.length - 1);
+    selectedTopicHistoryIndex = Math.max(0, safeIndex);
+    select.value = String(selectedTopicHistoryIndex);
+  }
+
+  if (topicHistory[selectedTopicHistoryIndex]) {
+    applyTopicSnapshot(topicHistory[selectedTopicHistoryIndex].payload);
+  }
+}
+
+function bindTopicHistorySelect() {
+  if (topicHistoryBound) return;
+  const select = document.getElementById("topic-history-select");
+  if (!select) return;
+  select.addEventListener("change", () => {
+    const idx = Number.parseInt(select.value, 10);
+    if (!Number.isFinite(idx)) return;
+    if (!topicHistory[idx]) return;
+    selectedTopicHistoryIndex = idx;
+    applyTopicSnapshot(topicHistory[idx].payload);
+  });
+  topicHistoryBound = true;
 }
 
 // Tab Switching
@@ -83,8 +216,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Specific Logics
     if (targetId === 'topics') {
       setTimeout(() => {
-        renderWordCloud();
-        if (currentPolymarket) renderPolymarket(currentPolymarket);
+        bindTopicHistorySelect();
+        if (!topicHistoryLoaded) {
+          loadTopicHistory("24h").then(() => {
+            if (topicHistory[0] && selectedTopicHistoryIndex === 0) {
+              applyTopicSnapshot(topicHistory[0].payload);
+            }
+          });
+        } else {
+          renderWordCloud();
+          renderPolymarket(currentPolymarket);
+        }
       }, 50);
     } else if (targetId === 'ongi-greed') {
       fetchOngiHistory();
@@ -265,16 +407,18 @@ async function main() {
     if (data.yield_curve) console.log("Yield Curve Data Received:", data.yield_curve);
     else console.warn("No Yield Curve data in response.");
 
+    latestData = data;
     const items = data.items || [];
     currentItems = items;
 
-    // Store topics
-    if (data.topics) {
-      currentTopics = data.topics.map(t => [t.word, t.count]);
-      // Lazy Render logic: only if visible
-      if (document.getElementById("view-topics").style.display !== "none") {
-        renderWordCloud();
-      }
+    if (data.updatedAt && data.updatedAt !== lastHistoryUpdatedAt) {
+      lastHistoryUpdatedAt = data.updatedAt;
+      loadTopicHistory("24h");
+    }
+
+    bindTopicHistorySelect();
+    if (selectedTopicHistoryIndex === 0) {
+      applyTopicSnapshot(data);
     }
 
     // Trade Recommendations
@@ -288,13 +432,7 @@ async function main() {
       if (modelEl) modelEl.textContent = `POWERED BY ${data.ai_model.toUpperCase()}`;
     }
 
-    // NEW: Polymarket
-    if (data.polymarket) {
-      currentPolymarket = data.polymarket;
-      if (document.getElementById("view-topics").style.display !== "none") {
-        renderPolymarket(currentPolymarket);
-      }
-    }
+    // Polymarket is handled in applyTopicSnapshot for topics view
 
     // ... top of file
     let chartWidget = null;
@@ -343,27 +481,6 @@ async function main() {
     // NEW: CRYPTO FEAR & GREED
     if (data.crypto_fear_greed) {
       updateCryptoFG(data.crypto_fear_greed);
-    }
-
-    // Imakita Sangyo (TL;DR)
-    const imakitaContainer = document.getElementById("imakita-container");
-    const imakitaContent = document.getElementById("imakita-content");
-
-    if (data.breaking_news && Array.isArray(data.breaking_news) && data.breaking_news.length > 0) {
-      if (imakitaContainer) imakitaContainer.style.display = "block";
-      if (imakitaContent) {
-        // Take top 3 items
-        const top3 = data.breaking_news.slice(0, 3);
-        imakitaContent.textContent = "";
-        top3.forEach((news) => {
-          const div = document.createElement("div");
-          div.className = "imakita-line";
-          div.textContent = news == null ? "" : String(news);
-          imakitaContent.appendChild(div);
-        });
-      }
-    } else {
-      if (imakitaContainer) imakitaContainer.style.display = "none";
     }
 
     // AI Overview
@@ -441,23 +558,9 @@ async function main() {
       });
     }
 
-    // AI Overview
-    const overviewEl = document.getElementById("market-overview");
-    const overviewText = document.getElementById("overview-text");
     const ongiCommentEl = document.getElementById("fear-ongi-comment");
-
-    if (overviewEl) {
-      if (data.overview) {
-        overviewEl.style.display = "block";
-        overviewText.textContent = data.overview;
-        if (ongiCommentEl) {
-          // Prefer ongi_comment, fallback to overview
-          ongiCommentEl.textContent = data.ongi_comment || data.overview;
-        }
-      } else {
-        overviewEl.style.display = "none";
-        if (ongiCommentEl) ongiCommentEl.textContent = "Waiting for AI analysis...";
-      }
+    if (ongiCommentEl) {
+      ongiCommentEl.textContent = data.ongi_comment || data.overview || "Waiting for AI analysis...";
     }
 
     // Comparative Insight Logic

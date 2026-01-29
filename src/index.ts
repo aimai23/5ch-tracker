@@ -1,5 +1,15 @@
 import type { Env, ScheduledEvent, ExecutionContext } from "./types";
-import { getMeta, getRanking, putMeta, putRanking, type RankingPayload, getOngiHistory, saveOngiHistory } from "./storage";
+import {
+  getMeta,
+  getRanking,
+  putMeta,
+  putRanking,
+  type RankingPayload,
+  getOngiHistory,
+  saveOngiHistory,
+  getRankingHistory,
+  saveRankingHistory
+} from "./storage";
 import { scheduled as scheduledImpl } from "./cron";
 
 function json(data: unknown, status = 200, extraHeaders?: Record<string, string>): Response {
@@ -78,6 +88,14 @@ export default {
       });
     }
 
+    if (url.pathname === "/api/ranking-history") {
+      const window = url.searchParams.get("window") || "24h";
+      const limitRaw = Number.parseInt(url.searchParams.get("limit") || "5", 10);
+      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(5, limitRaw)) : 5;
+      const history = await getRankingHistory(env, window, limit);
+      return json({ window, history }, 200, commonCorsHeaders);
+    }
+
     // Internal endpoint for GitHub Actions (or other fetchers)
     if (request.method === "POST" && pathname === "/internal/ingest") {
       const token = env.INGEST_TOKEN;
@@ -124,6 +142,11 @@ export default {
 
       // Only aggregated data is stored.
       await putRanking(env, window, payload);
+      try {
+        await saveRankingHistory(env, window, payload, 5);
+      } catch (e) {
+        console.warn("Failed to save ranking history", e);
+      }
 
       // Save Ongi History if available
       if (typeof payload.fear_greed === 'number') {

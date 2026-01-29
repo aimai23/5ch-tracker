@@ -69,6 +69,13 @@ export type MetaPayload = {
   lastError: string | null;
 };
 
+export interface RankingHistorySnapshot {
+  id: number;
+  window: string;
+  timestamp: number;
+  payload: RankingPayload;
+}
+
 // Helper to get meta key for ranking aux data
 function rankingMetaKey(window: string): string {
   return `ranking_meta_${window}`;
@@ -171,6 +178,76 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   );
 
   await env.DB.batch(statements);
+}
+
+const HISTORY_LIMIT_DEFAULT = 5;
+
+export async function saveRankingHistory(
+  env: Env,
+  window: string,
+  payload: RankingPayload,
+  limit = HISTORY_LIMIT_DEFAULT
+): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+
+  await env.DB.prepare(
+    "INSERT INTO ranking_history (window, timestamp, payload) VALUES (?, ?, ?)"
+  )
+    .bind(window, now, JSON.stringify(payload))
+    .run();
+
+  // Keep only the latest N snapshots per window
+  const keep = Math.max(1, Math.min(10, limit));
+  const { results } = await env.DB.prepare(
+    "SELECT id FROM ranking_history WHERE window = ? ORDER BY timestamp DESC LIMIT ?"
+  )
+    .bind(window, keep)
+    .all<{ id: number }>();
+
+  if (!results || results.length === 0) return;
+
+  const ids = results.map(r => r.id);
+  const placeholders = ids.map(() => "?").join(",");
+  await env.DB.prepare(
+    `DELETE FROM ranking_history WHERE window = ? AND id NOT IN (${placeholders})`
+  )
+    .bind(window, ...ids)
+    .run();
+}
+
+export async function getRankingHistory(
+  env: Env,
+  window: string,
+  limit = HISTORY_LIMIT_DEFAULT
+): Promise<RankingHistorySnapshot[]> {
+  const take = Math.max(1, Math.min(10, limit));
+  const { results } = await env.DB.prepare(
+    "SELECT id, window, timestamp, payload FROM ranking_history WHERE window = ? ORDER BY timestamp DESC LIMIT ?"
+  )
+    .bind(window, take)
+    .all<{ id: number; window: string; timestamp: number; payload: string }>();
+
+  if (!results) return [];
+
+  return results.map((r) => {
+    let payload: RankingPayload = {
+      updatedAt: null,
+      window: r.window,
+      items: [],
+      topics: [],
+      sources: []
+    };
+    try {
+      payload = JSON.parse(r.payload) as RankingPayload;
+    } catch { }
+
+    return {
+      id: r.id,
+      window: r.window,
+      timestamp: r.timestamp,
+      payload
+    };
+  });
 }
 
 // --- Price Functions ---

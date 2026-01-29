@@ -116,6 +116,7 @@ python main.py
 **Public**
 - `GET /health` : ヘルスチェック
 - `GET /api/ranking?window=24h` : ランキング + 解析結果一式
+- `GET /api/ranking-history?window=24h&limit=5` : 過去スナップショット（最大5件）
 - `GET /api/ongi-history` : Ongi履歴（30日）
 - `GET /api/meta` : 最終更新情報
 

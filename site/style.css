@@ -729,6 +729,36 @@ body {
   transition: all 0.3s ease;
 }
 
+.topic-history {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.topic-history-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--accent-cyan);
+}
+
+#topic-history-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #e0f7ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+#topic-history-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+}
+
 .market-overview:hover {
   background: rgba(0, 20, 40, 0.8);
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
