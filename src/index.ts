@@ -1,7 +1,6 @@
 import type { Env, ScheduledEvent, ExecutionContext } from "./types";
 import { getMeta, getRanking, putMeta, putRanking, type RankingPayload, getOngiHistory, saveOngiHistory } from "./storage";
 import { scheduled as scheduledImpl } from "./cron";
-import { handleScheduled } from "./scheduler";
 
 function json(data: unknown, status = 200, extraHeaders?: Record<string, string>): Response {
   return new Response(JSON.stringify(data), {
@@ -43,24 +42,6 @@ export default {
 
     if (request.method === "GET" && pathname === "/health") {
       return new Response("OK", { status: 200, headers: commonCorsHeaders });
-    }
-
-    // Force Update Endpoint (Manual Trigger)
-    if (request.method === "GET" && pathname === "/internal/update-prices") {
-      const auth = request.headers.get("Authorization");
-      const queryKey = url.searchParams.get("key");
-
-      if (auth !== `Bearer ${env.INGEST_TOKEN}` && queryKey !== env.INGEST_TOKEN) {
-        return new Response("Unauthorized", { status: 401 });
-      }
-
-      try {
-        // Pass a mock event
-        await handleScheduled({ cron: "manual", type: "scheduled", scheduledTime: Date.now() }, env, ctx);
-        return new Response("Manual Update Triggered. Check Logs.", { status: 200, headers: commonCorsHeaders });
-      } catch (e) {
-        return new Response(`Error: ${e}`, { status: 500 });
-      }
     }
 
     if (request.method === "GET" && pathname === "/api/meta") {

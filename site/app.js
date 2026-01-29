@@ -7,6 +7,34 @@ let currentTopics = [];
 let currentItems = [];
 let currentPolymarket = null;
 
+function escapeHtml(value) {
+  const s = value == null ? "" : String(value);
+  return s.replace(/[&<>"']/g, (ch) => {
+    switch (ch) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "\"": return "&quot;";
+      case "'": return "&#39;";
+      default: return ch;
+    }
+  });
+}
+
+function safeText(value) {
+  return escapeHtml(value);
+}
+
+function safeUrl(raw) {
+  try {
+    const u = new URL(String(raw), window.location.href);
+    if (u.protocol === "http:" || u.protocol === "https:") {
+      return u.toString();
+    }
+  } catch { }
+  return "about:blank";
+}
+
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
   // --- Slide Menu Logic ---
@@ -326,9 +354,13 @@ async function main() {
       if (imakitaContent) {
         // Take top 3 items
         const top3 = data.breaking_news.slice(0, 3);
-        imakitaContent.innerHTML = top3.map(news =>
-          `<div class="imakita-line">${news}</div>`
-        ).join("");
+        imakitaContent.textContent = "";
+        top3.forEach((news) => {
+          const div = document.createElement("div");
+          div.className = "imakita-line";
+          div.textContent = news == null ? "" : String(news);
+          imakitaContent.appendChild(div);
+        });
       }
     } else {
       if (imakitaContainer) imakitaContainer.style.display = "none";
@@ -439,7 +471,7 @@ async function main() {
 
     if (compToggle && compText) {
       if (insightText) {
-        compText.innerHTML = insightText.replace(/\n/g, "<br>"); // Simple formatting
+        compText.innerHTML = safeText(insightText).replace(/\n/g, "<br>"); // Simple formatting
         // Add click listener if not already added (simple check: clone or just ensure idempotent)
         // Better: Remove old listener or just assign onclick
         compToggle.onclick = () => {
@@ -504,7 +536,7 @@ async function main() {
       tableEl.style.display = "table";
       tbody.innerHTML = "";
 
-      const maxCount = items.length > 0 ? items[0].count : 1;
+      const maxCount = items.length > 0 ? (Number(items[0].count) || 1) : 1;
 
       // Set initial chart if 5ch (main workflow), or just first item
       if (items.length > 0 && source === "5ch") {
@@ -523,7 +555,11 @@ async function main() {
         if (index === 0) row.classList.add("selected");
         if (rank <= 3) row.classList.add(`rank-${rank}`);
 
-        const barPercent = Math.max((item.count / maxCount) * 100, 1);
+        const itemCount = Number(item.count) || 0;
+        const barPercent = Math.max((itemCount / maxCount) * 100, 1);
+        const safeTicker = safeText(item.ticker);
+        const safeCount = safeText(itemCount);
+        const logoTicker = encodeURIComponent(item.ticker == null ? "" : String(item.ticker));
 
         // Sentiment / Mood
         let moodHtml = "";
@@ -542,7 +578,8 @@ async function main() {
         } else if (source === "reddit") {
           // Reddit specific badge (e.g. Upvotes)
           const ups = new Intl.NumberFormat('en-US', { notation: "compact" }).format(item.upvotes || 0);
-          moodHtml = `<span class="mood-badge" style="border-color:#ff4500; color:#ff4500;">🔥 ${ups} Ups</span>`;
+          const safeUps = safeText(ups);
+          moodHtml = `<span class="mood-badge" style="border-color:#ff4500; color:#ff4500;">🔥 ${safeUps} Ups</span>`;
         }
 
         // Trend Logic
@@ -575,16 +612,16 @@ async function main() {
                 </td>
                 <td>
                 <div class="ticker-cell">
-                    <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${item.ticker}?format=png" loading="lazy" onerror="this.style.display='none'">
+                    <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${logoTicker}?format=png" loading="lazy" onerror="this.style.display='none'">
                     <div class="ticker-info">
-                        <span class="ticker-name">${item.ticker}</span>
+                        <span class="ticker-name">${safeTicker}</span>
                         ${moodHtml}
                     </div>
                 </div>
                 </td>
                 <td>
                 <div class="count-cell">
-                    <div class="count-val">${item.count}</div>
+                    <div class="count-val">${safeCount}</div>
                     <div class="bar-container">
                     <div class="bar-fill" style="width: ${barPercent}%"></div>
                     </div>
@@ -762,7 +799,7 @@ function renderPolymarket(data) {
           const parts = o.split(": ");
           const label = parts[0];
           const val = parts[1] || "";
-          return `<div class="poly-outcome"><span>${label}</span><strong>${val}</strong></div>`;
+          return `<div class="poly-outcome"><span>${safeText(label)}</span><strong>${safeText(val)}</strong></div>`;
         }).join("");
       }
 
@@ -774,12 +811,14 @@ function renderPolymarket(data) {
 
       const card = document.createElement("a");
       card.className = "poly-card poly-card-link";
-      card.href = item.url;
+      card.href = safeUrl(item.url);
       card.target = "_blank";
+      card.rel = "noopener noreferrer";
       card.style.textDecoration = "none";
 
+      const safeTitle = safeText(item.title_ja || item.title || "");
       card.innerHTML = `
-        <div class="poly-title">${item.title_ja || item.title}</div>
+        <div class="poly-title">${safeTitle}</div>
         <div class="poly-outcomes-list">
           ${outcomesHtml}
         </div>
@@ -935,19 +974,29 @@ function renderTradeRecommendations(tradeData) {
     const list = document.getElementById(containerId);
     if (!list) return;
 
-    list.innerHTML = "";
+    list.textContent = "";
     if (items && items.length > 0) {
       items.forEach(item => {
         const div = document.createElement("div");
         div.className = `trade-card-item ${type}-item`;
-        div.innerHTML = `
-          <span class="item-ticker">${item.ticker}</span>
-          <span class="item-reason">${item.reason}</span>
-        `;
+
+        const tickerSpan = document.createElement("span");
+        tickerSpan.className = "item-ticker";
+        tickerSpan.textContent = item.ticker == null ? "" : String(item.ticker);
+
+        const reasonSpan = document.createElement("span");
+        reasonSpan.className = "item-reason";
+        reasonSpan.textContent = item.reason == null ? "" : String(item.reason);
+
+        div.appendChild(tickerSpan);
+        div.appendChild(reasonSpan);
         list.appendChild(div);
       });
     } else {
-      list.innerHTML = '<div class="trade-placeholder">None identified.</div>';
+      const placeholder = document.createElement("div");
+      placeholder.className = "trade-placeholder";
+      placeholder.textContent = "None identified.";
+      list.appendChild(placeholder);
     }
   }
 

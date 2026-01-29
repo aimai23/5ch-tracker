@@ -25,7 +25,7 @@
 2. **Cloudflare Worker（TypeScript / `src/`）**
    - 受信したデータを **D1** に保存します。
    - 公開APIを提供します（ランキング、履歴、メタ情報など）。
-   - `cron` と `/internal/update-prices` は現状 **no-op**（価格取得機能は削除済み）です。
+   - `cron` は現状 **no-op**（価格取得機能は削除済み）です。
 
 3. **フロントエンド（静的 / `site/`）**
    - `site/index.html` + `site/app.js` でAPIを描画します。
@@ -121,7 +121,6 @@ python main.py
 
 **Internal**
 - `POST /internal/ingest` : 集計データの受け取り（`Authorization: Bearer <INGEST_TOKEN>` 必須）
-- `GET /internal/update-prices` : 現在は no-op（互換用に残置）
 
 ## 設定ファイル（`config/`）
 
