@@ -1,87 +1,137 @@
-# 5ch-tracker (Hybrid Architecture)
+# 5ch-tracker（Hybrid Architecture）
 
-This project tracks stock trends on 5ch (Japanese textboard), analyzes sentiment using Gemini AI, and aggregates data via Cloudflare Workers. It also integrates Polymarket, Reddit (WallStreetBets), and Macro indicators for a comprehensive market overview.
+5chの株スレをローカルで収集し、Geminiでティッカー抽出・センチメント解析を行った結果を Cloudflare Worker + D1 に保存し、フロントエンドで可視化するプロジェクトです。
 
-## Architecture
+## 全体構成
 
-1.  **Local Fetcher (Python)**:
-    *   Runs locally (or on a server).
-    *   Scrapes 5ch stock threads.
-    *   Fetches external data (Polymarket, ApeWisdom/Reddit, FRED/Sahm Rule, Doughcon).
-    *   Uses **Google Gemini API** to extract tickers, analyze sentiment, and generate "Breaking News" & "Comparative Insights".
-    *   Sends aggregated JSON payload to the Cloudflare Worker.
+1. **Local Fetcher（Python / `local_fetcher/`）**
+   - 5chのスレッドを取得し、本文を解析します。
+   - Gemini API で以下を生成します:
+     - ティッカー抽出
+     - Fear & Greed スコア
+     - レーダー指標（Hype / Panic / Faith / Gamble / IQ）
+     - 市況サマリー、Ongiコメント、Breaking News
+     - 日米比較コメント、AIトレード提案
+   - 外部データも取得します:
+     - Polymarket（gamma API）
+     - Reddit（ApeWisdom / WallStreetBets）
+     - CNN Fear & Greed
+     - Crypto Fear & Greed（Alternative.me）
+     - Sahm Rule / Yield Curve（FRED）
+     - Doughcon（pizzint.watch）
+   - 集約したJSONを Worker の `/internal/ingest` へ送信します。
+   - `last_run.json` を使ってランキングの差分（`rank_delta`）と新規フラグを計算します。
 
-2.  **Cloudflare Worker (TypeScript)**:
-    *   Receives data via `/internal/ingest`.
-    *   Stores data in **Cloudflare KV**.
-    *   Serves public APIs for the frontend.
+2. **Cloudflare Worker（TypeScript / `src/`）**
+   - 受信したデータを **D1** に保存します。
+   - 公開APIを提供します（ランキング、履歴、メタ情報など）。
+   - `cron` と `/internal/update-prices` は現状 **no-op**（価格取得機能は削除済み）です。
 
-## API Endpoints (Cloudflare Worker)
+3. **フロントエンド（静的 / `site/`）**
+   - `site/index.html` + `site/app.js` でAPIを描画します。
+   - Chart.js / TradingView Widget / wordcloud2.js を使用。
+   - `site/app.js` 内の `WORKER_URL` を自分の Worker に合わせて変更してください。
 
-Base URL: `https://<your-worker>.workers.dev`
+## ディレクトリ概要
 
-### Public
--   `GET /health`: Health check (returns "OK").
--   `GET /api/ranking?window=24h`: Get the latest market analysis, including rankings, summary, and breaking news.
--   `GET /api/ongi-history`: Get historical Fear & Greed (Ongi) scores.
--   `GET /api/meta`: Get metadata about the last update status.
+- `local_fetcher/` : 5ch収集 + Gemini解析 + Worker送信
+- `src/` : Cloudflare Worker API
+- `migrations/` : D1スキーマ
+- `config/` : 抽出ルール・除外ルール・Polymarket設定
+- `site/` : フロントエンド静的ファイル
 
-### Internal (Protected)
--   `POST /internal/ingest`: Ingest analyzed data from the Local Fetcher. Requires `Bearer <INGEST_TOKEN>`.
--   `GET /internal/update-prices`: Manually trigger price/ranking updates (if configured).
+## セットアップ
 
-## Setup Guide
+### 1) Cloudflare Worker / D1
 
-### 1. Cloudflare Worker
-Prerequisites: `npm`, `wrangler`
+前提: `node`, `npm`, `wrangler`
 
-1.  Clone repository.
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Configure `wrangler.toml` (if needed) or just run:
-    ```bash
-    npx wrangler deploy
-    ```
-4.  **Secrets**: Set the ingest token:
-    ```bash
-    npx wrangler secret put INGEST_TOKEN
-    ```
+```bash
+npm install
+```
 
-### 2. Local Fetcher (Python)
-Prerequisites: Python 3.10+
+#### D1作成 & 紐付け
 
-1.  Navigate to `local_fetcher/`.
-2.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  Create `.env` file in `local_fetcher/`:
-    ```ini
-    GEMINI_API_KEY=your_gemini_api_key
-    WORKER_URL=https://your-worker.workers.dev
-    INGEST_TOKEN=your_ingest_token
-    ```
-4.  Run the fetcher:
-    ```bash
-    python main.py
-    ```
-    Options:
-    -   `--debug`: Run analysis but do not upload to Worker.
-    -   `--monitor`: Run in a loop (every 120s).
-    -   `--poly-only`: Debug Polymarket fetching only.
+```bash
+npx wrangler d1 create <your-db-name>
+```
 
-## Configuration (`config/`)
+生成された `database_name` / `database_id` を `wrangler.toml` に反映します。
 
--   **`exclude.json`**: List of tickers and words to exclude from analysis (e.g., specific spam or common non-stock terms).
--   **`nickname_dictionary.json`**: Mapping of 5ch slang to Tickers (e.g., `"林檎": "AAPL"`).
--   **`polymarket.json`**: Queries for fetching Polymarket events.
--   **`polymarket_exclude.json`**: Keywords to exclude from Polymarket results.
+#### マイグレーション適用
 
-## Features
--   **Ticker Extraction**: Maps Japanese slang to US Tickers.
--   **Sentiment Analysis**: Fear & Greed scoring (0-100), Radar Chart (Hype, Panic, Faith, etc.).
--   **Breaking News**: AI-generated "Sports Commentary" style headlines.
--   **Comparative Insight**: AI comparison between 5ch (Japan) and Reddit (US) trends.
--   **Macro Indicators**: Sahm Rule, Yield Curve, CNN Fear & Greed.
+```bash
+npx wrangler d1 migrations apply <your-db-name> --remote
+```
+
+#### シークレット設定
+
+```bash
+npx wrangler secret put INGEST_TOKEN
+```
+
+#### デプロイ
+
+```bash
+npx wrangler deploy
+```
+
+### 2) Local Fetcher（Python）
+
+前提: Python 3.10+
+
+```bash
+cd local_fetcher
+pip install -r requirements.txt
+```
+
+`.env` を作成:
+
+```ini
+GEMINI_API_KEY=your_gemini_api_key
+WORKER_URL=https://<your-worker>.workers.dev
+INGEST_TOKEN=your_ingest_token
+```
+
+実行:
+
+```bash
+python main.py
+```
+
+オプション:
+- `--debug` : 解析のみ（Worker送信なし）
+- `--monitor` : 120秒ごとにループ実行
+- `--poly-only` : Polymarket取得のみ
+
+> 補足: `Janome` が入っているとトピック抽出精度が上がります（未導入なら自動で正規表現にフォールバック）
+
+### 3) フロントエンド
+
+`site/app.js` の `WORKER_URL` を自分の Worker に書き換えたうえで、
+任意の静的ホスティング（Cloudflare Pages など）で `site/` を配信してください。
+
+## API（Worker）
+
+**Public**
+- `GET /health` : ヘルスチェック
+- `GET /api/ranking?window=24h` : ランキング + 解析結果一式
+- `GET /api/ongi-history` : Ongi履歴（30日）
+- `GET /api/meta` : 最終更新情報
+
+**Internal**
+- `POST /internal/ingest` : 集計データの受け取り（`Authorization: Bearer <INGEST_TOKEN>` 必須）
+- `GET /internal/update-prices` : 現在は no-op（互換用に残置）
+
+## 設定ファイル（`config/`）
+
+- `exclude.json` : 除外ティッカー・ストップワード・スパム文字
+- `nickname_dictionary.json` : 5chスラング → ティッカー対応表
+- `polymarket.json` : Polymarket検索クエリ
+- `polymarket_exclude.json` : Polymarket除外キーワード
+
+## 注意点
+
+- 5chは Worker からの直接アクセスが403になることが多いため、**ローカル Fetcher 前提**です。
+- `local_fetcher/last_run.json` は実行時に自動生成されます（`.gitignore` 済み）。
+- 解析・外部APIは失敗時に空データで進むことがあります（ログ参照）。
