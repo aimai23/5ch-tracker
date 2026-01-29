@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 local_fetcher/dat_cache/
 local_fetcher/logs/
+local_fetcher/last_run.json
+__pycache__/
+*.pyc
