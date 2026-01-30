@@ -56,6 +56,13 @@ function getSnapshotTime(snapshot) {
   return null;
 }
 
+function getSnapshotUpdatedAt(snapshot) {
+  if (!snapshot || !snapshot.payload) return null;
+  const value = snapshot.payload.updatedAt;
+  if (value == null) return null;
+  return String(value);
+}
+
 function formatInsightLabel(snapshot, index) {
   const ts = getSnapshotTime(snapshot);
   const timeLabel = ts
@@ -91,8 +98,9 @@ function applyInsightSnapshot(snapshot, index) {
 async function loadInsightHistory(windowKey = "24h") {
   if (insightHistoryLoading) return;
   insightHistoryLoading = true;
+  const historyLimit = 5;
   try {
-    const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=5`, { cache: "no-store" });
+    const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=${historyLimit}`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       if (Array.isArray(json.history)) {
@@ -112,8 +120,26 @@ async function loadInsightHistory(windowKey = "24h") {
     insightHistoryLoaded = true;
   }
 
-  if (insightHistory.length === 0 && latestData) {
-    insightHistory = [{ payload: latestData, timestamp: Math.floor(Date.now() / 1000) }];
+  let latestSnapshot = null;
+  if (latestData) {
+    latestSnapshot = { payload: latestData, timestamp: Math.floor(Date.now() / 1000) };
+    const latestUpdatedAt = getSnapshotUpdatedAt(latestSnapshot);
+    const hasLatest = latestUpdatedAt
+      ? insightHistory.some((snap) => getSnapshotUpdatedAt(snap) === latestUpdatedAt)
+      : false;
+    const latestTime = getSnapshotTime(latestSnapshot);
+    const firstTime = getSnapshotTime(insightHistory[0]);
+    if (!hasLatest && latestTime && (!firstTime || latestTime > firstTime)) {
+      insightHistory = [latestSnapshot, ...insightHistory];
+    }
+  }
+
+  if (insightHistory.length === 0 && latestSnapshot) {
+    insightHistory = [latestSnapshot];
+  }
+
+  if (insightHistory.length > historyLimit) {
+    insightHistory = insightHistory.slice(0, historyLimit);
   }
 
   const safeIndex = Math.min(insightHistoryIndex, insightHistory.length - 1);

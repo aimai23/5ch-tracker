@@ -199,7 +199,7 @@ export async function saveRankingHistory(
   // Keep only the latest N snapshots per window
   const keep = Math.max(1, Math.min(10, limit));
   const { results } = await env.DB.prepare(
-    "SELECT id FROM ranking_history WHERE window = ? ORDER BY timestamp DESC LIMIT ?"
+    "SELECT id FROM ranking_history WHERE window = ? ORDER BY timestamp DESC, id DESC LIMIT ?"
   )
     .bind(window, keep)
     .all<{ id: number }>();
@@ -222,7 +222,7 @@ export async function getRankingHistory(
 ): Promise<RankingHistorySnapshot[]> {
   const take = Math.max(1, Math.min(10, limit));
   const { results } = await env.DB.prepare(
-    "SELECT id, window, timestamp, payload FROM ranking_history WHERE window = ? ORDER BY timestamp DESC LIMIT ?"
+    "SELECT id, window, timestamp, payload FROM ranking_history WHERE window = ? ORDER BY timestamp DESC, id DESC LIMIT ?"
   )
     .bind(window, take)
     .all<{ id: number; window: string; timestamp: number; payload: string }>();
