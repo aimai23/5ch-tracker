@@ -2152,6 +2152,7 @@ footer a {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-x: hidden;
 }
 
 .invest-brief-header {
@@ -2324,7 +2325,7 @@ footer a {
 
 .brief-calendar {
   border-left: 1px dashed rgba(255, 215, 0, 0.35);
-  padding-left: 0.9rem;
+  padding-left: 1rem;
 }
 
 .brief-calendar li {
@@ -2334,7 +2335,7 @@ footer a {
 .brief-calendar li::before {
   content: "";
   position: absolute;
-  left: -0.45rem;
+  left: 0;
   top: 0.55rem;
   width: 6px;
   height: 6px;
@@ -2556,11 +2557,11 @@ footer a {
   }
 
   .brief-calendar {
-    padding-left: 0.7rem;
+    padding-left: 0.8rem;
   }
 
   .brief-calendar li::before {
-    left: -0.4rem;
+    left: 0;
     width: 5px;
     height: 5px;
     top: 0.45rem;
