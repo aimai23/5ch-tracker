@@ -914,30 +914,32 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     # Polymarket Fetch (Parallel-ish in effect)
     polymarket_raw = fetch_polymarket_events()
     polymarket_data = translate_polymarket_events(polymarket_raw)
-    
-    # Reddit Fetch
-    reddit_data = fetch_apewisdom_rankings()
 
-    # DOUGHCON Fetch
-    doughcon_data = fetch_doughcon_level()
-    if doughcon_data:
-        logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
-
-    # Sahm Rule Fetch
-    sahm_data = fetch_sahm_rule()
-    if sahm_data:
-        logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
-    
-    # Crypto Fear & Greed Fetch
-    crypto_fg = fetch_crypto_fear_greed()
-    if crypto_fg:
-        logging.info(f"Crypto F&G Fetched: {crypto_fg['value']} ({crypto_fg['classification']})")
-    
-    
     if poly_only:
         logging.info("--- POLYMARKET ONLY MODE ---")
         logging.info(json.dumps(polymarket_data, indent=2, ensure_ascii=False))
         return
+
+    # External data (non-AI) should run before AI analysis
+    reddit_data = fetch_apewisdom_rankings()
+
+    doughcon_data = fetch_doughcon_level()
+    if doughcon_data:
+        logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
+
+    sahm_data = fetch_sahm_rule()
+    if sahm_data:
+        logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
+
+    crypto_fg = fetch_crypto_fear_greed()
+    if crypto_fg:
+        logging.info(f"Crypto F&G Fetched: {crypto_fg['value']} ({crypto_fg['classification']})")
+
+    cnn_fg = fetch_cnn_fear_greed()
+    if cnn_fg:
+        logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
+
+    yield_curve_data = fetch_yield_curve()
 
     threads = discover_threads()
     if not threads:
@@ -980,11 +982,6 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             logging.error("Retry failed or limit reached. Aborting upload.")
             return
 
-    # Fetch External CNN Fear & Greed
-    cnn_fg = fetch_cnn_fear_greed()
-    if cnn_fg:
-        logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
-    
     agg = {}
     for t in tickers_raw:
         sym = t.get("ticker", "").upper()
@@ -1038,11 +1035,6 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     # Limit top 20 for storing/sending is usually done by slice later
     # but final_items is effectively sorted now.
     
-    # Crisis Indicators
-    doughcon_data = fetch_doughcon_level()
-    sahm_data = fetch_sahm_rule()
-    yield_curve_data = fetch_yield_curve()
-
     # Save to last_run.json
     try:
         current_state = {
