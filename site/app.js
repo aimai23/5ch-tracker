@@ -447,9 +447,19 @@ function renderInvestBrief(data) {
     const historyText = formatSeries(series);
 
     const metaFallback = !catalyst && !risk && !invalidation;
-    const fallbackCatalyst = metaFallback ? (trend.className === "up" ? "????????" : trend.className === "down" ? "????????" : "????????") : "";
-    const fallbackRisk = metaFallback ? (trend.className === "down" ? "????????" : "?????????") : "";
-    const fallbackInvalidation = metaFallback ? "????????" : "";
+    const fallbackCatalyst = metaFallback ? (
+      trend.className === "up"
+        ? "\u63a8\u6e2c:\u8a71\u984c\u5897\u52a0\uff08\u63a8\u79fb\uff09"
+        : trend.className === "down"
+          ? "\u63a8\u6e2c:\u53cd\u8ee2\u5f85\u3061\uff08\u63a8\u79fb\uff09"
+          : "\u63a8\u6e2c:\u8a71\u984c\u7d99\u7d9a\uff08\u63a8\u79fb\uff09"
+    ) : "";
+    const fallbackRisk = metaFallback ? (
+      trend.className === "down"
+        ? "\u63a8\u6e2c:\u8a71\u984c\u6e1b\u901f\uff08\u63a8\u79fb\uff09"
+        : "\u63a8\u6e2c:\u53cd\u52d5\u30ea\u30b9\u30af\uff08\u63a8\u79fb\uff09"
+    ) : "";
+    const fallbackInvalidation = metaFallback ? "\u63a8\u6e2c:\u8a71\u984c\u6c88\u9759\uff08\u63a8\u79fb\uff09" : "";
     const catalystText = catalyst || fallbackCatalyst;
     const riskText = risk || fallbackRisk;
     const invalidationText = invalidation || fallbackInvalidation;
@@ -513,10 +523,10 @@ function renderInvestBrief(data) {
       meta.appendChild(line);
     }
 
-    addMeta("????", catalystText);
-    addMeta("??????", riskText);
-    addMeta("??????", invalidationText);
-    addMeta("期限", item && item.valid_until ? String(item.valid_until) : "");
+    addMeta("\u89e6\u5a92", catalystText);
+    addMeta("\u30ea\u30b9\u30af", riskText);
+    addMeta("\u7121\u52b9\u5316", invalidationText);
+    addMeta("\u671f\u9650", item && item.valid_until ? String(item.valid_until) : "");
 
     const history = document.createElement("div");
     history.className = "brief-card-history";

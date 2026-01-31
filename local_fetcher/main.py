@@ -174,17 +174,31 @@ def sanitize_brief(brief, max_watchlist=8):
         if not ticker or ticker in seen:
             continue
         seen.add(ticker)
+
+        catalyst = to_text(item.get("catalyst"))
+        risk = to_text(item.get("risk"))
+        invalidation = to_text(item.get("invalidation"))
+        valid_until = to_text(item.get("valid_until") or item.get("deadline"))
+
+        if not catalyst:
+            catalyst = "推測:話題先行"
+        if not risk:
+            risk = "推測:反動リスク"
+        if not invalidation:
+            invalidation = "推測:話題沈静"
+        if not valid_until:
+            valid_until = "未定"
+
         watchlist.append({
             "ticker": ticker,
             "reason": to_text(item.get("reason")),
-            "catalyst": to_text(item.get("catalyst")),
-            "risk": to_text(item.get("risk")),
-            "invalidation": to_text(item.get("invalidation")),
-            "valid_until": to_text(item.get("valid_until") or item.get("deadline"))
+            "catalyst": catalyst,
+            "risk": risk,
+            "invalidation": invalidation,
+            "valid_until": valid_until
         })
         if len(watchlist) >= max_watchlist:
             break
-
     calendar = []
     for entry in to_list(brief.get("catalyst_calendar")):
         if isinstance(entry, str):
@@ -238,7 +252,7 @@ def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None
 
     if re.search(r"(.)\1{8,}", message):
         score += 3
-    if re.search(r"[!???w?]{6,}", message):
+    if re.search(r"[!\uFF01?\uFF1Fw\uFF57]{6,}", message):
         score += 2
     if re.search(r"https?://", message):
         score += 2
@@ -420,7 +434,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
     GROUNDING RULES (Anti-hallucination):
     - ONLY use facts/tickers/events that appear in the provided TEXT or CONTEXT. Do NOT invent.
-    - If a detail is not explicitly present, leave it empty ("") or omit the item.
+    - If a detail is not explicitly present, you MAY infer for risk/valid_until, but prefix with "??:". Other fields should stay empty if unsupported.
     - For uncertain items, prefer fewer entries over guessing.
     - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
     - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
@@ -488,52 +502,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
            { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
-       - Allowed generic placeholders (ONLY when evidence is missing):
-         - catalyst: "????" / "????" / "????"
-         - risk: "?????" / "????" / "????"
-         - invalidation: "????" / "????"
-         - valid_until: "??"
-       - Use ONLY tickers that appear in the TEXT or in extracted tickers. If unsure, omit.
-       - If you cannot justify a field from the TEXT/CONTEXT, leave it empty ("") or skip that item.
-       - If there are not enough concrete items, return fewer entries rather than filling with guesses.
-
-    Output STRICT JSON format:
-    {{
-      "tickers": [
-        {{ "ticker": "NVDA", "count": 15, "sentiment": 0.5 }},
-        ...
-      ],
-      "fear_greed_score": 50,
-      "radar": {{ "hype": 5, "panic": 5, "faith": 5, "gamble": 5, "iq": 5 }},
-      "summary": "...",
-      "ongi_comment": "...",
-      "breaking_news": ["Headline 1", "Headline 2"],
-      "comparative_insight": "...",
-      "brief_swing": {{
-        "headline": "...",
-        "market_regime": "Risk-on",
-        "focus_themes": ["..."],
-        "watchlist": [
-          {{ "ticker": "NVDA", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "...", "valid_until": "2/6まで" }}
-        ],
-        "cautions": ["..."],
-        "catalyst_calendar": [
-          {{ "date": "2/5", "event": "雇用統計", "note": "金利敏感銘柄に注意", "impact": "high" }}
-        ]
-      }},
-      "brief_long": {{
-        "headline": "...",
-        "market_regime": "Mixed",
-        "focus_themes": ["..."],
-        "watchlist": [
-          {{ "ticker": "MSFT", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "...", "valid_until": "決算週まで" }}
-        ],
-        "cautions": ["..."],
-        "catalyst_calendar": [
-          {{ "date": "2/12", "event": "CPI", "note": "ハイテクはボラ拡大", "impact": "high" }}
-        ]
-      }}
-    }}
+       - Self-check pass: remove any watchlist item whose ticker is not in the TEXT/CONTEXT. Ensure reason/risk/valid_until are not empty; if empty, use the allowed placeholders prefixed with "\u63a8\u6e2c:".       - Allowed generic placeholders (ONLY when evidence is missing):
+         - catalyst: "\u63a8\u6e2c:\u8a71\u984c\u5148\u884c" / "\u63a8\u6e2c:\u8a71\u984c\u7d99\u7d9a" / "\u63a8\u6e2c:\u9700\u7d66\u4e3b\u5c0e"
+         - risk: "\u63a8\u6e2c:\u53cd\u52d5\u30ea\u30b9\u30af" / "\u63a8\u6e2c:\u8a71\u984c\u6e1b\u901f" / "\u63a8\u6e2c:\u6750\u6599\u4e0d\u8db3"
+         - invalidation: "\u63a8\u6e2c:\u8a71\u984c\u6c88\u9759" / "\u63a8\u6e2c:\u9700\u7d66\u53cd\u8ee2"
+         - valid_until: "\u672a\u5b9a"
 
     Text:
     {text[:400000]}
@@ -565,7 +538,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                     data = json.loads(content)
                     brief_swing = sanitize_brief(data.get("brief_swing", {}))
                     brief_long = sanitize_brief(data.get("brief_long", {}))
-                    return data.get("tickers", []), data.get("summary", "???????????????????.."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), brief_swing, brief_long, model_name
+                    return data.get("tickers", []), data.get("summary", "\u76f8\u5834\u306f\u6df7\u6c8c\u3068\u3057\u3066\u3044\u307e\u3059..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), brief_swing, brief_long, model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
