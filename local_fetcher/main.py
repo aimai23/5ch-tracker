@@ -313,8 +313,10 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
          - "focus_themes": 2-5 themes (short phrases)
          - "watchlist": 6 items with:
-           { "ticker", "reason", "catalyst", "risk", "invalidation" }
+           { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until" }
          - "cautions": 2-4 items
+         - "catalyst_calendar": 3-6 items with:
+           { "date", "event", "note" }
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
 
@@ -343,18 +345,24 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
         "market_regime": "Risk-on",
         "focus_themes": ["..."],
         "watchlist": [
-          {{ "ticker": "NVDA", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "..." }}
+          {{ "ticker": "NVDA", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "...", "valid_until": "2/6まで" }}
         ],
-        "cautions": ["..."]
+        "cautions": ["..."],
+        "catalyst_calendar": [
+          {{ "date": "2/5", "event": "雇用統計", "note": "金利敏感銘柄に注意" }}
+        ]
       }},
       "brief_long": {{
         "headline": "...",
         "market_regime": "Mixed",
         "focus_themes": ["..."],
         "watchlist": [
-          {{ "ticker": "MSFT", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "..." }}
+          {{ "ticker": "MSFT", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "...", "valid_until": "決算週まで" }}
         ],
-        "cautions": ["..."]
+        "cautions": ["..."],
+        "catalyst_calendar": [
+          {{ "date": "2/12", "event": "CPI", "note": "ハイテクはボラ拡大" }}
+        ]
       }},
       "trade_recommendations": {{
         "bullish": [

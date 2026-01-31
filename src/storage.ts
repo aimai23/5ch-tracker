@@ -36,6 +36,7 @@ export interface InvestBriefItem {
   catalyst?: string;
   risk?: string;
   invalidation?: string;
+  valid_until?: string;
 }
 
 export interface InvestBrief {
@@ -44,6 +45,7 @@ export interface InvestBrief {
   focus_themes?: string[];
   watchlist?: InvestBriefItem[];
   cautions?: string[];
+  catalyst_calendar?: Array<{ date: string; event: string; note?: string } | string>;
   notes?: string;
 }
 

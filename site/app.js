@@ -119,7 +119,8 @@ function buildFallbackBrief(data) {
       reason: "話題上位のため監視",
       catalyst: "",
       risk: "",
-      invalidation: ""
+      invalidation: "",
+      valid_until: "次回更新まで"
     })),
     cautions: ["AIブリーフ生成待ち。次回更新で詳細が入ります。"]
   };
@@ -139,7 +140,8 @@ function buildBriefWatchlist(displayBrief, data) {
       reason: item.reason || fallbackReason || "監視対象",
       catalyst: item.catalyst || "",
       risk: item.risk || "",
-      invalidation: item.invalidation || ""
+      invalidation: item.invalidation || "",
+      valid_until: item.valid_until || item.deadline || ""
     });
   }
 
@@ -169,8 +171,9 @@ function renderInvestBrief(data) {
   const themesEl = document.getElementById("brief-themes");
   const cautionsEl = document.getElementById("brief-cautions");
   const watchlistEl = document.getElementById("brief-watchlist");
+  const calendarEl = document.getElementById("brief-calendar");
 
-  if (!headlineEl || !regimeEl || !updatedEl || !themesEl || !cautionsEl || !watchlistEl) return;
+  if (!headlineEl || !regimeEl || !updatedEl || !themesEl || !cautionsEl || !watchlistEl || !calendarEl) return;
 
   const brief = getActiveBrief(data);
   const hasBrief = brief && (brief.headline || (brief.watchlist && brief.watchlist.length));
@@ -236,6 +239,29 @@ function renderInvestBrief(data) {
     cautionsEl.appendChild(li);
   }
 
+  const calendar = Array.isArray(displayBrief.catalyst_calendar) ? displayBrief.catalyst_calendar : [];
+  calendarEl.textContent = "";
+  if (calendar.length > 0) {
+    calendar.forEach(entry => {
+      const li = document.createElement("li");
+      if (typeof entry === "string") {
+        li.textContent = entry;
+      } else if (entry && typeof entry === "object") {
+        const date = entry.date ? String(entry.date) : "";
+        const event = entry.event ? String(entry.event) : "";
+        const note = entry.note ? String(entry.note) : "";
+        li.textContent = [date, event].filter(Boolean).join(" ") + (note ? ` / ${note}` : "");
+      } else {
+        li.textContent = "";
+      }
+      calendarEl.appendChild(li);
+    });
+  } else {
+    const li = document.createElement("li");
+    li.textContent = "カレンダー準備中";
+    calendarEl.appendChild(li);
+  }
+
   watchlistEl.textContent = "";
   if (watchlist.length === 0) {
     const empty = document.createElement("div");
@@ -293,6 +319,7 @@ function renderInvestBrief(data) {
     addMeta("触媒", catalyst);
     addMeta("リスク", risk);
     addMeta("無効化", invalidation);
+    addMeta("期限", item && item.valid_until ? String(item.valid_until) : "");
 
     const history = document.createElement("div");
     history.className = "brief-card-history";

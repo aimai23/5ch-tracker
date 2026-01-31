@@ -2306,6 +2306,10 @@ footer a {
   color: var(--accent-cyan);
 }
 
+#brief-calendar.brief-list li::before {
+  color: var(--accent-gold);
+}
+
 .brief-watchlist {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
