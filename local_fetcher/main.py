@@ -258,6 +258,113 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
         "catalyst_calendar": calendar
     }
 
+def coerce_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, dict):
+        return ""
+    if isinstance(value, list):
+        parts = [str(x).strip() for x in value if isinstance(x, (str, int, float))]
+        return " ".join([p for p in parts if p])
+    return str(value).strip()
+
+def normalize_ticker_items(items, exclude_set):
+    output = []
+    if not isinstance(items, list):
+        return output
+
+    ticker_pattern = re.compile(r"^[A-Z]{1,6}(?:\.[A-Z])?$")
+    for item in items:
+        ticker = ""
+        count = 1
+        sentiment = 0.0
+        if isinstance(item, str):
+            ticker = item.strip().upper()
+        elif isinstance(item, dict):
+            raw_ticker = item.get("ticker") or item.get("symbol") or item.get("code") or item.get("name")
+            ticker = str(raw_ticker).strip().upper() if raw_ticker else ""
+            raw_count = item.get("count")
+            if raw_count is None:
+                raw_count = item.get("mentions") or item.get("frequency")
+            try:
+                count = int(float(raw_count))
+            except Exception:
+                count = 1
+            raw_sent = item.get("sentiment")
+            if raw_sent is None:
+                raw_sent = item.get("score")
+            try:
+                sentiment = float(raw_sent)
+            except Exception:
+                sentiment = 0.0
+        else:
+            continue
+
+        if not ticker:
+            continue
+        if exclude_set and ticker in exclude_set:
+            continue
+        if not ticker_pattern.match(ticker):
+            continue
+        if count <= 0:
+            count = 1
+        output.append({"ticker": ticker, "count": count, "sentiment": sentiment})
+
+    return output
+
+def fallback_extract_tickers(text, nicknames, exclude_set):
+    if not text:
+        return []
+
+    counts = {}
+    ticker_pattern = re.compile(r"\$?[A-Z]{1,6}(?:\.[A-Z])?\b")
+    for match in ticker_pattern.findall(text):
+        ticker = match.lstrip("$")
+        if exclude_set and ticker in exclude_set:
+            continue
+        if not re.match(r"^[A-Z]{1,6}(?:\.[A-Z])?$", ticker):
+            continue
+        counts[ticker] = counts.get(ticker, 0) + 1
+
+    if isinstance(nicknames, dict):
+        for ticker, names in nicknames.items():
+            if not ticker:
+                continue
+            tick = str(ticker).strip().upper()
+            if exclude_set and tick in exclude_set:
+                continue
+            if not re.match(r"^[A-Z]{1,6}(?:\.[A-Z])?$", tick):
+                continue
+            if not isinstance(names, list):
+                continue
+            for name in names:
+                if not name:
+                    continue
+                name_str = str(name)
+                if len(name_str) < 2 and not re.search(r"[^\w\s]", name_str):
+                    continue
+                count = text.count(name_str)
+                if count:
+                    counts[tick] = counts.get(tick, 0) + count
+
+    items = [{"ticker": t, "count": c, "sentiment": 0.0} for t, c in counts.items()]
+    items.sort(key=lambda x: x["count"], reverse=True)
+    return items
+
+def build_brief_from_tickers(tickers, headline, mode="swing"):
+    seeds = []
+    for item in tickers:
+        if isinstance(item, dict):
+            ticker = item.get("ticker")
+        else:
+            ticker = item
+        if ticker:
+            seeds.append({"ticker": ticker})
+        if len(seeds) >= 8:
+            break
+    base = {"headline": headline, "watchlist": seeds}
+    return sanitize_brief(base, mode=mode)
+
 def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None):
     if not message:
         return 999
@@ -539,6 +646,28 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - risk: "\u6ce8\u610f:<caution>" / "\u53cd\u52d5\u30ea\u30b9\u30af" / "\u8a71\u984c\u6e1b\u901f"
          - invalidation: "\u8a71\u984c\u6c88\u9759" / "\u9700\u7d66\u53cd\u8ee2"
          - valid_until: "\u4eca\u9031\u672b\u307e\u3067" (brief_swing) / "\u4eca\u6708\u672b\u307e\u3067" (brief_long) / "\u672a\u5b9a"
+       OUTPUT JSON FORMAT (STRICT):
+       {{
+         "tickers": [{{ "ticker": "AAPL", "count": 12, "sentiment": 0.1 }}],
+         "summary": "string (NOT object)",
+         "ongi_comment": "string (NOT object)",
+         "fear_greed_score": 50,
+         "radar": {{ "hype": 0, "panic": 0, "faith": 0, "gamble": 0, "iq": 0 }},
+         "breaking_news": ["..."],
+         "comparative_insight": "string",
+         "brief_swing": {{
+           "headline": "...",
+           "market_regime": "...",
+           "focus_themes": ["..."],
+           "watchlist": [{{ "ticker": "...", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "...", "valid_until": "...", "confidence": "high|mid|low" }}],
+           "cautions": ["..."],
+           "catalyst_calendar": [{{ "date": "...", "event": "...", "note": "...", "impact": "low|mid|high" }}]
+         }},
+         "brief_long": {{ "... same keys as brief_swing ..." }}
+       }}
+       - All keys must be present even if empty.
+       - "summary" and "ongi_comment" must be plain strings, not nested objects.
+       - Each ticker object must include "count" (>=1) and "sentiment" (-1.0 to 1.0).
     Text:
     {text[:400000]}
     """
@@ -567,9 +696,60 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
+                    if isinstance(data, dict) and isinstance(data.get("result"), dict):
+                        data = data["result"]
+
+                    summary_value = data.get("summary", "")
+                    summary_obj = summary_value if isinstance(summary_value, dict) else None
+                    summary_text = coerce_text(summary_value)
+                    if not summary_text and summary_obj:
+                        summary_text = coerce_text(summary_obj.get("summary") or summary_obj.get("text"))
+                    if not summary_text:
+                        summary_text = "\u76f8\u5834\u306f\u6df7\u6c8c\u3068\u3057\u3066\u3044\u307e\u3059..."
+
+                    ongi_comment = coerce_text(data.get("ongi_comment", ""))
+                    if not ongi_comment and summary_obj:
+                        ongi_comment = coerce_text(summary_obj.get("ongi_comment") or summary_obj.get("comment"))
+
+                    exclude_set = {str(x).upper() for x in exclude_list if isinstance(x, str)}
+                    tickers_raw = normalize_ticker_items(
+                        data.get("tickers") or data.get("items") or data.get("symbols") or [],
+                        exclude_set
+                    )
+                    if not tickers_raw:
+                        tickers_raw = fallback_extract_tickers(text, nicknames, exclude_set)
+
+                    fear_greed_score = data.get("fear_greed_score", 50)
+                    try:
+                        fear_greed_score = int(float(fear_greed_score))
+                    except Exception:
+                        fear_greed_score = 50
+
+                    radar = data.get("radar", {})
+                    if not isinstance(radar, dict):
+                        radar = {}
+
+                    breaking_news = data.get("breaking_news", [])
+                    if isinstance(breaking_news, str):
+                        breaking_news = [breaking_news]
+                    elif not isinstance(breaking_news, list):
+                        breaking_news = []
+
+                    comparative_insight = coerce_text(data.get("comparative_insight", ""))
+
                     brief_swing = sanitize_brief(data.get("brief_swing", {}), mode="swing")
                     brief_long = sanitize_brief(data.get("brief_long", {}), mode="long")
-                    return data.get("tickers", []), data.get("summary", "\u76f8\u5834\u306f\u6df7\u6c8c\u3068\u3057\u3066\u3044\u307e\u3059..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), brief_swing, brief_long, model_name
+                    if summary_text:
+                        if not brief_swing.get("headline"):
+                            brief_swing["headline"] = summary_text
+                        if not brief_long.get("headline"):
+                            brief_long["headline"] = summary_text
+                    if not brief_swing.get("watchlist") and tickers_raw:
+                        brief_swing = build_brief_from_tickers(tickers_raw, summary_text, mode="swing")
+                    if not brief_long.get("watchlist") and tickers_raw:
+                        brief_long = build_brief_from_tickers(tickers_raw, summary_text, mode="long")
+
+                    return tickers_raw, summary_text, fear_greed_score, radar, ongi_comment, breaking_news, comparative_insight, brief_swing, brief_long, model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -683,6 +863,7 @@ def    send_to_worker(
         "topics": topics,
         "sources": source_meta,
         "overview": summary,
+        "summary": summary,
         "ongi_comment": ongi_comment,
         "comparative_insight": comparative_insight,
         "brief_swing": brief_swing,

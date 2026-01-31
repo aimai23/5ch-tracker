@@ -45,6 +45,29 @@ function safeUrl(raw) {
   return "about:blank";
 }
 
+function getOverviewText(payload) {
+  if (!payload) return "";
+  const overview = payload.overview;
+  if (typeof overview === "string") return overview;
+  if (overview && typeof overview === "object") {
+    if (typeof overview.summary === "string") return overview.summary;
+    if (typeof overview.text === "string") return overview.text;
+  }
+  if (typeof payload.summary === "string") return payload.summary;
+  return "";
+}
+
+function getOngiCommentText(payload) {
+  if (!payload) return "";
+  if (typeof payload.ongi_comment === "string") return payload.ongi_comment;
+  const overview = payload.overview;
+  if (overview && typeof overview === "object") {
+    if (typeof overview.ongi_comment === "string") return overview.ongi_comment;
+    if (typeof overview.comment === "string") return overview.comment;
+  }
+  return "";
+}
+
 function getSnapshotTime(snapshot) {
   if (!snapshot) return null;
   const payload = snapshot.payload || {};
@@ -233,7 +256,7 @@ function buildChangeTop(history, limit = 3) {
 function buildFallbackBrief(data) {
   const items = (data && Array.isArray(data.items) ? data.items.slice(0, WATCHLIST_TARGET) : []);
   return {
-    headline: (data && (data.overview || data.summary)) || "投資ブリーフ生成中",
+    headline: getOverviewText(data) || "投資ブリーフ生成中",
     market_regime: null,
     focus_themes: [],
     watchlist: items.map(item => ({
@@ -580,9 +603,10 @@ function applyInsightSnapshot(snapshot, index) {
   const labelEl = document.getElementById("overview-history-label");
 
   if (overviewEl && overviewText) {
-    if (payload.overview) {
+    const overviewTextValue = getOverviewText(payload);
+    if (overviewTextValue) {
       overviewEl.style.display = "block";
-      overviewText.textContent = payload.overview;
+      overviewText.textContent = overviewTextValue;
     } else {
       overviewEl.style.display = "none";
       overviewText.textContent = "";
@@ -1148,10 +1172,12 @@ async function main() {
       });
     }
 
-    const ongiCommentEl = document.getElementById("fear-ongi-comment");
-    if (ongiCommentEl) {
-      ongiCommentEl.textContent = data.ongi_comment || data.overview || "Waiting for AI analysis...";
-    }
+  const ongiCommentEl = document.getElementById("fear-ongi-comment");
+  if (ongiCommentEl) {
+    const ongiText = getOngiCommentText(data);
+    const overviewText = getOverviewText(data);
+    ongiCommentEl.textContent = ongiText || overviewText || "Waiting for AI analysis...";
+  }
 
     // Comparative Insight Logic
     const compToggle = document.getElementById("comparative-toggle");
