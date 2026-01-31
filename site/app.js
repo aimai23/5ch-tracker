@@ -1508,7 +1508,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Swipe Navigation Logic ---
-  const tabs = ['dashboard', 'topics', 'ongi-greed', 'invest-brief'];
+  const tabs = ['dashboard', 'invest-brief', 'topics', 'ongi-greed'];
 
   // Use a minimum threshold to avoid accidental swipes while scrolling vertically
   const SWIPE_THRESHOLD = 50;
