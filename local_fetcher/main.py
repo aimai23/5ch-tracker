@@ -147,6 +147,76 @@ def clean_message(text):
     text = re.sub(r"<[^>]+>", " ", text)
     return html.unescape(text).strip()
 
+def sanitize_brief(brief, max_watchlist=8):
+    def to_text(value):
+        if value is None:
+            return ""
+        return str(value).strip()
+
+    def to_list(value):
+        return value if isinstance(value, list) else []
+
+    if not isinstance(brief, dict):
+        brief = {}
+
+    focus_themes = [to_text(x) for x in to_list(brief.get("focus_themes"))]
+    focus_themes = [x for x in focus_themes if x]
+
+    cautions = [to_text(x) for x in to_list(brief.get("cautions"))]
+    cautions = [x for x in cautions if x]
+
+    watchlist = []
+    seen = set()
+    for item in to_list(brief.get("watchlist")):
+        if not isinstance(item, dict):
+            continue
+        ticker = to_text(item.get("ticker")).upper()
+        if not ticker or ticker in seen:
+            continue
+        seen.add(ticker)
+        watchlist.append({
+            "ticker": ticker,
+            "reason": to_text(item.get("reason")),
+            "catalyst": to_text(item.get("catalyst")),
+            "risk": to_text(item.get("risk")),
+            "invalidation": to_text(item.get("invalidation")),
+            "valid_until": to_text(item.get("valid_until") or item.get("deadline"))
+        })
+        if len(watchlist) >= max_watchlist:
+            break
+
+    calendar = []
+    for entry in to_list(brief.get("catalyst_calendar")):
+        if isinstance(entry, str):
+            cleaned = entry.strip()
+            if cleaned:
+                calendar.append(cleaned)
+            continue
+        if not isinstance(entry, dict):
+            continue
+        date = to_text(entry.get("date"))
+        event = to_text(entry.get("event"))
+        note = to_text(entry.get("note"))
+        impact = to_text(entry.get("impact")).lower()
+        if impact not in ["low", "mid", "high"]:
+            impact = ""
+        if date or event or note:
+            calendar.append({
+                "date": date,
+                "event": event,
+                "note": note,
+                "impact": impact
+            })
+
+    return {
+        "headline": to_text(brief.get("headline")),
+        "market_regime": to_text(brief.get("market_regime")),
+        "focus_themes": focus_themes,
+        "watchlist": watchlist,
+        "cautions": cautions,
+        "catalyst_calendar": calendar
+    }
+
 def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None):
     if not message:
         return 999
@@ -353,6 +423,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     - If a detail is not explicitly present, leave it empty ("") or omit the item.
     - For uncertain items, prefer fewer entries over guessing.
     - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
+    - Output must include all required keys. Use empty strings/arrays instead of null.
     
     CONTEXT:
     1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
@@ -486,7 +557,9 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("brief_swing", {}), data.get("brief_long", {}), model_name
+                    brief_swing = sanitize_brief(data.get("brief_swing", {}))
+                    brief_long = sanitize_brief(data.get("brief_long", {}))
+                    return data.get("tickers", []), data.get("summary", "???????????????????.."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), brief_swing, brief_long, model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
