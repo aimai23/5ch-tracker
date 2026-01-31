@@ -423,6 +423,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     - If a detail is not explicitly present, leave it empty ("") or omit the item.
     - For uncertain items, prefer fewer entries over guessing.
     - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
+    - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
     - Output must include all required keys. Use empty strings/arrays instead of null.
     
     CONTEXT:
@@ -487,6 +488,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
            { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
+       - Allowed generic placeholders (ONLY when evidence is missing):
+         - catalyst: "????" / "????" / "????"
+         - risk: "?????" / "????" / "????"
+         - invalidation: "????" / "????"
+         - valid_until: "??"
        - Use ONLY tickers that appear in the TEXT or in extracted tickers. If unsure, omit.
        - If you cannot justify a field from the TEXT/CONTEXT, leave it empty ("") or skip that item.
        - If there are not enough concrete items, return fewer entries rather than filling with guesses.

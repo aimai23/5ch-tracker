@@ -446,6 +446,14 @@ function renderInvestBrief(data) {
     const trend = getSeriesTrend(series);
     const historyText = formatSeries(series);
 
+    const metaFallback = !catalyst && !risk && !invalidation;
+    const fallbackCatalyst = metaFallback ? (trend.className === "up" ? "????????" : trend.className === "down" ? "????????" : "????????") : "";
+    const fallbackRisk = metaFallback ? (trend.className === "down" ? "????????" : "?????????") : "";
+    const fallbackInvalidation = metaFallback ? "????????" : "";
+    const catalystText = catalyst || fallbackCatalyst;
+    const riskText = risk || fallbackRisk;
+    const invalidationText = invalidation || fallbackInvalidation;
+
     const card = document.createElement("div");
     card.className = "brief-watch-card";
 
@@ -505,9 +513,9 @@ function renderInvestBrief(data) {
       meta.appendChild(line);
     }
 
-    addMeta("触媒", catalyst);
-    addMeta("リスク", risk);
-    addMeta("無効化", invalidation);
+    addMeta("????", catalystText);
+    addMeta("??????", riskText);
+    addMeta("??????", invalidationText);
     addMeta("期限", item && item.valid_until ? String(item.valid_until) : "");
 
     const history = document.createElement("div");
