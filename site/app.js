@@ -15,6 +15,7 @@ let insightHistoryBound = false;
 let investBriefMode = "swing";
 let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
+const WATCHLIST_TARGET = 6;
 
 function escapeHtml(value) {
   const s = value == null ? "" : String(value);
@@ -108,7 +109,7 @@ function formatSeries(series) {
 }
 
 function buildFallbackBrief(data) {
-  const items = (data && Array.isArray(data.items) ? data.items.slice(0, 6) : []);
+  const items = (data && Array.isArray(data.items) ? data.items.slice(0, WATCHLIST_TARGET) : []);
   return {
     headline: (data && (data.overview || data.summary)) || "投資ブリーフ生成中",
     market_regime: null,
@@ -124,6 +125,37 @@ function buildFallbackBrief(data) {
   };
 }
 
+function buildBriefWatchlist(displayBrief, data) {
+  const output = [];
+  const seen = new Set();
+
+  function pushItem(item, fallbackReason) {
+    if (!item) return;
+    const ticker = normalizeTicker(item.ticker);
+    if (!ticker || seen.has(ticker)) return;
+    seen.add(ticker);
+    output.push({
+      ticker,
+      reason: item.reason || fallbackReason || "監視対象",
+      catalyst: item.catalyst || "",
+      risk: item.risk || "",
+      invalidation: item.invalidation || ""
+    });
+  }
+
+  const briefItems = displayBrief && Array.isArray(displayBrief.watchlist) ? displayBrief.watchlist : [];
+  briefItems.forEach(item => pushItem(item, "監視対象"));
+
+  if (output.length < WATCHLIST_TARGET && data && Array.isArray(data.items)) {
+    data.items.forEach(item => {
+      if (output.length >= WATCHLIST_TARGET) return;
+      pushItem({ ticker: item.ticker, reason: "話題上位のため監視" }, "話題上位のため監視");
+    });
+  }
+
+  return output.slice(0, WATCHLIST_TARGET);
+}
+
 function getActiveBrief(data) {
   if (!data) return null;
   return investBriefMode === "long" ? data.brief_long : data.brief_swing;
@@ -133,6 +165,7 @@ function renderInvestBrief(data) {
   const headlineEl = document.getElementById("brief-headline");
   const regimeEl = document.getElementById("brief-regime");
   const updatedEl = document.getElementById("brief-updated");
+  const modelEl = document.getElementById("brief-model-name");
   const themesEl = document.getElementById("brief-themes");
   const cautionsEl = document.getElementById("brief-cautions");
   const watchlistEl = document.getElementById("brief-watchlist");
@@ -142,8 +175,17 @@ function renderInvestBrief(data) {
   const brief = getActiveBrief(data);
   const hasBrief = brief && (brief.headline || (brief.watchlist && brief.watchlist.length));
   const displayBrief = hasBrief ? brief : buildFallbackBrief(data || {});
+  const watchlist = buildBriefWatchlist(displayBrief, data || {});
 
   headlineEl.textContent = displayBrief.headline || "投資ブリーフ準備中";
+
+  if (modelEl) {
+    if (data && data.ai_model) {
+      modelEl.textContent = `POWERED BY ${String(data.ai_model).toUpperCase()}`;
+    } else {
+      modelEl.textContent = "POWERED BY --";
+    }
+  }
 
   if (displayBrief.market_regime) {
     regimeEl.textContent = displayBrief.market_regime;
@@ -194,7 +236,6 @@ function renderInvestBrief(data) {
     cautionsEl.appendChild(li);
   }
 
-  const watchlist = Array.isArray(displayBrief.watchlist) ? displayBrief.watchlist : [];
   watchlistEl.textContent = "";
   if (watchlist.length === 0) {
     const empty = document.createElement("div");
@@ -428,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuOverlay) menuOverlay.addEventListener("click", () => toggleMenu(false));
 
   // --- View Switching Logic ---
-  const allViews = ["view-dashboard", "view-topics", "view-invest-brief", "view-ongi-greed", "view-about", "view-trade-indepth"];
+  const allViews = ["view-dashboard", "view-topics", "view-invest-brief", "view-ongi-greed", "view-about"];
 
   function switchView(targetId) {
     // Hide all
@@ -496,11 +537,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Set initial active tab (dashboard by default)
-  const initialTabBtn = document.querySelector('.nav-tab[data-tab="dashboard"]');
+  // Set initial active tab (brief by default)
+  const initialTabBtn = document.querySelector('.nav-tab[data-tab="invest-brief"]');
   if (initialTabBtn) {
-    initialTabBtn.classList.add('active');
-    document.getElementById("view-dashboard").style.display = "grid";
+    switchView('invest-brief');
+  } else {
+    const fallbackTab = document.querySelector('.nav-tab[data-tab="dashboard"]');
+    if (fallbackTab) {
+      fallbackTab.classList.add('active');
+      document.getElementById("view-dashboard").style.display = "grid";
+    }
   }
 
   loadChart("SPX"); // Default
@@ -1419,7 +1465,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Swipe Navigation Logic ---
-  const tabs = ['dashboard', 'topics', 'ongi-greed', 'trade-indepth', 'invest-brief'];
+  const tabs = ['dashboard', 'topics', 'ongi-greed', 'invest-brief'];
 
   // Use a minimum threshold to avoid accidental swipes while scrolling vertically
   const SWIPE_THRESHOLD = 50;

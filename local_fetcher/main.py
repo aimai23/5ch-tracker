@@ -312,7 +312,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "headline": short 1-line summary (Max 80 chars)
          - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
          - "focus_themes": 2-5 themes (short phrases)
-         - "watchlist": 3-6 items with:
+         - "watchlist": 6 items with:
            { "ticker", "reason", "catalyst", "risk", "invalidation" }
          - "cautions": 2-4 items
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.

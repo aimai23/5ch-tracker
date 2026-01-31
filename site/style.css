@@ -2173,6 +2173,16 @@ footer a {
   font-size: 0.85rem;
 }
 
+.brief-model-name {
+  display: inline-flex;
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', sans-serif;
+  text-transform: uppercase;
+}
+
 .brief-toggle {
   display: flex;
   gap: 0.4rem;

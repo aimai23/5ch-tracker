@@ -51,8 +51,7 @@
         <button class="nav-tab active" data-tab="dashboard">MARKET BOARD</button>
         <button class="nav-tab" data-tab="topics">HOT TOPICS</button>
         <button class="nav-tab" data-tab="ongi-greed">ONGI & GREED</button>
-        <button class="nav-tab" data-tab="trade-indepth">ARAKAWA TEACHER</button>
-        <button class="nav-tab" data-tab="invest-brief">INVEST BRIEF</button>
+        <button class="nav-tab" data-tab="invest-brief">ARAKAWA BRIEF</button>
       </div>
 
       <div class="nav-right">
@@ -390,8 +389,9 @@
       <section class="panel invest-brief-panel">
         <div class="invest-brief-header">
           <div>
-            <h2 class="invest-brief-title">📌 INVEST BRIEF</h2>
+            <h2 class="invest-brief-title">📌 ARAKAWA BRIEF</h2>
             <p class="invest-brief-subtitle">監視リスト + 注意点のみ（売買推奨なし）</p>
+            <span id="brief-model-name" class="brief-model-name">POWERED BY GEMINI-3-FLASH-PREVIEW</span>
           </div>
           <div class="brief-toggle" role="tablist" aria-label="Invest brief horizon">
             <button class="brief-toggle-btn active" data-mode="swing" role="tab" aria-selected="true">SWING (数日)</button>
@@ -454,51 +454,6 @@
       </section>
     </div>
 
-    <!-- Trade Recommendations View -->
-    <div id="view-trade-indepth" style="display: none;">
-      <section class="panel" style="padding: 1rem; max-width: 900px; margin: 0 auto;">
-        <h2 class="trade-view-header">
-          🧠 ARAKAWA TEACHER
-        </h2>
-        <div class="trade-view-subheader">
-          <div class="trade-view-desc">荒川プロトレーダたちが注目する、話題の銘柄</div>
-          <span id="ai-model-name" class="trade-view-model-info">
-            POWERED BY GEMINI 2.0
-          </span>
-        </div>
-
-        <div class="trade-rec-container">
-          <!-- BULLISH SECTION -->
-          <div class="trade-section" id="bullish-section">
-            <div class="section-header bullish-header">
-              <span class="section-icon">🐂</span>
-              <span class="section-title">BULLISH PICKS</span>
-            </div>
-            <div class="trade-list" id="bullish-list">
-              <!-- Injected by JS -->
-              <div class="trade-placeholder">Waiting for AI...</div>
-            </div>
-          </div>
-
-          <!-- BEARISH SECTION -->
-          <div class="trade-section" id="bearish-section">
-            <div class="section-header bearish-header">
-              <span class="section-icon">🐻</span>
-              <span class="section-title">BEARISH PICKS</span>
-            </div>
-            <div class="trade-list" id="bearish-list">
-              <!-- Injected by JS -->
-              <div class="trade-placeholder">Waiting for AI...</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top: 2rem; font-size: 0.8rem; color: #666; text-align: center;">
-          ※ これはAIが生成したエンターテイメントコンテンツです。金融アドバイスではありません。
-        </div>
-      </section>
-    </div>
-
     <!-- Slide Menu Structure -->
     <div class="slide-menu-overlay" id="menu-overlay"></div>
     <nav class="slide-menu" id="slide-menu">
@@ -507,7 +462,7 @@
         <button class="slide-menu-close" id="menu-close">✕</button>
       </div>
       <ul class="slide-menu-list">
-        <li><a href="#" class="slide-menu-item" data-target="invest-brief">📌 INVEST BRIEF</a></li>
+        <li><a href="#" class="slide-menu-item" data-target="invest-brief">📌 ARAKAWA BRIEF</a></li>
         <li class="menu-divider"></li>
         <li><a href="#" class="slide-menu-item" data-target="about">ℹ️ ABOUT SITE</a></li>
       </ul>
