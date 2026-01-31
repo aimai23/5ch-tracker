@@ -348,6 +348,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
     LANGUAGE: JAPANESE ONLY (for all text outputs like summaries and news).
     Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
+    GROUNDING RULES (Anti-hallucination):
+    - ONLY use facts/tickers/events that appear in the provided TEXT or CONTEXT. Do NOT invent.
+    - If a detail is not explicitly present, leave it empty ("") or omit the item.
+    - For uncertain items, prefer fewer entries over guessing.
+    - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
     
     CONTEXT:
     1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
@@ -404,13 +409,16 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "headline": short 1-line summary (Max 80 chars)
          - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
          - "focus_themes": 2-5 themes (short phrases)
-         - "watchlist": 8 items with:
+         - "watchlist": up to 8 items with:
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until" }
          - "cautions": 2-4 items
          - "catalyst_calendar": 3-6 items with:
            { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
+       - Use ONLY tickers that appear in the TEXT or in extracted tickers. If unsure, omit.
+       - If you cannot justify a field from the TEXT/CONTEXT, leave it empty ("") or skip that item.
+       - If there are not enough concrete items, return fewer entries rather than filling with guesses.
 
     Output STRICT JSON format:
     {{
