@@ -2257,8 +2257,9 @@ footer a {
 .brief-block {
   padding: 1rem 1.2rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 240, 255, 0.08);
+  background: linear-gradient(160deg, rgba(12, 22, 33, 0.75), rgba(0, 0, 0, 0.45));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .brief-section-title {
@@ -2266,6 +2267,17 @@ footer a {
   color: var(--accent-cyan);
   font-size: 0.95rem;
   letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brief-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.55), transparent);
+  opacity: 0.7;
 }
 
 .brief-tags {
@@ -2306,8 +2318,25 @@ footer a {
   color: var(--accent-cyan);
 }
 
-#brief-calendar.brief-list li::before {
-  color: var(--accent-gold);
+.brief-calendar {
+  border-left: 1px dashed rgba(255, 215, 0, 0.35);
+  padding-left: 0.9rem;
+}
+
+.brief-calendar li {
+  padding-left: 0.6rem;
+}
+
+.brief-calendar li::before {
+  content: "";
+  position: absolute;
+  left: -0.45rem;
+  top: 0.55rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .brief-watchlist {
@@ -2319,10 +2348,27 @@ footer a {
 .brief-watch-card {
   border-radius: 14px;
   border: 1px solid rgba(0, 240, 255, 0.15);
-  background: rgba(10, 20, 30, 0.6);
+  background: linear-gradient(160deg, rgba(14, 24, 36, 0.8), rgba(4, 8, 12, 0.6));
   padding: 0.95rem 1rem;
   display: grid;
   gap: 0.6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.brief-watch-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.7), rgba(0, 240, 255, 0));
+  opacity: 0.6;
+}
+
+.brief-watch-card:hover {
+  border-color: rgba(0, 240, 255, 0.35);
 }
 
 .brief-card-header {
@@ -2461,6 +2507,7 @@ footer a {
 
   .brief-block {
     padding: 0.9rem 1rem;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
   }
 
   .brief-section-title {
@@ -2502,6 +2549,17 @@ footer a {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .brief-calendar {
+    padding-left: 0.7rem;
+  }
+
+  .brief-calendar li::before {
+    left: -0.4rem;
+    width: 5px;
+    height: 5px;
+    top: 0.45rem;
   }
 
   .brief-disclaimer {
