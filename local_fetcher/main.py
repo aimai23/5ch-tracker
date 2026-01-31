@@ -298,15 +298,6 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "【悲報】NVDA、順位ランクダウン。民度が "知性5" から "チンパン1" に低下中"
          - "【異変】TSLA、突然の急浮上！アンチが泡を吹いて倒れています"
 
-    7. TRADE RECOMMENDATIONS (AI Analyst Picks):
-       - Based on the thread's consensus and sentiment, identify **TOP 3** candidates for each:
-         1. "bullish": The token/stock with the most solid "Buy" conviction or "Hype".
-         2. "bearish": The token/stock that is being ridiculed or sold off ("Cut Loss" candidate).
-       - Provide a "reason" for each (Max 60 chars).
-       - Tone: Calm, Logical, Unreserved, Cold. (Cool Japanese).
-       - Return a LIST of objects. If fewer than 3, provide as many as possible.
-
-
     6. COMPARATIVE INSIGHT (JP 5ch vs US Reddit):
        - Compare the "JP 5ch Trends" (from your analysis of the text) vs "US Reddit Trends" (provided in Context).
        - Provide a "Deep Strategic Contrast" (Max 250 chars, Japanese).
@@ -314,6 +305,26 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Example: "Japan is defensive on Semis due to currency fears, while US is aggressively leveraging into Crypto miners."
        - Why is there a gap? what does it imply for the next 24h?
        - Tone: Professional Analyst, Insightful, Slightly Cynical.
+
+    7. INVEST BRIEF (Monitor-only, NO trade advice):
+       - Provide TWO briefs: "brief_swing" (few-day swing) and "brief_long" (mid/long term).
+       - Each brief should include:
+         - "headline": short 1-line summary (Max 80 chars)
+         - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
+         - "focus_themes": 2-5 themes (short phrases)
+         - "watchlist": 3-6 items with:
+           { "ticker", "reason", "catalyst", "risk", "invalidation" }
+         - "cautions": 2-4 items
+       - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
+       - Keep it practical and grounded in the thread context.
+
+    8. TRADE RECOMMENDATIONS (AI Analyst Picks):
+       - Based on the thread's consensus and sentiment, identify **TOP 3** candidates for each:
+         1. "bullish": The token/stock with the most solid "Buy" conviction or "Hype".
+         2. "bearish": The token/stock that is being ridiculed or sold off ("Cut Loss" candidate).
+       - Provide a "reason" for each (Max 60 chars).
+       - Tone: Calm, Logical, Unreserved, Cold. (Cool Japanese).
+       - Return a LIST of objects. If fewer than 3, provide as many as possible.
 
     Output STRICT JSON format:
     {{
@@ -327,6 +338,24 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
       "ongi_comment": "...",
       "breaking_news": ["Headline 1", "Headline 2"],
       "comparative_insight": "...",
+      "brief_swing": {{
+        "headline": "...",
+        "market_regime": "Risk-on",
+        "focus_themes": ["..."],
+        "watchlist": [
+          {{ "ticker": "NVDA", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "..." }}
+        ],
+        "cautions": ["..."]
+      }},
+      "brief_long": {{
+        "headline": "...",
+        "market_regime": "Mixed",
+        "focus_themes": ["..."],
+        "watchlist": [
+          {{ "ticker": "MSFT", "reason": "...", "catalyst": "...", "risk": "...", "invalidation": "..." }}
+        ],
+        "cautions": ["..."]
+      }},
       "trade_recommendations": {{
         "bullish": [
           {{ "ticker": "NVDA", "reason": "決算期待で脳汁全開" }},
@@ -368,7 +397,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("trade_recommendations", {}), model_name
+                    return data.get("tickers", []), data.get("summary", "相場は混沌としています..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), data.get("brief_swing", {}), data.get("brief_long", {}), data.get("trade_recommendations", {}), model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")
             else:
@@ -378,7 +407,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
             logging.error(f"Request error for {model_name}: {e}")
             
     logging.error("All Gemini models failed.")
-    return [], "要約生成失敗", 50, {}, "", [], "", {}, "Gemini (Fallback)"
+    return [], "要約生成失敗", 50, {}, "", [], "", {}, {}, {}, "Gemini (Fallback)"
 
 def analyze_topics(text, stopwords_list=[]):
     logging.info("Analyzing topics (Keyword Extraction)...")
@@ -466,7 +495,7 @@ def fetch_doughcon_data():
     return None
 
 def    send_to_worker(
-        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg
+        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, brief_swing, brief_long, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg
     ):
     logging.info(f"Sending {len(tickers)} tickers, {len(topics)} topics, {len(polymarket or [])} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
@@ -489,6 +518,8 @@ def    send_to_worker(
         "overview": summary,
         "ongi_comment": ongi_comment,
         "comparative_insight": comparative_insight,
+        "brief_swing": brief_swing,
+        "brief_long": brief_long,
         "trade_recommendations": trade_recs,
         "ai_model": ai_model,
         "fear_greed": fear_greed,
@@ -952,7 +983,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # Combined Gemini Analysis with Context
-    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, trade_recs, ai_model = analyze_market_data(
+    tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, brief_swing, brief_long, trade_recs, ai_model = analyze_market_data(
         all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data
     )
     if market_summary == "要約生成失敗":
@@ -1044,6 +1075,8 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "comparative_insight": comparative_insight,
             "ongi_comment": ongi_comment,
             "summary": market_summary,
+            "brief_swing": brief_swing,
+            "brief_long": brief_long,
             "breaking_news": breaking_news,
             "ai_model": ai_model
         }
@@ -1062,7 +1095,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
+    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, brief_swing, brief_long, trade_recs, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
 
 if __name__ == "__main__":
     import argparse

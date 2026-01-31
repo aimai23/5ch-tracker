@@ -30,6 +30,23 @@ export interface TradeRecommendations {
   bearish: TradeRecommendation[];
 }
 
+export interface InvestBriefItem {
+  ticker: string;
+  reason: string;
+  catalyst?: string;
+  risk?: string;
+  invalidation?: string;
+}
+
+export interface InvestBrief {
+  headline?: string;
+  market_regime?: string;
+  focus_themes?: string[];
+  watchlist?: InvestBriefItem[];
+  cautions?: string[];
+  notes?: string;
+}
+
 export type RankingPayload = {
   updatedAt: string | null;
   window: string;
@@ -43,6 +60,8 @@ export type RankingPayload = {
   trade_recommendations?: TradeRecommendations;
   ai_model?: string;
   radar?: RadarData;
+  brief_swing?: InvestBrief;
+  brief_long?: InvestBrief;
 
   breaking_news?: string[];
   polymarket?: Array<{ title: string; title_ja?: string; outcomes: string; url: string; volume: number }>;
@@ -123,6 +142,8 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     ai_model: meta.ai_model || undefined,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
+    brief_swing: meta.brief_swing,
+    brief_long: meta.brief_long,
     breaking_news: meta.breaking_news || [],
     polymarket: meta.polymarket || [],
     reddit_rankings: meta.reddit_rankings || [],
@@ -163,6 +184,8 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     ai_model: payload.ai_model,
     fear_greed: payload.fear_greed,
     radar: payload.radar,
+    brief_swing: payload.brief_swing,
+    brief_long: payload.brief_long,
     breaking_news: payload.breaking_news,
     polymarket: payload.polymarket,
     reddit_rankings: payload.reddit_rankings,

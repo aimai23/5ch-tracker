@@ -2143,6 +2143,255 @@ footer a {
   opacity: 0.7;
 }
 
+/* Invest Brief */
+.invest-brief-panel {
+  padding: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.invest-brief-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.invest-brief-title {
+  margin: 0;
+  color: var(--accent-gold);
+  font-size: 1.4rem;
+}
+
+.invest-brief-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.brief-toggle {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.brief-toggle-btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', sans-serif;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.brief-toggle-btn.active {
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+
+.brief-summary {
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  background: rgba(5, 15, 25, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.brief-headline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.brief-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.brief-regime {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: var(--accent-gold);
+  font-family: 'JetBrains Mono', sans-serif;
+}
+
+.brief-updated {
+  font-family: 'JetBrains Mono', sans-serif;
+}
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.brief-block {
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.brief-section-title {
+  margin: 0 0 0.8rem;
+  color: var(--accent-cyan);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+.brief-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.brief-tag {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  color: var(--accent-cyan);
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', sans-serif;
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.brief-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.brief-list li {
+  padding-left: 0.9rem;
+  position: relative;
+}
+
+.brief-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent-cyan);
+}
+
+.brief-watchlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.brief-watch-card {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  background: rgba(10, 20, 30, 0.6);
+  padding: 0.95rem 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.brief-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.brief-ticker {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+}
+
+.brief-trend {
+  font-family: 'JetBrains Mono', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.brief-trend.up {
+  color: #00ff88;
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.brief-trend.down {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.brief-trend.flat {
+  color: #f6d365;
+  border-color: rgba(246, 211, 101, 0.4);
+}
+
+.brief-card-reason {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.brief-card-meta {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.brief-card-meta strong {
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-right: 0.35rem;
+}
+
+.brief-card-history {
+  font-family: 'JetBrains Mono', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 0.45rem;
+}
+
+@media (max-width: 900px) {
+  .brief-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .invest-brief-panel {
+    padding: 1rem;
+  }
+
+  .brief-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 /* Back to Top Button */
 .back-to-top {
   position: fixed;

@@ -12,6 +12,8 @@ let insightHistoryIndex = 0;
 let insightHistoryLoaded = false;
 let insightHistoryLoading = false;
 let insightHistoryBound = false;
+let investBriefMode = "swing";
+let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
 
 function escapeHtml(value) {
@@ -70,6 +72,220 @@ function formatInsightLabel(snapshot, index) {
     : "--";
   if (index === 0) return `\u6700\u65b0 ${timeLabel}`;
   return `${index}\u56de\u524d ${timeLabel}`;
+}
+
+function normalizeTicker(value) {
+  if (value == null) return "";
+  return String(value).trim().toUpperCase();
+}
+
+function getTickerHistorySeries(ticker) {
+  const key = normalizeTicker(ticker);
+  if (!key || !Array.isArray(insightHistory) || insightHistory.length === 0) return [];
+  const series = [];
+  for (let i = insightHistory.length - 1; i >= 0; i -= 1) {
+    const snapshot = insightHistory[i];
+    const items = (snapshot && snapshot.payload && snapshot.payload.items) || [];
+    const match = items.find(item => normalizeTicker(item.ticker) === key);
+    series.push(match ? (Number(match.count) || 0) : 0);
+  }
+  return series;
+}
+
+function getSeriesTrend(series) {
+  if (!series || series.length < 2) return { label: "--", className: "flat" };
+  const latest = series[series.length - 1];
+  const prev = series[series.length - 2];
+  const delta = latest - prev;
+  if (delta > 0) return { label: `▲ +${delta}`, className: "up" };
+  if (delta < 0) return { label: `▼ ${delta}`, className: "down" };
+  return { label: "→ 0", className: "flat" };
+}
+
+function formatSeries(series) {
+  if (!series || series.length === 0) return "--";
+  return series.map(v => Number(v) || 0).join(" → ");
+}
+
+function buildFallbackBrief(data) {
+  const items = (data && Array.isArray(data.items) ? data.items.slice(0, 6) : []);
+  return {
+    headline: (data && (data.overview || data.summary)) || "投資ブリーフ生成中",
+    market_regime: null,
+    focus_themes: [],
+    watchlist: items.map(item => ({
+      ticker: item.ticker,
+      reason: "話題上位のため監視",
+      catalyst: "",
+      risk: "",
+      invalidation: ""
+    })),
+    cautions: ["AIブリーフ生成待ち。次回更新で詳細が入ります。"]
+  };
+}
+
+function getActiveBrief(data) {
+  if (!data) return null;
+  return investBriefMode === "long" ? data.brief_long : data.brief_swing;
+}
+
+function renderInvestBrief(data) {
+  const headlineEl = document.getElementById("brief-headline");
+  const regimeEl = document.getElementById("brief-regime");
+  const updatedEl = document.getElementById("brief-updated");
+  const themesEl = document.getElementById("brief-themes");
+  const cautionsEl = document.getElementById("brief-cautions");
+  const watchlistEl = document.getElementById("brief-watchlist");
+
+  if (!headlineEl || !regimeEl || !updatedEl || !themesEl || !cautionsEl || !watchlistEl) return;
+
+  const brief = getActiveBrief(data);
+  const hasBrief = brief && (brief.headline || (brief.watchlist && brief.watchlist.length));
+  const displayBrief = hasBrief ? brief : buildFallbackBrief(data || {});
+
+  headlineEl.textContent = displayBrief.headline || "投資ブリーフ準備中";
+
+  if (displayBrief.market_regime) {
+    regimeEl.textContent = displayBrief.market_regime;
+    regimeEl.style.display = "inline-flex";
+  } else {
+    regimeEl.textContent = "--";
+    regimeEl.style.display = "inline-flex";
+  }
+
+  if (data && data.updatedAt) {
+    const date = new Date(data.updatedAt);
+    if (!Number.isNaN(date.getTime())) {
+      updatedEl.textContent = `更新: ${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    } else {
+      updatedEl.textContent = "--";
+    }
+  } else {
+    updatedEl.textContent = "--";
+  }
+
+  const themes = Array.isArray(displayBrief.focus_themes) ? displayBrief.focus_themes : [];
+  themesEl.textContent = "";
+  if (themes.length > 0) {
+    themes.forEach(theme => {
+      const tag = document.createElement("span");
+      tag.className = "brief-tag";
+      tag.textContent = theme == null ? "" : String(theme);
+      themesEl.appendChild(tag);
+    });
+  } else {
+    const tag = document.createElement("span");
+    tag.className = "brief-tag";
+    tag.textContent = "テーマ整理中";
+    themesEl.appendChild(tag);
+  }
+
+  const cautions = Array.isArray(displayBrief.cautions) ? displayBrief.cautions : [];
+  cautionsEl.textContent = "";
+  if (cautions.length > 0) {
+    cautions.forEach(caution => {
+      const li = document.createElement("li");
+      li.textContent = caution == null ? "" : String(caution);
+      cautionsEl.appendChild(li);
+    });
+  } else {
+    const li = document.createElement("li");
+    li.textContent = "注意点データがありません。";
+    cautionsEl.appendChild(li);
+  }
+
+  const watchlist = Array.isArray(displayBrief.watchlist) ? displayBrief.watchlist : [];
+  watchlistEl.textContent = "";
+  if (watchlist.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "brief-card-reason";
+    empty.textContent = "監視リストを準備中です。";
+    watchlistEl.appendChild(empty);
+    return;
+  }
+
+  watchlist.forEach(item => {
+    const ticker = item && item.ticker ? String(item.ticker) : "--";
+    const reason = item && item.reason ? String(item.reason) : "監視対象";
+    const catalyst = item && item.catalyst ? String(item.catalyst) : "";
+    const risk = item && item.risk ? String(item.risk) : "";
+    const invalidation = item && item.invalidation ? String(item.invalidation) : "";
+
+    const series = getTickerHistorySeries(ticker);
+    const trend = getSeriesTrend(series);
+    const historyText = formatSeries(series);
+
+    const card = document.createElement("div");
+    card.className = "brief-watch-card";
+
+    const header = document.createElement("div");
+    header.className = "brief-card-header";
+
+    const tickerEl = document.createElement("span");
+    tickerEl.className = "brief-ticker";
+    tickerEl.textContent = ticker;
+
+    const trendEl = document.createElement("span");
+    trendEl.className = `brief-trend ${trend.className}`;
+    trendEl.textContent = trend.label;
+
+    header.appendChild(tickerEl);
+    header.appendChild(trendEl);
+
+    const reasonEl = document.createElement("div");
+    reasonEl.className = "brief-card-reason";
+    reasonEl.textContent = reason;
+
+    const meta = document.createElement("div");
+    meta.className = "brief-card-meta";
+
+    function addMeta(label, value) {
+      if (!value) return;
+      const line = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      line.appendChild(strong);
+      line.appendChild(document.createTextNode(value));
+      meta.appendChild(line);
+    }
+
+    addMeta("触媒", catalyst);
+    addMeta("リスク", risk);
+    addMeta("無効化", invalidation);
+
+    const history = document.createElement("div");
+    history.className = "brief-card-history";
+    history.textContent = `推移(5ch件数・古→新): ${historyText}`;
+
+    card.appendChild(header);
+    card.appendChild(reasonEl);
+    if (meta.childNodes.length > 0) {
+      card.appendChild(meta);
+    }
+    card.appendChild(history);
+
+    watchlistEl.appendChild(card);
+  });
+}
+
+function bindInvestBriefControls() {
+  if (investBriefBound) return;
+  document.querySelectorAll(".brief-toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+      if (!mode || mode === investBriefMode) return;
+      investBriefMode = mode;
+      document.querySelectorAll(".brief-toggle-btn").forEach(toggle => {
+        const active = toggle.dataset.mode === investBriefMode;
+        toggle.classList.toggle("active", active);
+        toggle.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      if (latestData) {
+        renderInvestBrief(latestData);
+      }
+    });
+  });
+  investBriefBound = true;
 }
 
 function applyInsightSnapshot(snapshot, index) {
@@ -212,7 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuOverlay) menuOverlay.addEventListener("click", () => toggleMenu(false));
 
   // --- View Switching Logic ---
-  const allViews = ["view-dashboard", "view-topics", "view-ongi-greed", "view-about", "view-trade-indepth"];
+  const allViews = ["view-dashboard", "view-topics", "view-invest-brief", "view-ongi-greed", "view-about", "view-trade-indepth"];
 
   function switchView(targetId) {
     // Hide all
@@ -248,6 +464,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 50);
     } else if (targetId === 'ongi-greed') {
       fetchOngiHistory();
+    } else if (targetId === 'invest-brief') {
+      bindInvestBriefControls();
+      const renderNow = () => {
+        if (latestData) renderInvestBrief(latestData);
+      };
+      if (!insightHistoryLoaded) {
+        loadInsightHistory("24h").then(renderNow);
+      } else {
+        renderNow();
+      }
     }
 
     // Close menu if open
@@ -439,6 +665,10 @@ async function main() {
       applyInsightSnapshot({ payload: data, timestamp: Math.floor(Date.now() / 1000) }, 0);
     }
     updateInsightControls();
+    const investView = document.getElementById("view-invest-brief");
+    if (investView && investView.style.display !== "none") {
+      renderInvestBrief(data);
+    }
 
     // Store topics
     if (data.topics) {
@@ -1189,7 +1419,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Swipe Navigation Logic ---
-  const tabs = ['dashboard', 'topics', 'ongi-greed', 'trade-indepth'];
+  const tabs = ['dashboard', 'topics', 'invest-brief', 'ongi-greed', 'trade-indepth'];
 
   // Use a minimum threshold to avoid accidental swipes while scrolling vertically
   const SWIPE_THRESHOLD = 50;

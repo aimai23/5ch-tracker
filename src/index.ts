@@ -86,7 +86,9 @@ export default {
         topics: [],
         overview: null, // Added overview to match original structure
         sources: [],
-        reddit_rankings: []
+        reddit_rankings: [],
+        brief_swing: null,
+        brief_long: null
       };
 
       const responseData = { ...safeRanking };
@@ -127,6 +129,8 @@ export default {
         comparative_insight: body.comparative_insight,
         trade_recommendations: body.trade_recommendations,
         ai_model: body.ai_model,
+        brief_swing: body.brief_swing,
+        brief_long: body.brief_long,
         fear_greed: body.fear_greed,
         radar: body.radar,
         breaking_news: body.breaking_news,
