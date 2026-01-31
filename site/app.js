@@ -564,15 +564,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Set initial active tab (brief by default)
-  const initialTabBtn = document.querySelector('.nav-tab[data-tab="invest-brief"]');
+  // Set initial active tab (dashboard by default)
+  const initialTabBtn = document.querySelector('.nav-tab[data-tab="dashboard"]');
   if (initialTabBtn) {
-    switchView('invest-brief');
+    switchView('dashboard');
   } else {
-    const fallbackTab = document.querySelector('.nav-tab[data-tab="dashboard"]');
+    const fallbackTab = document.querySelector('.nav-tab[data-tab="invest-brief"]');
     if (fallbackTab) {
-      fallbackTab.classList.add('active');
-      document.getElementById("view-dashboard").style.display = "grid";
+      switchView('invest-brief');
     }
   }
 
