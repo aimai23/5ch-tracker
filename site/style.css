@@ -2268,6 +2268,10 @@ footer a {
   gap: 1rem;
 }
 
+.brief-grid-quad .brief-block {
+  height: 100%;
+}
+
 .brief-block {
   padding: 0.9rem 1.05rem;
   border-radius: 14px;
