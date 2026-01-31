@@ -2155,6 +2155,11 @@ footer a {
   overflow-x: hidden;
 }
 
+#view-invest-brief {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 .invest-brief-header {
   display: flex;
   align-items: flex-start;
@@ -2469,6 +2474,7 @@ footer a {
 @media (max-width: 768px) {
   .invest-brief-panel {
     gap: 1rem;
+    padding: 0.9rem 0.85rem;
   }
 
   .invest-brief-header {
@@ -2489,7 +2495,7 @@ footer a {
   }
 
   .brief-summary {
-    padding: 0.85rem 1rem;
+    padding: 0.75rem 0.85rem;
   }
 
   .brief-headline {
@@ -2507,11 +2513,11 @@ footer a {
   }
 
   .brief-grid {
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
 
   .brief-block {
-    padding: 0.9rem 1rem;
+    padding: 0.75rem 0.85rem;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
   }
 
@@ -2532,7 +2538,7 @@ footer a {
   }
 
   .brief-watch-card {
-    padding: 0.85rem 0.9rem;
+    padding: 0.75rem 0.8rem;
   }
 
   .brief-ticker {
