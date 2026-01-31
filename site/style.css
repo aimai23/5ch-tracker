@@ -2301,8 +2301,8 @@ footer a {
 }
 
 .brief-changes {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
@@ -2317,6 +2317,8 @@ footer a {
   font-size: 0.78rem;
   color: var(--text-primary);
   background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  width: 100%;
 }
 
 .brief-change-chip.up {

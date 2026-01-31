@@ -300,7 +300,7 @@ function renderInvestBrief(data) {
     calendarEl.appendChild(li);
   }
 
-  const changeItems = buildChangeTop(insightHistory, 3);
+  const changeItems = buildChangeTop(insightHistory, 4);
   changesEl.textContent = "";
   if (changeItems.length > 0) {
     changeItems.forEach(item => {
