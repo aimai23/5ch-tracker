@@ -460,17 +460,8 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     LANGUAGE: JAPANESE ONLY (for all text outputs like summaries and news).
     Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
 
-    NOTE:
-    - Sections 1-6 may paraphrase/interpret, but DO NOT introduce new tickers/events not in TEXT/CONTEXT.
-    - The strict grounding rules below apply ONLY to Section 7 (INVEST BRIEF).
-    BRIEF GROUNDING RULES (Section 7 only):
-    - Use only facts/tickers/events that appear in TEXT or CONTEXT. Do NOT invent specifics.
-    - If a detail is not explicit, you MAY infer for catalyst/risk/valid_until using focus_themes/cautions; avoid specific dates unless present; prefer generic phrases over blanks.
-    - Do NOT add macro events or data that are not present in TEXT/CONTEXT.
-    - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
-    - Output must include all required keys. Use empty strings/arrays instead of null.
-
-    CONTEXT:    1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
+    CONTEXT:
+    1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
     2. {reddit_context}
     3. {crisis_context}
 
@@ -519,6 +510,12 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Tone: Professional Analyst, Insightful, Slightly Cynical.
 
     7. INVEST BRIEF (Monitor-only, NO trade advice):
+       BRIEF GROUNDING RULES (Section 7 only):
+       - Use only facts/tickers/events that appear in TEXT or CONTEXT. Do NOT invent specifics.
+       - If a detail is not explicit, you MAY infer for catalyst/risk/valid_until using focus_themes/cautions; avoid specific dates unless present; prefer generic phrases over blanks.
+       - Do NOT add macro events or data that are not present in TEXT/CONTEXT.
+       - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
+       - Output must include all required keys. Use empty strings/arrays instead of null.
        - Provide TWO briefs: "brief_swing" (few-day swing) and "brief_long" (mid/long term).
        - Each brief should include:
          - "headline": short 1-line summary (Max 80 chars)
