@@ -459,16 +459,18 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
     LANGUAGE: JAPANESE ONLY (for all text outputs like summaries and news).
     Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
-    GROUNDING RULES (Anti-hallucination):
-    - ONLY use facts/tickers/events that appear in the provided TEXT or CONTEXT. Do NOT invent.
+
+    NOTE:
+    - Sections 1-6 may paraphrase/interpret, but DO NOT introduce new tickers/events not in TEXT/CONTEXT.
+    - The strict grounding rules below apply ONLY to Section 7 (INVEST BRIEF).
+    BRIEF GROUNDING RULES (Section 7 only):
+    - Use only facts/tickers/events that appear in TEXT or CONTEXT. Do NOT invent specifics.
     - If a detail is not explicit, you MAY infer for catalyst/risk/valid_until using focus_themes/cautions; avoid specific dates unless present; prefer generic phrases over blanks.
-    - For uncertain items, prefer fewer entries over guessing.
-    - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
+    - Do NOT add macro events or data that are not present in TEXT/CONTEXT.
     - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
     - Output must include all required keys. Use empty strings/arrays instead of null.
-    
-    CONTEXT:
-    1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
+
+    CONTEXT:    1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
     2. {reddit_context}
     3. {crisis_context}
 
