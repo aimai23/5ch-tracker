@@ -205,7 +205,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
   await env.DB.batch(statements);
 }
 
-const HISTORY_LIMIT_DEFAULT = 6;
+const HISTORY_LIMIT_DEFAULT = 10;
 
 export async function saveRankingHistory(
   env: Env,

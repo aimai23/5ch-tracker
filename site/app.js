@@ -382,7 +382,7 @@ function applyInsightSnapshot(snapshot, index) {
 async function loadInsightHistory(windowKey = "24h") {
   if (insightHistoryLoading) return;
   insightHistoryLoading = true;
-  const historyLimit = 6;
+  const historyLimit = 10;
   try {
     const res = await fetch(`${WORKER_URL}/api/ranking-history?window=${encodeURIComponent(windowKey)}&limit=${historyLimit}`, { cache: "no-store" });
     if (res.ok) {

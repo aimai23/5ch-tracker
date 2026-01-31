@@ -68,8 +68,8 @@ export default {
 
     if (url.pathname === "/api/ranking-history") {
       const window = url.searchParams.get("window") || "24h";
-      const limitRaw = Number.parseInt(url.searchParams.get("limit") || "6", 10);
-      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(6, limitRaw)) : 6;
+      const limitRaw = Number.parseInt(url.searchParams.get("limit") || "10", 10);
+      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(10, limitRaw)) : 10;
       const history = await getRankingHistory(env, window, limit);
       return json({ window, history }, 200, commonCorsHeaders);
     }
@@ -147,7 +147,7 @@ export default {
       // Only aggregated data is stored.
       await putRanking(env, window, payload);
       try {
-        await saveRankingHistory(env, window, payload, 6);
+        await saveRankingHistory(env, window, payload, 10);
       } catch (e) {
         console.warn("Failed to save ranking history", e);
       }
