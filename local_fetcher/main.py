@@ -606,8 +606,8 @@ def fetch_polymarket_events():
     # Sort everything by volume first
     all_events.sort(key=lambda x: float(x.get("volume", 0) or 0), reverse=True)
     
-    logging.info(f"Total Polymarket events found: {len(all_events)}. Top 10 selected.")
-    return all_events[:10]
+    logging.info(f"Total Polymarket events found: {len(all_events)}. Top 8 selected.")
+    return all_events[:8]
 
 def translate_polymarket_events(events):
     if not events: return []
