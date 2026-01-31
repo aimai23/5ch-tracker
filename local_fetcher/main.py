@@ -35,6 +35,9 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WORKER_URL = os.getenv("WORKER_URL") 
 INGEST_TOKEN = os.getenv("INGEST_TOKEN")
 STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
+SPAM_SCORE_THRESHOLD = int(os.getenv("SPAM_SCORE_THRESHOLD", "7"))
+SPAM_DUP_THRESHOLD = int(os.getenv("SPAM_DUP_THRESHOLD", "2"))
+SPAM_ID_LIMIT = int(os.getenv("SPAM_ID_LIMIT", "25"))
 
 if not GEMINI_API_KEY:
     logging.error("GEMINI_API_KEY is not set.")
@@ -120,27 +123,107 @@ def discover_threads():
         
     return top_threads
 
-def parse_dat_content(text_data, spam_list=[]):
+def extract_post_id(meta_text):
+    if not meta_text:
+        return None
+    m = re.search(r"ID:([A-Za-z0-9+/]+)", meta_text)
+    return m.group(1) if m else None
+
+def normalize_message(text):
+    if not text:
+        return ""
+    text = text.lower()
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\s+", "", text)
+    text = re.sub(r"[\W_]+", "", text)
+    return text
+
+def clean_message(text):
     import html
+    if not text:
+        return ""
+    text = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return html.unescape(text).strip()
+
+def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None):
+    if not message:
+        return 999
+
+    for s in spam_list:
+        if s and s in message:
+            return 999
+
+    score = 0
+    length = len(message)
+    if length <= 2:
+        score += 3
+    elif length <= 5:
+        score += 1
+    if length >= 500:
+        score += 2
+    if length >= 1000:
+        score += 3
+
+    if re.search(r"(.)\1{8,}", message):
+        score += 3
+    if re.search(r"[!???w?]{6,}", message):
+        score += 2
+    if re.search(r"https?://", message):
+        score += 2
+
+    compact = re.sub(r"\s+", "", message)
+    if compact:
+        meaningful = len(re.findall(r"[A-Za-z0-9?-??-??-?]", compact))
+        ratio = meaningful / max(len(compact), 1)
+        if ratio < 0.3 and len(compact) > 10:
+            score += 2
+
+    norm = normalize_message(message)
+    if norm:
+        dup_counter[norm] = dup_counter.get(norm, 0) + 1
+        if dup_counter[norm] > SPAM_DUP_THRESHOLD:
+            score += 3
+        elif dup_counter[norm] > 1:
+            score += 1
+
+    if user_id:
+        id_counter[user_id] = id_counter.get(user_id, 0) + 1
+        if id_counter[user_id] > SPAM_ID_LIMIT and length < 60:
+            score += 2
+        if id_counter[user_id] > SPAM_ID_LIMIT + 10:
+            score += 2
+
+    if re.search(r"\$[A-Za-z]{1,5}\b|\b[A-Z]{2,5}\b", message):
+        score = max(score - 2, 0)
+
+    return score
+
+def parse_dat_content(text_data, spam_list=[]):
     comments = []
+    dup_counter = {}
+    id_counter = {}
+    filtered = 0
     for line in text_data.splitlines()[1:]:
         parts = line.split("<>")
         if len(parts) >= 4:
+            meta = parts[2]
             msg = parts[3]
-            
-            # Spam Filter
-            is_spam = False
-            for s in spam_list:
-                if s in msg: 
-                    is_spam = True
-                    break
-            if is_spam: continue
 
-            msg = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", msg)
-            msg = re.sub(r"<[^>]+>", " ", msg)
-            clean_msg = html.unescape(msg)
-            comments.append(clean_msg.strip())
-    
+            clean_msg = clean_message(msg)
+            if not clean_msg:
+                continue
+
+            user_id = extract_post_id(meta)
+            score = spam_score_message(clean_msg, spam_list, dup_counter, id_counter, user_id)
+            if score >= SPAM_SCORE_THRESHOLD:
+                filtered += 1
+                continue
+
+            comments.append(clean_msg)
+
+    if filtered:
+        logging.info(f"Soft-spam filtered: {filtered} posts")
     if not comments: return ""
     full_text = "\n".join(comments)
     if len(full_text) > 15000: return full_text[:15000]
@@ -198,18 +281,25 @@ def fetch_thread_text(url, spam_list=[]):
         if not msgs: msgs = soup.find_all("dd", class_="thread_in")
         if not msgs: msgs = soup.select("div.post > div.message")
             
+        dup_counter = {}
+        id_counter = {}
+        filtered = 0
         for msg in msgs[1:]:
             text = msg.get_text(strip=True)
-            
-            if text:
-                is_spam = False
-                for s in spam_list:
-                    if s in text:
-                        is_spam = True
-                        break
-                if is_spam: continue
-                
-                comments.append(text)
+
+            clean_text = clean_message(text)
+            if not clean_text:
+                continue
+
+            score = spam_score_message(clean_text, spam_list, dup_counter, id_counter, None)
+            if score >= SPAM_SCORE_THRESHOLD:
+                filtered += 1
+                continue
+
+            comments.append(clean_text)
+
+        if filtered:
+            logging.info(f"Soft-spam filtered (html): {filtered} posts")
 
         if not comments: return ""
         full_text = "\n".join(comments)
