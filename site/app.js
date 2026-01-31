@@ -134,6 +134,74 @@ function classifyDeadline(value) {
   return { label: raw, className: "deadline-unknown" };
 }
 
+function getDeadlineSortKey(value) {
+  if (!value) return Number.POSITIVE_INFINITY;
+  const raw = String(value).trim();
+  if (!raw) return Number.POSITIVE_INFINITY;
+
+  if (/\u672a\u5b9a|\u4e0d\u660e|\u69d8\u5b50\u898b|\u672a\u8a2d\u5b9a/i.test(raw)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  if (/24h|24\u6642\u9593/i.test(raw)) return nowMs + 6 * 60 * 60 * 1000;
+  if (/\u672c\u65e5|\u4eca\u65e5|\u4eca\u591c|\u4eca\u671d/i.test(raw)) return nowMs + 6 * 60 * 60 * 1000;
+  if (/\u660e\u5f8c\u65e5/.test(raw)) return nowMs + 2 * 24 * 60 * 60 * 1000;
+  if (/\u660e\u65e5/.test(raw)) return nowMs + 24 * 60 * 60 * 1000;
+
+  const dateMatch = raw.match(/(\d{1,2})\s*(?:\/|\u6708)\s*(\d{1,2})/);
+  if (dateMatch) {
+    const month = Number(dateMatch[1]);
+    const day = Number(dateMatch[2]);
+    let year = now.getFullYear();
+    let target = new Date(year, month - 1, day, 23, 59, 59);
+    if (target.getTime() < nowMs - 7 * 24 * 60 * 60 * 1000) {
+      year += 1;
+      target = new Date(year, month - 1, day, 23, 59, 59);
+    }
+    return target.getTime();
+  }
+
+  const monthMatch = raw.match(/(\d{1,2})\s*\u6708/);
+  if (monthMatch) {
+    const month = Number(monthMatch[1]);
+    let year = now.getFullYear();
+    if (month < now.getMonth() + 1) year += 1;
+    let day = 15;
+    const monthEnd = /\u6708\u672b|\u6700\u7d42/.test(raw);
+    if (/\u4e0a\u65ec/.test(raw)) day = 5;
+    else if (/\u4e2d\u65ec/.test(raw)) day = 15;
+    else if (/\u4e0b\u65ec/.test(raw)) day = 25;
+    if (monthEnd) {
+      day = new Date(year, month, 0).getDate();
+    }
+    return new Date(year, month - 1, day, 23, 59, 59).getTime();
+  }
+
+  if (/\u4eca\u9031/.test(raw)) return nowMs + 4 * 24 * 60 * 60 * 1000;
+  if (/\u6765\u9031/.test(raw)) return nowMs + 10 * 24 * 60 * 60 * 1000;
+
+  if (/\u4eca\u6708/.test(raw)) {
+    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return last.getTime();
+  }
+
+  if (/\u6765\u6708/.test(raw)) {
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const last = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    return last.getTime();
+  }
+
+  if (/\u6c7a\u7b97|\u767a\u8868|\u30ed\u30fc\u30f3\u30c1|\u30a4\u30d9\u30f3\u30c8|\u958b\u59cb|\u7d42\u4e86/.test(raw)) {
+    return nowMs + 14 * 24 * 60 * 60 * 1000;
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
 function buildChangeTop(history, limit = 3) {
   if (!Array.isArray(history) || history.length < 2) return [];
   const latestItems = (history[0]?.payload?.items) || [];
@@ -234,6 +302,17 @@ function renderInvestBrief(data) {
   const hasBrief = brief && (brief.headline || (brief.watchlist && brief.watchlist.length));
   const displayBrief = hasBrief ? brief : buildFallbackBrief(data || {});
   const watchlist = buildBriefWatchlist(displayBrief, data || {});
+  const sortedWatchlist = watchlist
+    .map((item, index) => ({
+      item,
+      index,
+      key: getDeadlineSortKey(item && (item.valid_until || item.deadline))
+    }))
+    .sort((a, b) => {
+      if (a.key === b.key) return a.index - b.index;
+      return a.key - b.key;
+    })
+    .map(entry => entry.item);
 
   headlineEl.textContent = displayBrief.headline || "投資ブリーフ準備中";
 
@@ -345,7 +424,7 @@ function renderInvestBrief(data) {
   }
 
   watchlistEl.textContent = "";
-  if (watchlist.length === 0) {
+  if (sortedWatchlist.length === 0) {
     const empty = document.createElement("div");
     empty.className = "brief-card-reason";
     empty.textContent = "監視リストを準備中です。";
@@ -356,7 +435,7 @@ function renderInvestBrief(data) {
   const redditTickers = new Set((data && Array.isArray(data.reddit_rankings) ? data.reddit_rankings : [])
     .map(r => normalizeTicker(r.ticker)));
 
-  watchlist.forEach(item => {
+  sortedWatchlist.forEach(item => {
     const ticker = item && item.ticker ? String(item.ticker) : "--";
     const reason = item && item.reason ? String(item.reason) : "監視対象";
     const catalyst = item && item.catalyst ? String(item.catalyst) : "";
