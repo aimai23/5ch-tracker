@@ -2406,6 +2406,96 @@ footer a {
   }
 }
 
+@media (max-width: 768px) {
+  .invest-brief-panel {
+    gap: 1rem;
+  }
+
+  .invest-brief-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .invest-brief-title {
+    font-size: 1.2rem;
+  }
+
+  .invest-brief-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .brief-model-name {
+    font-size: 0.65rem;
+  }
+
+  .brief-summary {
+    padding: 0.85rem 1rem;
+  }
+
+  .brief-headline {
+    font-size: 0.95rem;
+  }
+
+  .brief-meta {
+    gap: 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .brief-toggle-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .brief-grid {
+    gap: 0.9rem;
+  }
+
+  .brief-block {
+    padding: 0.9rem 1rem;
+  }
+
+  .brief-section-title {
+    font-size: 0.9rem;
+  }
+
+  .brief-tags {
+    gap: 0.4rem;
+  }
+
+  .brief-tag {
+    font-size: 0.7rem;
+  }
+
+  .brief-watchlist {
+    grid-template-columns: 1fr;
+  }
+
+  .brief-watch-card {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .brief-ticker {
+    font-size: 1rem;
+  }
+
+  .brief-card-reason {
+    font-size: 0.88rem;
+  }
+
+  .brief-card-meta {
+    font-size: 0.76rem;
+  }
+
+  .brief-card-history {
+    font-size: 0.7rem;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 /* Back to Top Button */
 .back-to-top {
   position: fixed;
