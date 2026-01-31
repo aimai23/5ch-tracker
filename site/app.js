@@ -605,6 +605,32 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuClose) menuClose.addEventListener("click", () => toggleMenu(false));
   if (menuOverlay) menuOverlay.addEventListener("click", () => toggleMenu(false));
 
+  // --- Brief Guide Modal ---
+  const guideOpen = document.getElementById("brief-guide-open");
+  const guideOverlay = document.getElementById("brief-guide-overlay");
+  const guideClose = document.getElementById("brief-guide-close");
+
+  const openGuide = () => {
+    if (guideOverlay) guideOverlay.style.display = "flex";
+  };
+
+  const closeGuide = () => {
+    if (guideOverlay) guideOverlay.style.display = "none";
+  };
+
+  if (guideOpen && guideOverlay && guideClose) {
+    guideOpen.addEventListener("click", openGuide);
+    guideClose.addEventListener("click", closeGuide);
+    guideOverlay.addEventListener("click", (e) => {
+      if (e.target === guideOverlay) closeGuide();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && guideOverlay.style.display === "flex") {
+        closeGuide();
+      }
+    });
+  }
+
   // --- View Switching Logic ---
   const allViews = ["view-dashboard", "view-topics", "view-invest-brief", "view-ongi-greed", "view-about"];
 
