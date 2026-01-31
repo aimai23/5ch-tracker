@@ -148,7 +148,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--accent-cyan);
+  background: #00d46a;
   color: #000;
   padding: 2px 8px;
   border-radius: 4px;
@@ -157,9 +157,9 @@ body {
 .live-indicator {
   width: 6px;
   height: 6px;
-  background-color: #fff;
+  background-color: #00ff88;
   border-radius: 50%;
-  box-shadow: 0 0 5px #fff;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.9);
   animation: pulse 1s infinite;
 }
 
