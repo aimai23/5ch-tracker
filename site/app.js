@@ -15,7 +15,7 @@ let insightHistoryBound = false;
 let investBriefMode = "swing";
 let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
-const WATCHLIST_TARGET = 6;
+const WATCHLIST_TARGET = 8;
 
 function escapeHtml(value) {
   const s = value == null ? "" : String(value);
@@ -106,6 +106,32 @@ function getSeriesTrend(series) {
 function formatSeries(series) {
   if (!series || series.length === 0) return "--";
   return series.map(v => Number(v) || 0).join(" → ");
+}
+
+function classifyDeadline(value) {
+  if (!value) return { label: "", className: "deadline-unknown" };
+  const raw = String(value).trim();
+  if (!raw) return { label: "", className: "deadline-unknown" };
+  if (/未定|不明|様子見|未設定/i.test(raw)) return { label: raw, className: "deadline-unknown" };
+
+  const dateMatch = raw.match(/(\d{1,2})\s*[\/月]\s*(\d{1,2})/);
+  if (dateMatch) {
+    const now = new Date();
+    const month = Number(dateMatch[1]);
+    const day = Number(dateMatch[2]);
+    const year = now.getFullYear();
+    const target = new Date(year, month - 1, day, 23, 59, 59);
+    if (!Number.isNaN(target.getTime())) {
+      const diffMs = target.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      if (diffHours <= 24) return { label: raw, className: "deadline-urgent" };
+      if (diffHours <= 168) return { label: raw, className: "deadline-soon" };
+      return { label: raw, className: "deadline-later" };
+    }
+  }
+
+  if (/次回更新|決算|イベント|今週/i.test(raw)) return { label: raw, className: "deadline-soon" };
+  return { label: raw, className: "deadline-unknown" };
 }
 
 function buildChangeTop(history, limit = 3) {
@@ -351,19 +377,37 @@ function renderInvestBrief(data) {
     tickerEl.className = "brief-ticker";
     tickerEl.textContent = ticker;
 
+    const rightGroup = document.createElement("div");
+    rightGroup.className = "brief-card-right";
+
     const trendEl = document.createElement("span");
     trendEl.className = `brief-trend ${trend.className}`;
     trendEl.textContent = trend.label;
 
-    header.appendChild(tickerEl);
-    header.appendChild(trendEl);
+    const deadlineInfo = classifyDeadline(item && item.valid_until ? String(item.valid_until) : "");
+    if (deadlineInfo.label) {
+      const deadlineEl = document.createElement("span");
+      deadlineEl.className = `brief-deadline ${deadlineInfo.className}`;
+      deadlineEl.textContent = deadlineInfo.label;
+      rightGroup.appendChild(deadlineEl);
+    } else {
+      const deadlineEl = document.createElement("span");
+      deadlineEl.className = "brief-deadline deadline-unknown";
+      deadlineEl.textContent = "未定";
+      rightGroup.appendChild(deadlineEl);
+    }
+
+    rightGroup.appendChild(trendEl);
 
     if (redditTickers.has(normalizeTicker(ticker))) {
       const badge = document.createElement("span");
       badge.className = "brief-badge";
       badge.textContent = "CONSENSUS";
-      header.appendChild(badge);
+      rightGroup.appendChild(badge);
     }
+
+    header.appendChild(tickerEl);
+    header.appendChild(rightGroup);
 
     const reasonEl = document.createElement("div");
     reasonEl.className = "brief-card-reason";

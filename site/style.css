@@ -2437,6 +2437,51 @@ footer a {
   letter-spacing: 0.04em;
 }
 
+.brief-card-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.brief-deadline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.brief-deadline.deadline-urgent {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.brief-deadline.deadline-soon {
+  color: #f6d365;
+  border-color: rgba(246, 211, 101, 0.6);
+  background: rgba(246, 211, 101, 0.12);
+}
+
+.brief-deadline.deadline-unknown {
+  color: #9aa4b2;
+  border-color: rgba(154, 164, 178, 0.5);
+  background: rgba(154, 164, 178, 0.12);
+}
+
+.brief-deadline.deadline-later {
+  color: var(--accent-cyan);
+  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(0, 240, 255, 0.08);
+}
+
 .brief-watchlist {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -2637,6 +2682,14 @@ footer a {
   .brief-watch-card {
     padding: 0.75rem 0.8rem;
     min-width: 0;
+  }
+
+  .brief-card-right {
+    gap: 0.3rem;
+  }
+
+  .brief-deadline {
+    font-size: 0.58rem;
   }
 
   .brief-ticker {
