@@ -316,7 +316,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until" }
          - "cautions": 2-4 items
          - "catalyst_calendar": 3-6 items with:
-           { "date", "event", "note" }
+           { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
 
@@ -341,7 +341,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
         ],
         "cautions": ["..."],
         "catalyst_calendar": [
-          {{ "date": "2/5", "event": "雇用統計", "note": "金利敏感銘柄に注意" }}
+          {{ "date": "2/5", "event": "雇用統計", "note": "金利敏感銘柄に注意", "impact": "high" }}
         ]
       }},
       "brief_long": {{
@@ -353,7 +353,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
         ],
         "cautions": ["..."],
         "catalyst_calendar": [
-          {{ "date": "2/12", "event": "CPI", "note": "ハイテクはボラ拡大" }}
+          {{ "date": "2/12", "event": "CPI", "note": "ハイテクはボラ拡大", "impact": "high" }}
         ]
       }}
     }}

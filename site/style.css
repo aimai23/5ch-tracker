@@ -2300,6 +2300,40 @@ footer a {
   gap: 0.5rem;
 }
 
+.brief-changes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.brief-change-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: 'JetBrains Mono', sans-serif;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.brief-change-chip.up {
+  border-color: rgba(0, 255, 136, 0.5);
+  color: #00ff88;
+}
+
+.brief-change-chip.down {
+  border-color: rgba(255, 107, 107, 0.5);
+  color: #ff6b6b;
+}
+
+.brief-change-chip.new {
+  border-color: rgba(0, 240, 255, 0.6);
+  color: var(--accent-cyan);
+}
+
 .brief-tag {
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
@@ -2351,6 +2385,50 @@ footer a {
   border-radius: 50%;
   background: var(--accent-gold);
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.brief-impact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  margin-right: 0.4rem;
+  letter-spacing: 0.04em;
+}
+
+.brief-impact.high {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+}
+
+.brief-impact.mid {
+  background: rgba(246, 211, 101, 0.15);
+  color: #f6d365;
+  border: 1px solid rgba(246, 211, 101, 0.5);
+}
+
+.brief-impact.low {
+  background: rgba(0, 240, 255, 0.12);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+}
+
+.brief-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--accent-gold);
+  letter-spacing: 0.04em;
 }
 
 .brief-watchlist {
@@ -2531,6 +2609,14 @@ footer a {
 
   .brief-tags {
     gap: 0.4rem;
+  }
+
+  .brief-changes {
+    gap: 0.45rem;
+  }
+
+  .brief-change-chip {
+    font-size: 0.7rem;
   }
 
   .brief-tag {

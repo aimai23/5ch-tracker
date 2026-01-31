@@ -108,6 +108,34 @@ function formatSeries(series) {
   return series.map(v => Number(v) || 0).join(" → ");
 }
 
+function buildChangeTop(history, limit = 3) {
+  if (!Array.isArray(history) || history.length < 2) return [];
+  const latestItems = (history[0]?.payload?.items) || [];
+  const prevItems = (history[1]?.payload?.items) || [];
+  const latestMap = new Map(latestItems.map(item => [normalizeTicker(item.ticker), Number(item.count) || 0]));
+  const prevMap = new Map(prevItems.map(item => [normalizeTicker(item.ticker), Number(item.count) || 0]));
+  const allTickers = new Set([...latestMap.keys(), ...prevMap.keys()].filter(Boolean));
+  const changes = [];
+
+  allTickers.forEach(ticker => {
+    const latest = latestMap.get(ticker) || 0;
+    const prev = prevMap.get(ticker) || 0;
+    const delta = latest - prev;
+    if (latest === 0 && prev === 0) return;
+    const isNew = prev === 0 && latest > 0;
+    changes.push({ ticker, delta, latest, prev, isNew });
+  });
+
+  changes.sort((a, b) => {
+    const aScore = Math.abs(a.delta) + (a.isNew ? 1000 : 0);
+    const bScore = Math.abs(b.delta) + (b.isNew ? 1000 : 0);
+    if (bScore !== aScore) return bScore - aScore;
+    return b.latest - a.latest;
+  });
+
+  return changes.slice(0, limit);
+}
+
 function buildFallbackBrief(data) {
   const items = (data && Array.isArray(data.items) ? data.items.slice(0, WATCHLIST_TARGET) : []);
   return {
@@ -172,8 +200,9 @@ function renderInvestBrief(data) {
   const cautionsEl = document.getElementById("brief-cautions");
   const watchlistEl = document.getElementById("brief-watchlist");
   const calendarEl = document.getElementById("brief-calendar");
+  const changesEl = document.getElementById("brief-changes");
 
-  if (!headlineEl || !regimeEl || !updatedEl || !themesEl || !cautionsEl || !watchlistEl || !calendarEl) return;
+  if (!headlineEl || !regimeEl || !updatedEl || !themesEl || !cautionsEl || !watchlistEl || !calendarEl || !changesEl) return;
 
   const brief = getActiveBrief(data);
   const hasBrief = brief && (brief.headline || (brief.watchlist && brief.watchlist.length));
@@ -250,7 +279,16 @@ function renderInvestBrief(data) {
         const date = entry.date ? String(entry.date) : "";
         const event = entry.event ? String(entry.event) : "";
         const note = entry.note ? String(entry.note) : "";
-        li.textContent = [date, event].filter(Boolean).join(" ") + (note ? ` / ${note}` : "");
+        const impactRaw = entry.impact ? String(entry.impact).toLowerCase() : "";
+        const impactClass = impactRaw === "high" ? "high" : impactRaw === "mid" ? "mid" : impactRaw === "low" ? "low" : "";
+        if (impactClass) {
+          const badge = document.createElement("span");
+          badge.className = `brief-impact ${impactClass}`;
+          badge.textContent = impactClass === "high" ? "高" : impactClass === "mid" ? "中" : "低";
+          li.appendChild(badge);
+        }
+        const text = [date, event].filter(Boolean).join(" ") + (note ? ` / ${note}` : "");
+        li.appendChild(document.createTextNode(text));
       } else {
         li.textContent = "";
       }
@@ -262,6 +300,24 @@ function renderInvestBrief(data) {
     calendarEl.appendChild(li);
   }
 
+  const changeItems = buildChangeTop(insightHistory, 3);
+  changesEl.textContent = "";
+  if (changeItems.length > 0) {
+    changeItems.forEach(item => {
+      const chip = document.createElement("div");
+      const label = item.isNew ? "NEW" : item.delta > 0 ? `+${item.delta}` : `${item.delta}`;
+      const chipClass = item.isNew ? "new" : item.delta > 0 ? "up" : "down";
+      chip.className = `brief-change-chip ${chipClass}`;
+      chip.textContent = `${item.ticker} ${label}`;
+      changesEl.appendChild(chip);
+    });
+  } else {
+    const chip = document.createElement("div");
+    chip.className = "brief-change-chip";
+    chip.textContent = "変化データ準備中";
+    changesEl.appendChild(chip);
+  }
+
   watchlistEl.textContent = "";
   if (watchlist.length === 0) {
     const empty = document.createElement("div");
@@ -270,6 +326,9 @@ function renderInvestBrief(data) {
     watchlistEl.appendChild(empty);
     return;
   }
+
+  const redditTickers = new Set((data && Array.isArray(data.reddit_rankings) ? data.reddit_rankings : [])
+    .map(r => normalizeTicker(r.ticker)));
 
   watchlist.forEach(item => {
     const ticker = item && item.ticker ? String(item.ticker) : "--";
@@ -298,6 +357,13 @@ function renderInvestBrief(data) {
 
     header.appendChild(tickerEl);
     header.appendChild(trendEl);
+
+    if (redditTickers.has(normalizeTicker(ticker))) {
+      const badge = document.createElement("span");
+      badge.className = "brief-badge";
+      badge.textContent = "CONSENSUS";
+      header.appendChild(badge);
+    }
 
     const reasonEl = document.createElement("div");
     reasonEl.className = "brief-card-reason";

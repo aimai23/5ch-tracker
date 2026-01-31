@@ -36,7 +36,7 @@ export interface InvestBrief {
   focus_themes?: string[];
   watchlist?: InvestBriefItem[];
   cautions?: string[];
-  catalyst_calendar?: Array<{ date: string; event: string; note?: string } | string>;
+  catalyst_calendar?: Array<{ date: string; event: string; note?: string; impact?: "low" | "mid" | "high" } | string>;
   notes?: string;
 }
 
