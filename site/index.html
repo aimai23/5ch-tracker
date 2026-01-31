@@ -393,7 +393,7 @@
             <p class="invest-brief-subtitle">スレ民の話題から観測した上位監視リスト + 注意点要約</p>
             <div class="brief-meta-row">
               <span id="brief-model-name" class="brief-model-name">POWERED BY GEMINI-3-FLASH-PREVIEW</span>
-              <button type="button" id="brief-guide-open" class="brief-guide-link">???</button>
+              <button type="button" id="brief-guide-open" class="brief-guide-link">使い方</button>
             </div>
           </div>
           <div class="brief-toggle" role="tablist" aria-label="Invest brief horizon">
@@ -500,37 +500,36 @@
       </div>
     </div>
 
-    <!-- Brief Guide Overlay -->
+        <!-- Brief Guide Overlay -->
     <div id="brief-guide-overlay" class="brief-guide-overlay" style="display: none;">
       <div class="brief-guide-modal" role="dialog" aria-modal="true" aria-labelledby="brief-guide-title">
         <div class="brief-guide-header">
-          <h3 id="brief-guide-title">ARAKAWA BRIEF ???</h3>
-          <button type="button" id="brief-guide-close" class="brief-guide-close" aria-label="???">?</button>
+          <h3 id="brief-guide-title">ARAKAWA BRIEF 使い方</h3>
+          <button type="button" id="brief-guide-close" class="brief-guide-close" aria-label="閉じる">✕</button>
         </div>
         <div class="brief-guide-content">
-          <p>????5ch/Reddit??????????????????????????????????????????????????????</p>
-          <h4>??????????</h4>
+          <p>掲示板（5ch/Reddit）の話題量と要約を、投資判断のヒントとして整理した画面です。数値やラベルは「注目度・変化・期限」を示します。</p>
+          <h4>アイコン・表示の意味</h4>
           <ul>
-            <li><strong>?????3</strong>???2??????????????????<strong>NEW</strong>???0???????</li>
-            <li><strong>CONSENSUS</strong>?????/???????????????????</li>
-            <li><strong>? / ? / ?</strong>????????????????/??/?????</li>
-            <li><strong>?????</strong>??????????????<strong>?=24h??</strong> / <strong>?=??</strong> / <strong>?=????</strong> / <strong>?=??</strong>?</li>
-            <li><strong>High/Mid/Low</strong>???????????????High???????</li>
+            <li><strong>変化トップ3</strong>：直近2回の比較で話題数の増減が大きい銘柄。<strong>NEW</strong>は前回0件からの出現。</li>
+            <li><strong>CONSENSUS</strong>：複数スレ/ソースで共通して強い言及がある時の印。</li>
+            <li><strong>▲ / ▼ / →</strong>：直近の話題カウントの方向（増加/減少/横ばい）。</li>
+            <li><strong>期限バッジ</strong>：右上の色で時間軸を可視化。<strong>赤=24h以内</strong> / <strong>黄=今週</strong> / <strong>青=それ以外</strong> / <strong>灰=未定</strong>。</li>
+            <li><strong>High/Mid/Low</strong>：触媒カレンダーの影響度目安（Highほど要注意）。</li>
           </ul>
-          <h4>???????</h4>
+          <h4>カード内の項目</h4>
           <ul>
-            <li><strong>??</strong>?????????????/?????</li>
-            <li><strong>???</strong>?????????</li>
-            <li><strong>???</strong>????????????</li>
-            <li><strong>??</strong>???????????</li>
-            <li><strong>??</strong>????????????10???????</li>
+            <li><strong>触媒</strong>：動きの起点になり得る材料/イベント。</li>
+            <li><strong>リスク</strong>：逆風や下落要因。</li>
+            <li><strong>無効化</strong>：シナリオが崩れる条件。</li>
+            <li><strong>期限</strong>：注目を維持する目安。</li>
+            <li><strong>推移</strong>：話題数の推移（直近最大10回・古→新）。</li>
           </ul>
-          <p class="brief-guide-note">? ?????????????????????????????????????????????????</p>
+          <p class="brief-guide-note">※ 本ブリーフは掲示板の話題を整理したエンターテイメント要素を含む情報であり、投資助言ではありません。</p>
         </div>
       </div>
     </div>
-
-    <!-- Libraries -->
+<!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- TradingView Widget Script -->
