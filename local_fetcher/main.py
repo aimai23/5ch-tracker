@@ -38,6 +38,7 @@ STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
 SPAM_SCORE_THRESHOLD = int(os.getenv("SPAM_SCORE_THRESHOLD", "7"))
 SPAM_DUP_THRESHOLD = int(os.getenv("SPAM_DUP_THRESHOLD", "2"))
 SPAM_ID_LIMIT = int(os.getenv("SPAM_ID_LIMIT", "25"))
+LOG_RETENTION_DAYS = int(os.getenv("LOG_RETENTION_DAYS", "30"))
 
 if not GEMINI_API_KEY:
     logging.error("GEMINI_API_KEY is not set.")
@@ -56,9 +57,9 @@ def cleanup_old_files():
                 except Exception as e:
                     logging.warning(f"Failed to remove cache {f}: {e}")
 
-    # Cleanup Logs (Keep 30 days)
+    # Cleanup Logs (Keep 1 month)
     now = time.time()
-    retention_days = 30
+    retention_days = LOG_RETENTION_DAYS
     cutoff = now - (retention_days * 86400)
     
     log_files = glob.glob(os.path.join(LOG_DIR, "*.log"))
