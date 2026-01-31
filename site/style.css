@@ -2146,12 +2146,12 @@ footer a {
 /* Invest Brief */
 .invest-brief-panel {
   padding: 1rem;
-  max-width: none;
+  max-width: 1200px;
   width: 100%;
-  margin: 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.2rem;
   overflow-x: hidden;
 }
 
@@ -2217,7 +2217,7 @@ footer a {
 }
 
 .brief-summary {
-  padding: 1rem 1.2rem;
+  padding: 0.95rem 1.05rem;
   border-radius: 14px;
   border: 1px solid rgba(0, 240, 255, 0.15);
   background: rgba(5, 15, 25, 0.6);
@@ -2260,7 +2260,7 @@ footer a {
 }
 
 .brief-block {
-  padding: 1rem 1.2rem;
+  padding: 0.9rem 1.05rem;
   border-radius: 14px;
   border: 1px solid rgba(0, 240, 255, 0.08);
   background: linear-gradient(160deg, rgba(12, 22, 33, 0.75), rgba(0, 0, 0, 0.45));
