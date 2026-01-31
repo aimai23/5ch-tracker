@@ -2160,6 +2160,12 @@ footer a {
   overflow-x: hidden;
 }
 
+#view-invest-brief *,
+#view-invest-brief *::before,
+#view-invest-brief *::after {
+  box-sizing: border-box;
+}
+
 .invest-brief-header {
   display: flex;
   align-items: flex-start;
@@ -2535,10 +2541,12 @@ footer a {
 
   .brief-watchlist {
     grid-template-columns: 1fr;
+    min-width: 0;
   }
 
   .brief-watch-card {
     padding: 0.75rem 0.8rem;
+    min-width: 0;
   }
 
   .brief-ticker {
