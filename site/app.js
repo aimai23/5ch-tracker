@@ -778,11 +778,6 @@ async function main() {
       if (imakitaContainer) imakitaContainer.style.display = "none";
     }
 
-    // Trade Recommendations
-    if (data.trade_recommendations) {
-      renderTradeRecommendations(data.trade_recommendations);
-    }
-
     // NEW: Model Name
     if (data.ai_model) {
       const modelEl = document.getElementById("ai-model-name");
@@ -1424,51 +1419,7 @@ function toggleHistoryChart() {
   }
 }
 
-function renderTradeRecommendations(tradeData) {
-  if (!tradeData) return;
 
-  // Update Rendering for List of Picks
-  function renderList(containerId, items, type) {
-    const list = document.getElementById(containerId);
-    if (!list) return;
-
-    list.textContent = "";
-    if (items && items.length > 0) {
-      items.forEach(item => {
-        const div = document.createElement("div");
-        div.className = `trade-card-item ${type}-item`;
-
-        const tickerSpan = document.createElement("span");
-        tickerSpan.className = "item-ticker";
-        tickerSpan.textContent = item.ticker == null ? "" : String(item.ticker);
-
-        const reasonSpan = document.createElement("span");
-        reasonSpan.className = "item-reason";
-        reasonSpan.textContent = item.reason == null ? "" : String(item.reason);
-
-        div.appendChild(tickerSpan);
-        div.appendChild(reasonSpan);
-        list.appendChild(div);
-      });
-    } else {
-      const placeholder = document.createElement("div");
-      placeholder.className = "trade-placeholder";
-      placeholder.textContent = "None identified.";
-      list.appendChild(placeholder);
-    }
-  }
-
-  // Bullish
-  const bullishItems = Array.isArray(tradeData.bullish) ? tradeData.bullish : (tradeData.bullish ? [tradeData.bullish] : []);
-  renderList("bullish-list", bullishItems, "bullish");
-
-  // Bearish
-  const bearishItems = Array.isArray(tradeData.bearish) ? tradeData.bearish : (tradeData.bearish ? [tradeData.bearish] : []);
-  renderList("bearish-list", bearishItems, "bearish");
-}
-
-// Ensure global scope access if needed, or just let it exist in the module
-window.renderTradeRecommendations = renderTradeRecommendations;
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- Back to Top Logic ---

@@ -20,15 +20,6 @@ export interface RadarData {
 
 export type TopicItem = { word: string; count: number };
 
-export interface TradeRecommendation {
-  ticker: string;
-  reason: string;
-}
-
-export interface TradeRecommendations {
-  bullish: TradeRecommendation[];
-  bearish: TradeRecommendation[];
-}
 
 export interface InvestBriefItem {
   ticker: string;
@@ -59,7 +50,6 @@ export type RankingPayload = {
   ongi_comment?: string;
   comparative_insight?: string;
   fear_greed?: number;
-  trade_recommendations?: TradeRecommendations;
   ai_model?: string;
   radar?: RadarData;
   brief_swing?: InvestBrief;
@@ -140,7 +130,6 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     summary: meta.summary || undefined,
     ongi_comment: meta.ongi_comment || undefined,
     comparative_insight: meta.comparative_insight || undefined,
-    trade_recommendations: meta.trade_recommendations || undefined,
     ai_model: meta.ai_model || undefined,
     fear_greed: meta.fear_greed,
     radar: meta.radar,
@@ -182,7 +171,6 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     summary: payload.summary,
     ongi_comment: payload.ongi_comment,
     comparative_insight: payload.comparative_insight,
-    trade_recommendations: payload.trade_recommendations,
     ai_model: payload.ai_model,
     fear_greed: payload.fear_greed,
     radar: payload.radar,

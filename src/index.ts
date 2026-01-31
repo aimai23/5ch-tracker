@@ -127,7 +127,6 @@ export default {
         summary: body.summary,
         ongi_comment: body.ongi_comment,
         comparative_insight: body.comparative_insight,
-        trade_recommendations: body.trade_recommendations,
         ai_model: body.ai_model,
         brief_swing: body.brief_swing,
         brief_long: body.brief_long,
