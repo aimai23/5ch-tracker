@@ -147,11 +147,13 @@ def clean_message(text):
     text = re.sub(r"<[^>]+>", " ", text)
     return html.unescape(text).strip()
 
-def sanitize_brief(brief, max_watchlist=8):
+def sanitize_brief(brief, max_watchlist=8, mode="swing"):
     def to_text(value):
         if value is None:
             return ""
-        return str(value).strip()
+        text = str(value).strip()
+        text = re.sub(r"^\u63a8\u6e2c[:\uFF1A]", "", text).strip()
+        return text
 
     def to_list(value):
         return value if isinstance(value, list) else []
@@ -167,6 +169,8 @@ def sanitize_brief(brief, max_watchlist=8):
 
     watchlist = []
     seen = set()
+    theme_hint = focus_themes[0] if focus_themes else ""
+    caution_hint = cautions[0] if cautions else ""
     for item in to_list(brief.get("watchlist")):
         if not isinstance(item, dict):
             continue
@@ -175,23 +179,29 @@ def sanitize_brief(brief, max_watchlist=8):
             continue
         seen.add(ticker)
 
+        reason = to_text(item.get("reason")) or "\u8a71\u984c\u4e0a\u4f4d\u306e\u305f\u3081\u76e3\u8996"
         catalyst = to_text(item.get("catalyst"))
         risk = to_text(item.get("risk"))
         invalidation = to_text(item.get("invalidation"))
         valid_until = to_text(item.get("valid_until") or item.get("deadline"))
 
         if not catalyst:
-            catalyst = "推測:話題先行"
+            catalyst = f"\u30c6\u30fc\u30de:{theme_hint}" if theme_hint else "\u8a71\u984c\u5148\u884c"
         if not risk:
-            risk = "推測:反動リスク"
+            risk = f"\u6ce8\u610f:{caution_hint}" if caution_hint else "\u53cd\u52d5\u30ea\u30b9\u30af"
         if not invalidation:
-            invalidation = "推測:話題沈静"
+            invalidation = "\u8a71\u984c\u6c88\u9759"
         if not valid_until:
-            valid_until = "未定"
+            if mode == "long":
+                valid_until = "\u4eca\u6708\u672b\u307e\u3067"
+            elif mode == "swing":
+                valid_until = "\u4eca\u9031\u672b\u307e\u3067"
+            else:
+                valid_until = "\u672a\u5b9a"
 
         watchlist.append({
             "ticker": ticker,
-            "reason": to_text(item.get("reason")),
+            "reason": reason,
             "catalyst": catalyst,
             "risk": risk,
             "invalidation": invalidation,
@@ -434,7 +444,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     Analyze the following text to extract US stock trends, a general summary, a vibe check, 5 specific sentiment metrics, AND A COMPARATIVE INSIGHT.
     GROUNDING RULES (Anti-hallucination):
     - ONLY use facts/tickers/events that appear in the provided TEXT or CONTEXT. Do NOT invent.
-    - If a detail is not explicitly present, you MAY infer for risk/valid_until, but prefix with "??:". Other fields should stay empty if unsupported.
+    - If a detail is not explicit, you MAY infer for catalyst/risk/valid_until using focus_themes/cautions; avoid specific dates unless present; prefer generic phrases over blanks.
     - For uncertain items, prefer fewer entries over guessing.
     - Do NOT add macro events or data that are not present in the TEXT/CONTEXT.
     - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
@@ -502,12 +512,14 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
            { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
-       - Self-check pass: remove any watchlist item whose ticker is not in the TEXT/CONTEXT. Ensure reason/risk/valid_until are not empty; if empty, use the allowed placeholders prefixed with "\u63a8\u6e2c:".       - Allowed generic placeholders (ONLY when evidence is missing):
-         - catalyst: "\u63a8\u6e2c:\u8a71\u984c\u5148\u884c" / "\u63a8\u6e2c:\u8a71\u984c\u7d99\u7d9a" / "\u63a8\u6e2c:\u9700\u7d66\u4e3b\u5c0e"
-         - risk: "\u63a8\u6e2c:\u53cd\u52d5\u30ea\u30b9\u30af" / "\u63a8\u6e2c:\u8a71\u984c\u6e1b\u901f" / "\u63a8\u6e2c:\u6750\u6599\u4e0d\u8db3"
-         - invalidation: "\u63a8\u6e2c:\u8a71\u984c\u6c88\u9759" / "\u63a8\u6e2c:\u9700\u7d66\u53cd\u8ee2"
-         - valid_until: "\u672a\u5b9a"
-
+       - Self-check pass: remove any watchlist item whose ticker is not in the TEXT/CONTEXT.
+       - Ensure reason/catalyst/risk/invalidation/valid_until are not empty.
+       - If missing, fill with allowed generic placeholders (do not invent specifics).
+       - Allowed generic placeholders (ONLY when evidence is missing):
+         - catalyst: "\u30c6\u30fc\u30de:<focus theme>" / "\u8a71\u984c\u5148\u884c" / "\u9700\u7d66\u4e3b\u5c0e"
+         - risk: "\u6ce8\u610f:<caution>" / "\u53cd\u52d5\u30ea\u30b9\u30af" / "\u8a71\u984c\u6e1b\u901f"
+         - invalidation: "\u8a71\u984c\u6c88\u9759" / "\u9700\u7d66\u53cd\u8ee2"
+         - valid_until: "\u4eca\u9031\u672b\u307e\u3067" (brief_swing) / "\u4eca\u6708\u672b\u307e\u3067" (brief_long) / "\u672a\u5b9a"
     Text:
     {text[:400000]}
     """
@@ -536,8 +548,8 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
                     data = json.loads(content)
-                    brief_swing = sanitize_brief(data.get("brief_swing", {}))
-                    brief_long = sanitize_brief(data.get("brief_long", {}))
+                    brief_swing = sanitize_brief(data.get("brief_swing", {}), mode="swing")
+                    brief_long = sanitize_brief(data.get("brief_long", {}), mode="long")
                     return data.get("tickers", []), data.get("summary", "\u76f8\u5834\u306f\u6df7\u6c8c\u3068\u3057\u3066\u3044\u307e\u3059..."), data.get("fear_greed_score", 50), data.get("radar", {}), data.get("ongi_comment", ""), data.get("breaking_news", []), data.get("comparative_insight", ""), brief_swing, brief_long, model_name
                 except Exception:
                     logging.warning(f"Parsing response failed for {model_name}")

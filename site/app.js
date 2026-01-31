@@ -449,17 +449,17 @@ function renderInvestBrief(data) {
     const metaFallback = !catalyst && !risk && !invalidation;
     const fallbackCatalyst = metaFallback ? (
       trend.className === "up"
-        ? "\u63a8\u6e2c:\u8a71\u984c\u5897\u52a0\uff08\u63a8\u79fb\uff09"
+        ? "\u8a71\u984c\u5897\u52a0\uff08\u63a8\u79fb\uff09"
         : trend.className === "down"
-          ? "\u63a8\u6e2c:\u53cd\u8ee2\u5f85\u3061\uff08\u63a8\u79fb\uff09"
-          : "\u63a8\u6e2c:\u8a71\u984c\u7d99\u7d9a\uff08\u63a8\u79fb\uff09"
+          ? "\u53cd\u8ee2\u5f85\u3061\uff08\u63a8\u79fb\uff09"
+          : "\u8a71\u984c\u7d99\u7d9a\uff08\u63a8\u79fb\uff09"
     ) : "";
     const fallbackRisk = metaFallback ? (
       trend.className === "down"
-        ? "\u63a8\u6e2c:\u8a71\u984c\u6e1b\u901f\uff08\u63a8\u79fb\uff09"
-        : "\u63a8\u6e2c:\u53cd\u52d5\u30ea\u30b9\u30af\uff08\u63a8\u79fb\uff09"
+        ? "\u8a71\u984c\u6e1b\u901f\uff08\u63a8\u79fb\uff09"
+        : "\u53cd\u52d5\u30ea\u30b9\u30af\uff08\u63a8\u79fb\uff09"
     ) : "";
-    const fallbackInvalidation = metaFallback ? "\u63a8\u6e2c:\u8a71\u984c\u6c88\u9759\uff08\u63a8\u79fb\uff09" : "";
+    const fallbackInvalidation = metaFallback ? "\u8a71\u984c\u6c88\u9759\uff08\u63a8\u79fb\uff09" : "";
     const catalystText = catalyst || fallbackCatalyst;
     const riskText = risk || fallbackRisk;
     const invalidationText = invalidation || fallbackInvalidation;
