@@ -2556,6 +2556,13 @@ footer a {
   letter-spacing: 0.04em;
 }
 
+.brief-badge.evidence {
+  color: var(--accent-cyan);
+  border-color: rgba(0, 240, 255, 0.45);
+  background: rgba(0, 240, 255, 0.12);
+}
+
+
 .brief-card-right {
   display: inline-flex;
   align-items: center;

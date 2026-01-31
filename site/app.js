@@ -481,6 +481,14 @@ function renderInvestBrief(data) {
     trendEl.className = `brief-trend ${trend.className}`;
     trendEl.textContent = trend.label;
 
+    const confidence = item && item.confidence ? String(item.confidence).toLowerCase() : "";
+    if (confidence === "high") {
+      const evidenceBadge = document.createElement("span");
+      evidenceBadge.className = "brief-badge evidence";
+      evidenceBadge.textContent = "\u6839\u62e0";
+      rightGroup.appendChild(evidenceBadge);
+    }
+
     const deadlineInfo = classifyDeadline(item && item.valid_until ? String(item.valid_until) : "");
     if (deadlineInfo.label) {
       const deadlineEl = document.createElement("span");

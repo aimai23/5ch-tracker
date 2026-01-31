@@ -179,19 +179,35 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             continue
         seen.add(ticker)
 
-        reason = to_text(item.get("reason")) or "\u8a71\u984c\u4e0a\u4f4d\u306e\u305f\u3081\u76e3\u8996"
-        catalyst = to_text(item.get("catalyst"))
-        risk = to_text(item.get("risk"))
-        invalidation = to_text(item.get("invalidation"))
-        valid_until = to_text(item.get("valid_until") or item.get("deadline"))
+        reason_raw = to_text(item.get("reason"))
+        catalyst_raw = to_text(item.get("catalyst"))
+        risk_raw = to_text(item.get("risk"))
+        invalidation_raw = to_text(item.get("invalidation"))
+        valid_until_raw = to_text(item.get("valid_until") or item.get("deadline"))
+        confidence_raw = to_text(item.get("confidence")).lower()
 
-        if not catalyst:
-            catalyst = f"\u30c6\u30fc\u30de:{theme_hint}" if theme_hint else "\u8a71\u984c\u5148\u884c"
-        if not risk:
-            risk = f"\u6ce8\u610f:{caution_hint}" if caution_hint else "\u53cd\u52d5\u30ea\u30b9\u30af"
-        if not invalidation:
-            invalidation = "\u8a71\u984c\u6c88\u9759"
-        if not valid_until:
+        missing = sum(1 for v in [reason_raw, catalyst_raw, risk_raw, invalidation_raw, valid_until_raw] if not v)
+        if confidence_raw in ["high", "mid", "low"]:
+            confidence = confidence_raw
+            if confidence == "high" and missing > 0:
+                confidence = "mid"
+            if missing > 2:
+                confidence = "low"
+        else:
+            if missing == 0:
+                confidence = "high"
+            elif missing <= 2:
+                confidence = "mid"
+            else:
+                confidence = "low"
+
+        reason = reason_raw or "\u8a71\u984c\u4e0a\u4f4d\u306e\u305f\u3081\u76e3\u8996"
+        catalyst = catalyst_raw or (f"\u30c6\u30fc\u30de:{theme_hint}" if theme_hint else "\u8a71\u984c\u5148\u884c")
+        risk = risk_raw or (f"\u6ce8\u610f:{caution_hint}" if caution_hint else "\u53cd\u52d5\u30ea\u30b9\u30af")
+        invalidation = invalidation_raw or "\u8a71\u984c\u6c88\u9759"
+        if valid_until_raw:
+            valid_until = valid_until_raw
+        else:
             if mode == "long":
                 valid_until = "\u4eca\u6708\u672b\u307e\u3067"
             elif mode == "swing":
@@ -205,7 +221,8 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             "catalyst": catalyst,
             "risk": risk,
             "invalidation": invalidation,
-            "valid_until": valid_until
+            "valid_until": valid_until,
+            "confidence": confidence
         })
         if len(watchlist) >= max_watchlist:
             break
@@ -506,13 +523,15 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
          - "focus_themes": 2-5 themes (short phrases)
          - "watchlist": up to 8 items with:
-           { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until" }
+           { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence" }
          - "cautions": 2-4 items
          - "catalyst_calendar": 3-6 items with:
            { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Keep it practical and grounded in the thread context.
-       - Self-check pass: remove any watchlist item whose ticker is not in the TEXT/CONTEXT.
+       - Self-check pass: DO NOT remove items solely for weak evidence.
+       - If ticker is in extracted tickers but not clearly in TEXT/CONTEXT, keep it with confidence="low".
+       - Set confidence per item: "high" (explicit), "mid" (implied by themes/cautions), "low" (generic placeholder).
        - Ensure reason/catalyst/risk/invalidation/valid_until are not empty.
        - If missing, fill with allowed generic placeholders (do not invent specifics).
        - Allowed generic placeholders (ONLY when evidence is missing):
