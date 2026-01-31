@@ -338,6 +338,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     crisis_context = "Crisis Indicators: "
     if doughcon_data:
         crisis_context += f"DOUGHCON PENTAGON PIZZA INDEX: {doughcon_data.get('level')} ({doughcon_data.get('description')}). "
+    crisis_context += "NOTE: Doughcon baseline is effectively DEFCON 4; treat a shift to 3 as the alert threshold. "
     if sahm_data:
         crisis_context += f"SAHM RULE RECESSION SIGNAL: {sahm_data.get('value')} (Status: {sahm_data.get('state')})."
 
