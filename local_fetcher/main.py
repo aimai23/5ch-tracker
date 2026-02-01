@@ -217,7 +217,7 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             else:
                 valid_until = "\u672a\u5b9a"
 
-        if bias_raw in ["bull", "bear", "neutral"]:
+        if bias_raw in ["bull", "bear"]:
             bias = bias_raw
         else:
             bias_source = " ".join([reason_raw, catalyst_raw, risk_raw, invalidation_raw]).lower()
@@ -225,9 +225,7 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             bear_keys = ["弱気", "下落", "売り", "懸念", "警戒", "減速", "失速", "暴落", "崩壊", "下振れ", "逆風", "売却", "利確", "ロスカット", "下押し", "bear", "short"]
             bull_score = sum(1 for k in bull_keys if k in bias_source)
             bear_score = sum(1 for k in bear_keys if k in bias_source)
-            if bull_score == 0 and bear_score == 0:
-                bias = "neutral"
-            elif bull_score >= bear_score:
+            if bull_score >= bear_score:
                 bias = "bull"
             else:
                 bias = "bear"
