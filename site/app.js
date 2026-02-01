@@ -552,17 +552,17 @@ function renderInvestBrief(data) {
     let biasLabel = "";
     let biasClass = "";
     if (biasRaw === "bull" || /\u5f37\u6c17|\u8cb7\u3044|\u4e0a/.test(biasRaw)) {
-      biasLabel = "B";
+      biasLabel = "🐮";
       biasClass = "bias-bull";
     } else if (biasRaw === "bear" || /\u5f31\u6c17|\u58f2\u308a|\u4e0b/.test(biasRaw)) {
-      biasLabel = "S";
+      biasLabel = "🐻";
       biasClass = "bias-bear";
     }
     if (biasLabel) {
       const biasBadge = document.createElement("span");
       biasBadge.className = `brief-badge ${biasClass}`;
       biasBadge.textContent = biasLabel;
-      biasBadge.title = biasLabel === "B" ? "\u5f37\u6c17" : "\u5f31\u6c17";
+      biasBadge.title = biasLabel === "🐮" ? "\u5f37\u6c17" : "\u5f31\u6c17";
       rightGroup.appendChild(biasBadge);
     }
 

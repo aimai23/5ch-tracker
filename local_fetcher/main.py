@@ -650,8 +650,8 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "focus_themes" (3-5 items)
          - "watchlist" (exactly 8 items; pad with low-confidence items if needed):
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence", "bias" }
-         - "cautions" (3-5 items)
-         - "catalyst_calendar" (3-5 items):
+         - "cautions" (3 items)
+         - "catalyst_calendar" (3 items):
            { "date", "event", "note", "impact" } with impact in "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
        - Output must include all required keys. Use empty strings/arrays instead of null.
