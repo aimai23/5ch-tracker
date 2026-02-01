@@ -170,6 +170,17 @@ function getDeadlineSortKey(value) {
   const now = new Date();
   const nowMs = now.getTime();
 
+  const isoMatch = raw.match(/(\d{4})\s*[-/]\s*(\d{1,2})\s*[-/]\s*(\d{1,2})/);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    const target = new Date(year, month - 1, day, 23, 59, 59);
+    if (!Number.isNaN(target.getTime())) {
+      return target.getTime();
+    }
+  }
+
   if (/24h|24\u6642\u9593/i.test(raw)) return nowMs + 6 * 60 * 60 * 1000;
   if (/\u672c\u65e5|\u4eca\u65e5|\u4eca\u591c|\u4eca\u671d/i.test(raw)) return nowMs + 6 * 60 * 60 * 1000;
   if (/\u660e\u5f8c\u65e5/.test(raw)) return nowMs + 2 * 24 * 60 * 60 * 1000;
@@ -526,6 +537,15 @@ function renderInvestBrief(data) {
       rightGroup.appendChild(evidenceBadge);
     }
 
+    rightGroup.appendChild(trendEl);
+
+    if (redditTickers.has(normalizeTicker(ticker))) {
+      const badge = document.createElement("span");
+      badge.className = "brief-badge";
+      badge.textContent = "CONSENSUS";
+      rightGroup.appendChild(badge);
+    }
+
     const deadlineInfo = classifyDeadline(item && item.valid_until ? String(item.valid_until) : "");
     if (deadlineInfo.label) {
       const deadlineEl = document.createElement("span");
@@ -537,15 +557,6 @@ function renderInvestBrief(data) {
       deadlineEl.className = "brief-deadline deadline-unknown";
       deadlineEl.textContent = "未定";
       rightGroup.appendChild(deadlineEl);
-    }
-
-    rightGroup.appendChild(trendEl);
-
-    if (redditTickers.has(normalizeTicker(ticker))) {
-      const badge = document.createElement("span");
-      badge.className = "brief-badge";
-      badge.textContent = "CONSENSUS";
-      rightGroup.appendChild(badge);
     }
 
     header.appendChild(tickerEl);
