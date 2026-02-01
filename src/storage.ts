@@ -71,6 +71,9 @@ export type RankingPayload = {
   doughcon?: { level: number; description: string };
   sahm_rule?: { value: number; state: string };
   yield_curve?: { value: number; state: string };
+  hy_oas?: { value: number; state: string };
+  market_breadth?: { value?: number; change?: number; change_percent?: number; state: string };
+  volatility?: { vix?: number; move?: number; state?: string };
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -143,6 +146,9 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     doughcon: meta.doughcon,
     sahm_rule: meta.sahm_rule,
     yield_curve: meta.yield_curve,
+    hy_oas: meta.hy_oas,
+    market_breadth: meta.market_breadth,
+    volatility: meta.volatility,
     sources: meta.sources || [],
   };
 }
@@ -184,6 +190,9 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     doughcon: payload.doughcon,
     sahm_rule: payload.sahm_rule,
     yield_curve: payload.yield_curve,
+    hy_oas: payload.hy_oas,
+    market_breadth: payload.market_breadth,
+    volatility: payload.volatility,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")

@@ -856,14 +856,23 @@ def fetch_doughcon_data():
     return None
 
 def    send_to_worker(
-        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg
+        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg, hy_oas_data, market_breadth_data, volatility_data
     ):
     logging.info(f"Sending {len(tickers)} tickers, {len(topics)} topics, {len(polymarket or [])} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
         logging.warning("Worker config missing. Skipping upload.")
         return
 
-    logging.info(f"Payload Indicators: Pizza={doughcon_data is not None}, Sahm={sahm_data is not None}, Yield={yield_curve_data is not None}, CryptoFG={crypto_fg is not None}")
+    logging.info(
+        "Payload Indicators: "
+        f"Pizza={doughcon_data is not None}, "
+        f"Sahm={sahm_data is not None}, "
+        f"Yield={yield_curve_data is not None}, "
+        f"CryptoFG={crypto_fg is not None}, "
+        f"HY_OAS={hy_oas_data is not None}, "
+        f"Breadth={market_breadth_data is not None}, "
+        f"Volatility={volatility_data is not None}"
+    )
     
     payload = {
         "updatedAt": datetime.datetime.now().isoformat(),
@@ -887,7 +896,10 @@ def    send_to_worker(
         "crypto_fear_greed": crypto_fg,
         "doughcon": doughcon_data,
         "sahm_rule": sahm_data,
-        "yield_curve": yield_curve_data
+        "yield_curve": yield_curve_data,
+        "hy_oas": hy_oas_data,
+        "market_breadth": market_breadth_data,
+        "volatility": volatility_data
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -1243,6 +1255,20 @@ def fetch_with_retry(url, retries=3, delay=2):
             
     return None
 
+def fetch_fred_series_value(series_id):
+    try:
+        url = f"https://fred.stlouisfed.org/series/{series_id}"
+        resp = fetch_with_retry(url)
+        if resp:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            val_el = soup.find(class_="series-meta-observation-value")
+            if val_el:
+                val_text = val_el.get_text(strip=True).replace(",", "")
+                return float(val_text)
+    except Exception as e:
+        logging.warning(f"Failed to fetch FRED series {series_id}: {e}")
+    return None
+
 def fetch_doughcon_level():
     try:
         url = "https://www.pizzint.watch/api/dashboard-data?nocache=1"
@@ -1332,6 +1358,98 @@ def fetch_yield_curve():
         logging.warning(f"Failed to fetch Yield Curve: {e}")
     return None
 
+def fetch_hy_oas():
+    value = fetch_fred_series_value("BAMLH0A0HYM2")
+    if value is None:
+        return None
+    if value >= 7:
+        state = "Stress"
+    elif value >= 5:
+        state = "Warning"
+    elif value >= 3:
+        state = "Normal"
+    else:
+        state = "Tight"
+    return {
+        "value": value,
+        "state": state
+    }
+
+def fetch_yahoo_quotes(symbols):
+    if not symbols:
+        return {}
+    url = "https://query1.finance.yahoo.com/v7/finance/quote"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*"
+    }
+    params = { "symbols": ",".join(symbols) }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            results = data.get("quoteResponse", {}).get("result", [])
+            return { item.get("symbol"): item for item in results if item.get("symbol") }
+    except Exception as e:
+        logging.warning(f"Failed to fetch Yahoo quotes: {e}")
+    return {}
+
+def fetch_market_breadth():
+    quotes = fetch_yahoo_quotes(["^NYAD"])
+    quote = quotes.get("^NYAD")
+    if not quote:
+        return None
+    change = quote.get("regularMarketChange")
+    if change is None:
+        return None
+    state = "Flat"
+    if change > 0:
+        state = "Advancing"
+    elif change < 0:
+        state = "Declining"
+    return {
+        "value": quote.get("regularMarketPrice"),
+        "change": change,
+        "change_percent": quote.get("regularMarketChangePercent"),
+        "state": state
+    }
+
+def fetch_volatility():
+    vix = fetch_fred_series_value("VIXCLS")
+    quotes = fetch_yahoo_quotes(["^MOVE"])
+    move_quote = quotes.get("^MOVE")
+    move = None
+    if move_quote and move_quote.get("regularMarketPrice") is not None:
+        move = float(move_quote.get("regularMarketPrice"))
+
+    if vix is None and move is None:
+        return None
+
+    risk_score = 0
+    if vix is not None:
+        if vix >= 25:
+            risk_score += 2
+        elif vix >= 20:
+            risk_score += 1
+    if move is not None:
+        if move >= 110:
+            risk_score += 2
+        elif move >= 90:
+            risk_score += 1
+
+    if risk_score >= 3:
+        state = "Stress"
+    elif risk_score >= 1:
+        state = "Elevated"
+    else:
+        state = "Calm"
+
+    return {
+        "vix": vix,
+        "move": move,
+        "state": state
+    }
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
@@ -1365,6 +1483,20 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
 
     yield_curve_data = fetch_yield_curve()
+    if yield_curve_data:
+        logging.info(f"Yield Curve Fetched: {yield_curve_data['value']} ({yield_curve_data['state']})")
+
+    hy_oas_data = fetch_hy_oas()
+    if hy_oas_data:
+        logging.info(f"HY OAS Fetched: {hy_oas_data['value']} ({hy_oas_data['state']})")
+
+    market_breadth_data = fetch_market_breadth()
+    if market_breadth_data:
+        logging.info(f"Market Breadth Fetched: {market_breadth_data['state']} ({market_breadth_data['change']})")
+
+    volatility_data = fetch_volatility()
+    if volatility_data:
+        logging.info(f"Volatility Fetched: VIX={volatility_data.get('vix')} MOVE={volatility_data.get('move')} ({volatility_data.get('state')})")
 
     threads = discover_threads()
     if not threads:
@@ -1498,7 +1630,12 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
 
-    send_to_worker(final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data, breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight, brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg)
+    send_to_worker(
+        final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data,
+        breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight,
+        brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data,
+        crypto_fg, hy_oas_data, market_breadth_data, volatility_data
+    )
 
 if __name__ == "__main__":
     import argparse

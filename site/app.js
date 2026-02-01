@@ -1158,6 +1158,15 @@ async function main() {
       updateYieldCurve(data.yield_curve);
     }
 
+    // NEW: HY OAS
+    updateHyOas(data.hy_oas || null);
+
+    // NEW: MARKET BREADTH
+    updateMarketBreadth(data.market_breadth || null);
+
+    // NEW: VIX / MOVE
+    updateVolatility(data.volatility || null);
+
     // NEW: CRYPTO FEAR & GREED
     if (data.crypto_fear_greed) {
       updateCryptoFG(data.crypto_fear_greed);
@@ -1708,6 +1717,88 @@ function updateYieldCurve(data) {
   let color = "#00ff00"; // Green
   if (data.value < 0) color = "#ff0000";       // Inverted
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
+
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
+}
+
+function updateHyOas(data) {
+  const levelEl = document.getElementById("hy-oas-level");
+  const descEl = document.getElementById("hy-oas-desc");
+
+  if (!levelEl) return;
+  if (!data) {
+    levelEl.textContent = "NO DATA";
+    if (descEl) descEl.textContent = "";
+    return;
+  }
+
+  levelEl.textContent = String(data.state || "UNKNOWN").toUpperCase();
+  if (descEl && typeof data.value === "number") {
+    descEl.textContent = `Value: ${data.value.toFixed(2)}%`;
+  }
+
+  let color = "#00ff00";
+  if (typeof data.value === "number") {
+    if (data.value >= 7) color = "#ff0000";
+    else if (data.value >= 5) color = "#ff6600";
+    else if (data.value >= 3) color = "#ffff00";
+  }
+
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
+}
+
+function updateMarketBreadth(data) {
+  const levelEl = document.getElementById("breadth-level");
+  const descEl = document.getElementById("breadth-desc");
+
+  if (!levelEl) return;
+  if (!data) {
+    levelEl.textContent = "NO DATA";
+    if (descEl) descEl.textContent = "";
+    return;
+  }
+
+  levelEl.textContent = String(data.state || "FLAT").toUpperCase();
+
+  const change = typeof data.change === "number" ? data.change : null;
+  const changePct = typeof data.change_percent === "number" ? data.change_percent : null;
+  if (descEl) {
+    const signed = change === null ? "N/A" : `${change >= 0 ? "+" : ""}${change.toFixed(0)}`;
+    const pct = changePct === null ? "" : ` (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`;
+    descEl.textContent = `Δ ${signed}${pct}`;
+  }
+
+  let color = "#ffff00";
+  if (change !== null) {
+    color = change > 0 ? "#00ff88" : change < 0 ? "#ff6b6b" : "#ffff00";
+  }
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
+}
+
+function updateVolatility(data) {
+  const levelEl = document.getElementById("vol-level");
+  const descEl = document.getElementById("vol-desc");
+
+  if (!levelEl) return;
+  if (!data) {
+    levelEl.textContent = "NO DATA";
+    if (descEl) descEl.textContent = "";
+    return;
+  }
+
+  levelEl.textContent = String(data.state || "VOLATILITY").toUpperCase();
+
+  const parts = [];
+  if (typeof data.vix === "number") parts.push(`VIX ${data.vix.toFixed(1)}`);
+  if (typeof data.move === "number") parts.push(`MOVE ${data.move.toFixed(1)}`);
+  if (descEl) descEl.textContent = parts.length ? parts.join(" / ") : "NO DATA";
+
+  let color = "#00ff00";
+  if (data.state === "Stress") color = "#ff0000";
+  else if (data.state === "Elevated") color = "#ffff00";
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 10px ${color}55`;

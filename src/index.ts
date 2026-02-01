@@ -140,6 +140,9 @@ export default {
         doughcon: body.doughcon,
         sahm_rule: body.sahm_rule,
         yield_curve: body.yield_curve,
+        hy_oas: body.hy_oas,
+        market_breadth: body.market_breadth,
+        volatility: body.volatility,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

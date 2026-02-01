@@ -10,7 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20260202-2">
+  <link rel="stylesheet" href="./style.css?v=20260202-3">
 </head>
 
 <body>
@@ -299,6 +299,83 @@
             </div>
           </div>
 
+          <!-- HIGH YIELD OAS -->
+          <div class="status-card hy-oas-wrapper">
+            <div class="status-title"
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              💳 HY OAS (CREDIT SPREAD)
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:240px; bottom: 120%;">
+                  ハイイールド債の信用スプレッド。<br>リスク資産のストレス指標として有効です。
+                </div>
+              </div>
+            </div>
+            <div id="hy-oas-level"
+              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
+              --</div>
+            <div id="hy-oas-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank"
+                style="color:#666; text-decoration:none;">FRED (St. Louis Fed)</a>
+            </div>
+          </div>
+
+          <!-- MARKET BREADTH -->
+          <div class="status-card breadth-wrapper">
+            <div class="status-title"
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              📊 MARKET BREADTH
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:230px; bottom: 120%;">
+                  市場の広がり指標（A/Dライン）。<br>上昇が一部に偏っていないかを確認します。
+                </div>
+              </div>
+            </div>
+            <div id="breadth-level"
+              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
+              --</div>
+            <div id="breadth-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://finance.yahoo.com/quote/%5ENYAD" target="_blank"
+                style="color:#666; text-decoration:none;">Yahoo Finance</a>
+            </div>
+          </div>
+
+          <!-- VIX / MOVE -->
+          <div class="status-card vol-wrapper">
+            <div class="status-title"
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              🌪️ VIX / MOVE
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:240px; bottom: 120%;">
+                  株（VIX）と債券（MOVE）のボラティリティ。<br>リスクオフの兆候を早期検知。
+                </div>
+              </div>
+            </div>
+            <div id="vol-level"
+              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
+              --</div>
+            <div id="vol-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://fred.stlouisfed.org/series/VIXCLS" target="_blank"
+                style="color:#666; text-decoration:none;">FRED (VIX)</a> /
+              <a href="https://finance.yahoo.com/quote/%5EMOVE" target="_blank"
+                style="color:#666; text-decoration:none;">Yahoo (MOVE)</a>
+            </div>
+          </div>
+
         </div>
 
       </section>
@@ -547,7 +624,7 @@
     ↑
   </button>
 
-  <script src="./app.js?v=20260202-2"></script>
+  <script src="./app.js?v=20260202-3"></script>
 </body>
 
 </html>
