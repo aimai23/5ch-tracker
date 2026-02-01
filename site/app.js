@@ -1687,9 +1687,9 @@ function updateDoughcon(data) {
 function applyRiskLevel(levelEl, level) {
   if (!levelEl) return;
   const palette = {
-    low: { text: "RISK LOW", color: "#00ff88" },
-    mid: { text: "RISK MID", color: "#f6d365" },
-    high: { text: "RISK HIGH", color: "#ff6b6b" }
+    low: { text: "NOMAL", color: "#00ff88" },
+    mid: { text: "WARNIG", color: "#f6d365" },
+    high: { text: "DENGER", color: "#ff6b6b" }
   };
   const entry = palette[level] || palette.mid;
   levelEl.textContent = entry.text;
