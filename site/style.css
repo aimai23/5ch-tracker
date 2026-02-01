@@ -2717,6 +2717,10 @@ footer a {
   padding-top: 0.45rem;
 }
 
+.brief-card-history[hidden] {
+  display: none !important;
+}
+
 .brief-card-history-wrap {
   margin-top: 0.5rem;
   display: flex;
