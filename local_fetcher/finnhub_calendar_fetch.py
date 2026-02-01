@@ -29,7 +29,7 @@ def build_range(from_arg: Optional[str], to_arg: Optional[str], days: int) -> Tu
     if from_arg and to_arg:
         return from_arg, to_arg
 
-    start = datetime.datetime.utcnow().date()
+    start = datetime.datetime.now(datetime.timezone.utc).date()
     end = start + datetime.timedelta(days=days)
     return iso_day(start), iso_day(end)
 
@@ -115,19 +115,34 @@ def main() -> int:
         "token": api_key,
     }
 
+    errors: List[str] = []
+
     earnings_raw = fetch_json(f"{BASE_URL}/calendar/earnings", earnings_params)
-    economic_raw = fetch_json(f"{BASE_URL}/calendar/economic", economic_params)
+    try:
+        economic_raw = fetch_json(f"{BASE_URL}/calendar/economic", economic_params)
+    except requests.HTTPError as exc:
+        economic_raw = {}
+        status = getattr(exc.response, "status_code", None)
+        if status in (401, 403, 429):
+            errors.append(f"economic_calendar_unavailable_status_{status}")
+        else:
+            errors.append(f"economic_calendar_error_{status or 'unknown'}")
+    except Exception:
+        economic_raw = {}
+        errors.append("economic_calendar_error_unknown")
 
     earnings_list = normalize_earnings(earnings_raw.get("earningsCalendar", []) or [])
     economic_list = normalize_economic(economic_raw.get("economicCalendar", []) or [])
 
     payload = {
-        "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "range": {"from": from_date, "to": to_date, "days": args.days},
         "source": "finnhub",
         "earnings": earnings_list,
         "economic": economic_list,
     }
+    if errors:
+        payload["errors"] = errors
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
