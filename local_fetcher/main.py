@@ -1454,9 +1454,13 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
     
-    # Polymarket Fetch (Parallel-ish in effect)
-    polymarket_raw = fetch_polymarket_events()
-    polymarket_data = translate_polymarket_events(polymarket_raw)
+    # Polymarket Fetch (skip AI translation in debug mode)
+    polymarket_data = []
+    if not debug_mode:
+        polymarket_raw = fetch_polymarket_events()
+        polymarket_data = translate_polymarket_events(polymarket_raw)
+    else:
+        logging.info("DEBUG MODE: Skipping Polymarket translation (AI).")
 
     if poly_only:
         logging.info("--- POLYMARKET ONLY MODE ---")
@@ -1655,4 +1659,4 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             logging.info("Monitor stopped.")
     else:
-        run_analysis(debug_mode=False)
+        run_analysis(debug_mode=args.debug)
