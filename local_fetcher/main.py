@@ -642,7 +642,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Use tickers that appear in TEXT/CONTEXT. For those tickers, you MAY add general market context not in the TEXT; prefix it with "一般知識:" and set confidence="low".
        - If evidence is weak or implicit, still answer with short, generic wording and lower the confidence instead of omitting.
        - Confidence: "high" (explicit), "mid" (implied), "low" (generic/assumption).
-       - Bias per watchlist item: "bull" (上方向の示唆), "bear" (下方向の示唆), "neutral" (中立/様子見). Bias is REQUIRED; if unclear use "neutral".
+       - Bias per watchlist item: "bull" (??????) or "bear" (??????). Bias is REQUIRED. This is a direction label only (NOT a trade recommendation).
        - Provide TWO briefs: "brief_swing" and "brief_long" with the same keys.
        - Each brief must include:
          - "headline" (Max 80 chars)
