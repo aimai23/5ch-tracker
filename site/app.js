@@ -69,6 +69,23 @@ function getOngiCommentText(payload) {
   return "";
 }
 
+function localizeMarketRegime(value) {
+  if (!value) return "";
+  let text = String(value);
+  const replacements = [
+    { en: /Deep\s*Fear/gi, ja: "深い恐怖" },
+    { en: /Liquidation\s*Mode/gi, ja: "投げ売りモード" },
+    { en: /Risk[\s-]*On/gi, ja: "リスクオン" },
+    { en: /Risk[\s-]*Off/gi, ja: "リスクオフ" },
+    { en: /Mixed/gi, ja: "混在" },
+    { en: /Neutral/gi, ja: "中立" },
+  ];
+  replacements.forEach(({ en, ja }) => {
+    text = text.replace(en, ja);
+  });
+  return text;
+}
+
 function getSnapshotTime(snapshot) {
   if (!snapshot) return null;
   const payload = snapshot.payload || {};
@@ -362,7 +379,7 @@ function renderInvestBrief(data) {
   }
 
   if (displayBrief.market_regime) {
-    regimeEl.textContent = displayBrief.market_regime;
+    regimeEl.textContent = localizeMarketRegime(displayBrief.market_regime);
     regimeEl.style.display = "inline-flex";
   } else {
     regimeEl.textContent = "--";
@@ -573,16 +590,35 @@ function renderInvestBrief(data) {
     addMeta("\u7121\u52b9\u5316", invalidationText);
     addMeta("\u671f\u9650", item && item.valid_until ? String(item.valid_until) : "");
 
+    const historyWrap = document.createElement("div");
+    historyWrap.className = "brief-card-history-wrap";
+
+    const historyToggle = document.createElement("button");
+    historyToggle.type = "button";
+    historyToggle.className = "brief-history-toggle";
+    historyToggle.textContent = "推移";
+    historyToggle.setAttribute("aria-expanded", "false");
+
     const history = document.createElement("div");
     history.className = "brief-card-history";
-    history.textContent = `推移(5ch件数・古→新): ${historyText}`;
+    history.textContent = `推移(5ch件数・古→新): ${historyText || NO_DATA_LABEL}`;
+    history.hidden = true;
+
+    historyToggle.addEventListener("click", () => {
+      const open = history.hidden;
+      history.hidden = !open;
+      historyToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      historyToggle.textContent = open ? "推移を隠す" : "推移";
+    });
 
     card.appendChild(header);
     card.appendChild(reasonEl);
     if (meta.childNodes.length > 0) {
       card.appendChild(meta);
     }
-    card.appendChild(history);
+    historyWrap.appendChild(historyToggle);
+    historyWrap.appendChild(history);
+    card.appendChild(historyWrap);
 
     watchlistEl.appendChild(card);
   });
