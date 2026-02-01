@@ -16,6 +16,7 @@ let investBriefMode = "swing";
 let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
 const WATCHLIST_TARGET = 8;
+const NO_DATA_LABEL = "NO DATA";
 
 function escapeHtml(value) {
   const s = value == null ? "" : String(value);
@@ -256,7 +257,7 @@ function buildChangeTop(history, limit = 3) {
 function buildFallbackBrief(data) {
   const items = (data && Array.isArray(data.items) ? data.items.slice(0, WATCHLIST_TARGET) : []);
   return {
-    headline: getOverviewText(data) || "投資ブリーフ生成中",
+    headline: getOverviewText(data) || NO_DATA_LABEL,
     market_regime: null,
     focus_themes: [],
     watchlist: items.map(item => ({
@@ -267,7 +268,7 @@ function buildFallbackBrief(data) {
       invalidation: "",
       valid_until: "次回更新まで"
     })),
-    cautions: ["AIブリーフ生成待ち。次回更新で詳細が入ります。"]
+    cautions: [NO_DATA_LABEL]
   };
 }
 
@@ -338,7 +339,7 @@ function renderInvestBrief(data) {
     })
     .map(entry => entry.item);
 
-  headlineEl.textContent = displayBrief.headline || "投資ブリーフ準備中";
+  headlineEl.textContent = displayBrief.headline || NO_DATA_LABEL;
 
   if (modelEl) {
     const modelName = data && data.ai_model ? String(data.ai_model) : "";
@@ -391,7 +392,7 @@ function renderInvestBrief(data) {
   } else {
     const tag = document.createElement("span");
     tag.className = "brief-tag";
-    tag.textContent = "テーマ整理中";
+    tag.textContent = NO_DATA_LABEL;
     themesEl.appendChild(tag);
   }
 
@@ -405,7 +406,7 @@ function renderInvestBrief(data) {
     });
   } else {
     const li = document.createElement("li");
-    li.textContent = "注意点データがありません。";
+    li.textContent = NO_DATA_LABEL;
     cautionsEl.appendChild(li);
   }
 
@@ -437,7 +438,7 @@ function renderInvestBrief(data) {
     });
   } else {
     const li = document.createElement("li");
-    li.textContent = "カレンダー準備中";
+    li.textContent = NO_DATA_LABEL;
     calendarEl.appendChild(li);
   }
 
@@ -463,7 +464,7 @@ function renderInvestBrief(data) {
   if (sortedWatchlist.length === 0) {
     const empty = document.createElement("div");
     empty.className = "brief-card-reason";
-    empty.textContent = "監視リストを準備中です。";
+    empty.textContent = NO_DATA_LABEL;
     watchlistEl.appendChild(empty);
     return;
   }
@@ -621,8 +622,8 @@ function applyInsightSnapshot(snapshot, index) {
       overviewEl.style.display = "block";
       overviewText.textContent = overviewTextValue;
     } else {
-      overviewEl.style.display = "none";
-      overviewText.textContent = "";
+      overviewEl.style.display = "block";
+      overviewText.textContent = NO_DATA_LABEL;
     }
   }
 
@@ -1189,7 +1190,7 @@ async function main() {
   if (ongiCommentEl) {
     const ongiText = getOngiCommentText(data);
     const overviewText = getOverviewText(data);
-    ongiCommentEl.textContent = ongiText || overviewText || "Waiting for AI analysis...";
+    ongiCommentEl.textContent = ongiText || overviewText || NO_DATA_LABEL;
   }
 
     // Comparative Insight Logic
