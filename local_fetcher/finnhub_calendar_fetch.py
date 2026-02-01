@@ -1,0 +1,141 @@
+import argparse
+import datetime
+import json
+import os
+import re
+import sys
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
+from dotenv import load_dotenv
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_OUT = os.path.join(BASE_DIR, "finnhub_calendar.json")
+BASE_URL = "https://finnhub.io/api/v1"
+
+
+def parse_date(value: str) -> str:
+    if not value:
+        return ""
+    match = re.search(r"\d{4}-\d{2}-\d{2}", value)
+    return match.group(0) if match else ""
+
+
+def iso_day(dt: datetime.date) -> str:
+    return dt.strftime("%Y-%m-%d")
+
+
+def build_range(from_arg: Optional[str], to_arg: Optional[str], days: int) -> Tuple[str, str]:
+    if from_arg and to_arg:
+        return from_arg, to_arg
+
+    start = datetime.datetime.utcnow().date()
+    end = start + datetime.timedelta(days=days)
+    return iso_day(start), iso_day(end)
+
+
+def fetch_json(url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    resp = requests.get(url, params=params, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+    return data if isinstance(data, dict) else {}
+
+
+def normalize_earnings(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    output: List[Dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        date = item.get("date") or ""
+        output.append({
+            "date": date,
+            "symbol": item.get("symbol"),
+            "hour": item.get("hour"),
+            "eps_actual": item.get("epsActual"),
+            "eps_estimate": item.get("epsEstimate"),
+            "revenue_actual": item.get("revenueActual"),
+            "revenue_estimate": item.get("revenueEstimate"),
+            "quarter": item.get("quarter"),
+            "year": item.get("year"),
+        })
+    output.sort(key=lambda x: (x.get("date") or "", x.get("symbol") or ""))
+    return output
+
+
+def normalize_economic(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    output: List[Dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        time_value = item.get("time") or ""
+        date = parse_date(time_value)
+        output.append({
+            "date": date,
+            "time": time_value,
+            "event": item.get("event"),
+            "country": item.get("country"),
+            "actual": item.get("actual"),
+            "estimate": item.get("estimate"),
+            "previous": item.get("prev"),
+            "unit": item.get("unit"),
+            "impact": item.get("impact"),
+        })
+    output.sort(key=lambda x: (x.get("date") or "", x.get("time") or "", x.get("event") or ""))
+    return output
+
+
+def main() -> int:
+    load_dotenv()
+    api_key = os.getenv("FINNHUB_API_KEY")
+    if not api_key:
+        print("FINNHUB_API_KEY is not set.", file=sys.stderr)
+        return 1
+
+    parser = argparse.ArgumentParser(description="Fetch Finnhub earnings and economic calendars.")
+    parser.add_argument("--from", dest="from_date", help="From date (YYYY-MM-DD)")
+    parser.add_argument("--to", dest="to_date", help="To date (YYYY-MM-DD)")
+    parser.add_argument("--days", type=int, default=30, help="Range length in days when from/to not set")
+    parser.add_argument("--out", default=DEFAULT_OUT, help="Output JSON path")
+    parser.add_argument("--include-international", action="store_true", help="Include international earnings")
+    args = parser.parse_args()
+
+    from_date, to_date = build_range(args.from_date, args.to_date, args.days)
+
+    earnings_params: Dict[str, Any] = {
+        "from": from_date,
+        "to": to_date,
+        "token": api_key,
+    }
+    if args.include_international:
+        earnings_params["international"] = "true"
+
+    economic_params: Dict[str, Any] = {
+        "from": from_date,
+        "to": to_date,
+        "token": api_key,
+    }
+
+    earnings_raw = fetch_json(f"{BASE_URL}/calendar/earnings", earnings_params)
+    economic_raw = fetch_json(f"{BASE_URL}/calendar/economic", economic_params)
+
+    earnings_list = normalize_earnings(earnings_raw.get("earningsCalendar", []) or [])
+    economic_list = normalize_economic(economic_raw.get("economicCalendar", []) or [])
+
+    payload = {
+        "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "range": {"from": from_date, "to": to_date, "days": args.days},
+        "source": "finnhub",
+        "earnings": earnings_list,
+        "economic": economic_list,
+    }
+
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    print(f"Wrote {len(earnings_list)} earnings and {len(economic_list)} economic events to {args.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
