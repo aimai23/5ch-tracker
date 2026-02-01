@@ -99,13 +99,6 @@ def normalize_earnings(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         output.append({
             "date": date,
             "symbol": item.get("symbol"),
-            "hour": item.get("hour"),
-            "eps_actual": item.get("epsActual"),
-            "eps_estimate": item.get("epsEstimate"),
-            "revenue_actual": item.get("revenueActual"),
-            "revenue_estimate": item.get("revenueEstimate"),
-            "quarter": item.get("quarter"),
-            "year": item.get("year"),
         })
     output.sort(key=lambda x: (x.get("date") or "", x.get("symbol") or ""))
     return output
