@@ -601,7 +601,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Compare PREVIOUS vs CURRENT state.
        - Generate 1-3 short, punchy headlines (max 60 chars each).
        - Style: "Sports Commentary" or "Breaking News Ticker". DRAMATIC and EXAGGERATED.
-       - IMPORTANT: DO NOT use "【速報】". You can use "【悲報】", "【朗報】", "【異変】" etc, or just start with the Ticker.
+       - IMPORTANT: DO NOT use "【速報】". You can use "【悲報】", "【朗報】", "【異変】" etc.
        - Focus on CHANGE: Rank swaps, Sentiment flips (Fear->Greed), crash or moon.
        - Examples:
          - "【朗報】SOXL、"阿鼻叫喚" から "脳汁" モードへ転換！買い豚の息が吹き返しました"
@@ -617,35 +617,22 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Tone: Professional Analyst, Insightful, Slightly Cynical.
 
     7. INVEST BRIEF (Monitor-only, NO trade advice):
-       BRIEF GROUNDING RULES (Section 7 only):
-       - Use tickers that appear in TEXT/CONTEXT. For those tickers, you MAY add general market context not in the TEXT, but label it as "一般知識:" and set confidence="low". Avoid precise dates unless present.
-       - If a detail is not explicit, you MAY infer for catalyst/risk/valid_until using focus_themes/cautions; avoid specific dates unless present; prefer generic phrases over blanks.
-       - Macro events/data not in TEXT/CONTEXT are allowed ONLY as generic context for a mentioned ticker, and must be labeled "一般知識:" (no specific dates).
-       - If a field lacks explicit evidence, use ONLY the generic placeholders listed below; do not invent specifics.
-       - Output must include all required keys. Use empty strings/arrays instead of null.
-       - Provide TWO briefs: "brief_swing" (few-day swing) and "brief_long" (mid/long term).
-       - Each brief should include:
-         - "headline": short 1-line summary (Max 80 chars)
-         - "market_regime": e.g. Risk-on / Risk-off / Mixed (JP okay)
-         - "focus_themes": 2-5 themes (short phrases)
-         - "watchlist": up to 8 items with:
+       BRIEF RULES (Section 7 only):
+       - Use tickers that appear in TEXT/CONTEXT. For those tickers, you MAY add general market context not in the TEXT; prefix it with "一般知識:" and set confidence="low".
+       - If evidence is weak or implicit, still answer with short, generic wording and lower the confidence instead of omitting.
+       - Confidence: "high" (explicit), "mid" (implied), "low" (generic/assumption).
+       - Provide TWO briefs: "brief_swing" and "brief_long" with the same keys.
+       - Each brief must include:
+         - "headline" (Max 80 chars)
+         - "market_regime"
+         - "focus_themes" (2-5)
+         - "watchlist" (up to 8 items):
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence" }
-         - "cautions": 2-4 items
-         - "catalyst_calendar": 3-6 items with:
-           { "date", "event", "note", "impact" } where impact is one of "low" | "mid" | "high"
+         - "cautions" (2-4)
+         - "catalyst_calendar" (3-6 items):
+           { "date", "event", "note", "impact" } with impact in "low" | "mid" | "high"
        - IMPORTANT: Do NOT say Buy/Sell/Entry/Target. Only monitoring language.
-       - Keep it practical and grounded in the thread context.
-       - Self-check pass: DO NOT remove items solely for weak evidence.
-       - If ticker is in extracted tickers but not clearly in TEXT/CONTEXT, keep it with confidence="low".
-       - Set confidence per item: "high" (explicit), "mid" (implied by themes/cautions), "low" (generic placeholder).
-       - Ensure reason/catalyst/risk/invalidation/valid_until are not empty.
-       - If missing, fill with allowed generic placeholders (do not invent specifics).
-       - If you use general knowledge, prefix with "一般知識:" and set confidence="low".
-       - Allowed generic placeholders (ONLY when evidence is missing):
-         - catalyst: "\u30c6\u30fc\u30de:<focus theme>" / "\u8a71\u984c\u5148\u884c" / "\u9700\u7d66\u4e3b\u5c0e"
-         - risk: "\u6ce8\u610f:<caution>" / "\u53cd\u52d5\u30ea\u30b9\u30af" / "\u8a71\u984c\u6e1b\u901f"
-         - invalidation: "\u8a71\u984c\u6c88\u9759" / "\u9700\u7d66\u53cd\u8ee2"
-         - valid_until: "\u4eca\u9031\u672b\u307e\u3067" (brief_swing) / "\u4eca\u6708\u672b\u307e\u3067" (brief_long) / "\u672a\u5b9a"
+       - Output must include all required keys. Use empty strings/arrays instead of null.
        OUTPUT JSON FORMAT (STRICT):
        {{
          "tickers": [{{ "ticker": "AAPL", "count": 12, "sentiment": 0.1 }}],
