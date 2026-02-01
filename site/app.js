@@ -1684,22 +1684,28 @@ function updateDoughcon(data) {
   levelEl.style.textShadow = `0 0 8px ${color}`;
 }
 
+function applyRiskLevel(levelEl, level) {
+  if (!levelEl) return;
+  const palette = {
+    low: { text: "RISK LOW", color: "#00ff88" },
+    mid: { text: "RISK MID", color: "#f6d365" },
+    high: { text: "RISK HIGH", color: "#ff6b6b" }
+  };
+  const entry = palette[level] || palette.mid;
+  levelEl.textContent = entry.text;
+  levelEl.style.color = entry.color;
+  levelEl.style.textShadow = `0 0 10px ${entry.color}55`;
+}
+
 function updateSahmRule(data) {
   const levelEl = document.getElementById("sahm-level");
   const descEl = document.getElementById("sahm-desc");
 
   if (!data || !levelEl) return;
 
-  levelEl.textContent = data.state.toUpperCase();
-  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}`;
-
-  // Color Logic (0.50+ = Danger/Red, 0.30+ = Warning/Yellow, <0.30 = Safe/Green)
-  let color = "#00ff00";
-  if (data.value >= 0.50) color = "#ff0000";
-  else if (data.value >= 0.30) color = "#ffff00";
-
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 10px ${color}55`;
+  const risk = data.value >= 0.50 ? "high" : data.value >= 0.30 ? "mid" : "low";
+  applyRiskLevel(levelEl, risk);
+  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)} (${data.state})`;
 }
 
 function updateYieldCurve(data) {
@@ -1711,16 +1717,9 @@ function updateYieldCurve(data) {
     return;
   }
 
-  levelEl.textContent = data.state.toUpperCase();
-  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}%`;
-
-  // Color Logic (Inverted (<0) = Danger/Red, Flattening (<0.2) = Warning/Yellow, Normal = Safe/Green)
-  let color = "#00ff00"; // Green
-  if (data.value < 0) color = "#ff0000";       // Inverted
-  else if (data.value < 0.2) color = "#ffff00"; // Flattening
-
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 10px ${color}55`;
+  const risk = data.value < 0 ? "high" : data.value < 0.2 ? "mid" : "low";
+  applyRiskLevel(levelEl, risk);
+  if (descEl) descEl.textContent = `Value: ${data.value.toFixed(2)}% (${data.state})`;
 }
 
 function updateCnnFG(data) {
@@ -1764,20 +1763,14 @@ function updateHyOas(data) {
     return;
   }
 
-  levelEl.textContent = String(data.state || "UNKNOWN").toUpperCase();
-  if (descEl && typeof data.value === "number") {
-    descEl.textContent = `Value: ${data.value.toFixed(2)}%`;
+  const value = typeof data.value === "number" ? data.value : null;
+  const risk = value === null ? "mid" : value >= 7 ? "high" : value >= 5 ? "mid" : "low";
+  applyRiskLevel(levelEl, risk);
+  if (descEl && value !== null) {
+    descEl.textContent = `Value: ${value.toFixed(2)}% (${data.state || "N/A"})`;
+  } else if (descEl) {
+    descEl.textContent = data.state ? `State: ${data.state}` : "";
   }
-
-  let color = "#00ff00";
-  if (typeof data.value === "number") {
-    if (data.value >= 7) color = "#ff0000";
-    else if (data.value >= 5) color = "#ff6600";
-    else if (data.value >= 3) color = "#ffff00";
-  }
-
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
 
 function updateMarketBreadth(data) {
@@ -1791,22 +1784,30 @@ function updateMarketBreadth(data) {
     return;
   }
 
-  levelEl.textContent = String(data.state || "FLAT").toUpperCase();
+  const trend = String(data.state || "Neutral");
+  const trendLower = trend.toLowerCase();
+  let risk = "mid";
+  if (trendLower.includes("bear") || trendLower.includes("declin") || trendLower.includes("down")) {
+    risk = "high";
+  } else if (trendLower.includes("bull") || trendLower.includes("advanc") || trendLower.includes("up")) {
+    risk = "low";
+  }
+  applyRiskLevel(levelEl, risk);
 
+  const value = typeof data.value === "number" ? data.value : null;
   const change = typeof data.change === "number" ? data.change : null;
   const changePct = typeof data.change_percent === "number" ? data.change_percent : null;
   if (descEl) {
-    const signed = change === null ? "N/A" : `${change >= 0 ? "+" : ""}${change.toFixed(0)}`;
-    const pct = changePct === null ? "" : ` (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`;
-    descEl.textContent = `Δ ${signed}${pct}`;
+    const parts = [];
+    if (value !== null) parts.push(`A/D ${value.toFixed(0)}`);
+    if (change !== null) {
+      const signed = `${change >= 0 ? "+" : ""}${change.toFixed(0)}`;
+      const pct = changePct === null ? "" : ` (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`;
+      parts.push(`Δ ${signed}${pct}`);
+    }
+    parts.push(`Trend: ${trend}`);
+    descEl.textContent = parts.join(" / ");
   }
-
-  let color = "#ffff00";
-  if (change !== null) {
-    color = change > 0 ? "#00ff88" : change < 0 ? "#ff6b6b" : "#ffff00";
-  }
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
 
 function updateVolatility(data) {
@@ -1820,19 +1821,20 @@ function updateVolatility(data) {
     return;
   }
 
-  levelEl.textContent = String(data.state || "VOLATILITY").toUpperCase();
+  const vix = typeof data.vix === "number" ? data.vix : null;
+  const move = typeof data.move === "number" ? data.move : null;
+  let risk = "low";
+  if ((vix !== null && vix >= 25) || (move !== null && move >= 110)) {
+    risk = "high";
+  } else if ((vix !== null && vix >= 20) || (move !== null && move >= 90)) {
+    risk = "mid";
+  }
+  applyRiskLevel(levelEl, risk);
 
   const parts = [];
-  if (typeof data.vix === "number") parts.push(`VIX ${data.vix.toFixed(1)}`);
-  if (typeof data.move === "number") parts.push(`MOVE ${data.move.toFixed(1)}`);
-  if (descEl) descEl.textContent = parts.length ? parts.join(" / ") : "NO DATA";
-
-  let color = "#00ff00";
-  if (data.state === "Stress") color = "#ff0000";
-  else if (data.state === "Elevated") color = "#ffff00";
-
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 10px ${color}55`;
+  parts.push(`VIX ${vix !== null ? vix.toFixed(1) : "N/A"}`);
+  parts.push(`MOVE ${move !== null ? move.toFixed(1) : "N/A"}`);
+  if (descEl) descEl.textContent = parts.join(" / ");
 }
 
 function updateCryptoFG(data) {

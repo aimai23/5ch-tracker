@@ -1395,6 +1395,59 @@ def fetch_yahoo_quotes(symbols):
     return {}
 
 def fetch_market_breadth():
+    try:
+        url = "https://indexmood.com/breadth/advance-decline/today"
+        resp = fetch_with_retry(url)
+        if not resp or resp.status_code != 200:
+            resp = requests.get(url, timeout=10)
+        if resp:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            plain = " ".join(soup.stripped_strings)
+            m = re.search(r"A\\s*/?\\s*D\\s*Line:\\s*([-0-9,]+).*?Trend:\\s*([A-Za-z]+)", plain, re.IGNORECASE)
+            if not m:
+                m = re.search(r"Net\\s+Advance\\s*/?\\s*Decline\\s*([-0-9,]+)", plain, re.IGNORECASE)
+                trend_match = re.search(r"Trend:\\s*([A-Za-z]+)", plain, re.IGNORECASE)
+                if m and trend_match:
+                    m = (m.group(1), trend_match.group(1))
+                else:
+                    m = None
+            if not m:
+                value_match = re.search(r"Current\\s+Breadth\\s*([-0-9,]+)", plain, re.IGNORECASE)
+                trend_match = re.search(r"Net\\s+Advance\\s*/?\\s*Decline\\s*[-–—−]\\s*([A-Za-z]+)", plain, re.IGNORECASE)
+                if value_match and trend_match:
+                    m = (value_match.group(1), trend_match.group(1))
+            if not m:
+                tokens = [t.strip(" :") for t in plain.split()]
+                value = None
+                trend = None
+                for i in range(len(tokens) - 2):
+                    if tokens[i].lower() == "current" and tokens[i + 1].lower().startswith("breadth"):
+                        value = tokens[i + 2]
+                        break
+                for i in range(len(tokens) - 3):
+                    if tokens[i].lower() == "net" and tokens[i + 1].lower().startswith("advance"):
+                        if tokens[i + 2] in ["-", "–", "—", "−"]:
+                            trend = tokens[i + 3]
+                        else:
+                            trend = tokens[i + 2]
+                        break
+                if value and trend:
+                    m = (value, trend)
+            if m:
+                if isinstance(m, tuple):
+                    value_raw, trend_raw = m
+                else:
+                    value_raw, trend_raw = m.group(1), m.group(2)
+                value = float(str(value_raw).replace(",", ""))
+                trend = str(trend_raw).capitalize()
+                return {
+                    "value": value,
+                    "state": trend
+                }
+            logging.warning(f"IndexMood breadth parse failed. Snippet: {plain[:200]}")
+    except Exception as e:
+        logging.warning(f"Failed to fetch IndexMood breadth: {e}")
+
     quotes = fetch_yahoo_quotes(["^NYAD"])
     quote = quotes.get("^NYAD")
     if not quote:
@@ -1496,7 +1549,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
 
     market_breadth_data = fetch_market_breadth()
     if market_breadth_data:
-        logging.info(f"Market Breadth Fetched: {market_breadth_data['state']} ({market_breadth_data['change']})")
+        logging.info(f"Market Breadth Fetched: {market_breadth_data.get('state')} ({market_breadth_data.get('value')})")
 
     volatility_data = fetch_volatility()
     if volatility_data:
