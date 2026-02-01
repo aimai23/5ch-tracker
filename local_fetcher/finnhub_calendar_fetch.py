@@ -40,6 +40,55 @@ def fetch_json(url: str, params: Dict[str, Any]) -> Dict[str, Any]:
     data = resp.json()
     return data if isinstance(data, dict) else {}
 
+def chunk_dates(start: datetime.date, end: datetime.date, chunk_days: int) -> List[Tuple[datetime.date, datetime.date]]:
+    chunks: List[Tuple[datetime.date, datetime.date]] = []
+    cursor = start
+    delta = datetime.timedelta(days=chunk_days - 1)
+    while cursor <= end:
+        chunk_end = min(end, cursor + delta)
+        chunks.append((cursor, chunk_end))
+        cursor = chunk_end + datetime.timedelta(days=1)
+    return chunks
+
+def fetch_earnings_range(from_date: str, to_date: str, token: str, include_international: bool, chunk_days: int) -> Dict[str, Any]:
+    start = datetime.datetime.strptime(from_date, "%Y-%m-%d").date()
+    end = datetime.datetime.strptime(to_date, "%Y-%m-%d").date()
+    items: List[Dict[str, Any]] = []
+    seen = set()
+    errors: List[str] = []
+
+    for chunk_start, chunk_end in chunk_dates(start, end, chunk_days):
+        params: Dict[str, Any] = {
+            "from": iso_day(chunk_start),
+            "to": iso_day(chunk_end),
+            "token": token,
+        }
+        if include_international:
+            params["international"] = "true"
+
+        try:
+            data = fetch_json(f"{BASE_URL}/calendar/earnings", params)
+        except Exception:
+            errors.append(f"earnings_chunk_error_{iso_day(chunk_start)}")
+            continue
+
+        for item in data.get("earningsCalendar", []) or []:
+            if not isinstance(item, dict):
+                continue
+            key = (
+                item.get("symbol"),
+                item.get("date"),
+                item.get("hour"),
+                item.get("quarter"),
+                item.get("year"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append(item)
+
+    return {"earningsCalendar": items, "errors": errors}
+
 
 def normalize_earnings(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     output: List[Dict[str, Any]] = []
@@ -97,17 +146,10 @@ def main() -> int:
     parser.add_argument("--days", type=int, default=30, help="Range length in days when from/to not set")
     parser.add_argument("--out", default=DEFAULT_OUT, help="Output JSON path")
     parser.add_argument("--include-international", action="store_true", help="Include international earnings")
+    parser.add_argument("--chunk-days", type=int, default=7, help="Chunk size in days to avoid API truncation")
     args = parser.parse_args()
 
     from_date, to_date = build_range(args.from_date, args.to_date, args.days)
-
-    earnings_params: Dict[str, Any] = {
-        "from": from_date,
-        "to": to_date,
-        "token": api_key,
-    }
-    if args.include_international:
-        earnings_params["international"] = "true"
 
     economic_params: Dict[str, Any] = {
         "from": from_date,
@@ -115,9 +157,14 @@ def main() -> int:
         "token": api_key,
     }
 
-    errors: List[str] = []
-
-    earnings_raw = fetch_json(f"{BASE_URL}/calendar/earnings", earnings_params)
+    earnings_raw = fetch_earnings_range(
+        from_date,
+        to_date,
+        api_key,
+        args.include_international,
+        max(1, args.chunk_days),
+    )
+    errors: List[str] = list(earnings_raw.get("errors", []))
     try:
         economic_raw = fetch_json(f"{BASE_URL}/calendar/economic", economic_params)
     except requests.HTTPError as exc:
