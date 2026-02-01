@@ -4,5 +4,6 @@ node_modules/
 local_fetcher/dat_cache/
 local_fetcher/logs/
 local_fetcher/last_run.json
+local_fetcher/finnhub_calendar.json
 __pycache__/
 *.pyc

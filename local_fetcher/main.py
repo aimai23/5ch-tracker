@@ -1458,6 +1458,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "sahm_rule": sahm_data,
             "yield_curve": yield_curve_data,
             "crypto_fear_greed": crypto_fg,
+            "reddit_rankings": reddit_data,
             "comparative_insight": comparative_insight,
             "ongi_comment": ongi_comment,
             "summary": market_summary,
