@@ -186,6 +186,7 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
         invalidation_raw = to_text(item.get("invalidation"))
         valid_until_raw = to_text(item.get("valid_until") or item.get("deadline"))
         confidence_raw = to_text(item.get("confidence")).lower()
+        bias_raw = to_text(item.get("bias")).lower()
 
         missing = sum(1 for v in [reason_raw, catalyst_raw, risk_raw, invalidation_raw, valid_until_raw] if not v)
         if confidence_raw in ["high", "mid", "low"]:
@@ -223,7 +224,8 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             "risk": risk,
             "invalidation": invalidation,
             "valid_until": valid_until,
-            "confidence": confidence
+            "confidence": confidence,
+            "bias": bias_raw if bias_raw in ["bull", "bear", "neutral"] else ""
         })
         if len(watchlist) >= max_watchlist:
             break
@@ -627,13 +629,14 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Use tickers that appear in TEXT/CONTEXT. For those tickers, you MAY add general market context not in the TEXT; prefix it with "一般知識:" and set confidence="low".
        - If evidence is weak or implicit, still answer with short, generic wording and lower the confidence instead of omitting.
        - Confidence: "high" (explicit), "mid" (implied), "low" (generic/assumption).
+       - Bias per watchlist item: "bull" (上方向の示唆), "bear" (下方向の示唆), "neutral" (中立/様子見).
        - Provide TWO briefs: "brief_swing" and "brief_long" with the same keys.
        - Each brief must include:
          - "headline" (Max 80 chars)
          - "market_regime" (日本語のみ。英語フレーズは使わず簡潔に翻訳)
          - "focus_themes" (3-5 items)
          - "watchlist" (exactly 8 items; pad with low-confidence items if needed):
-           { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence" }
+           { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence", "bias" }
          - "cautions" (3-5 items)
          - "catalyst_calendar" (3-5 items):
            { "date", "event", "note", "impact" } with impact in "low" | "mid" | "high"

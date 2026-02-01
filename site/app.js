@@ -298,7 +298,8 @@ function buildBriefWatchlist(displayBrief, data) {
       catalyst: item.catalyst || "",
       risk: item.risk || "",
       invalidation: item.invalidation || "",
-      valid_until: item.valid_until || item.deadline || ""
+      valid_until: item.valid_until || item.deadline || "",
+      bias: item.bias || ""
     });
   }
 
@@ -542,8 +543,27 @@ function renderInvestBrief(data) {
     if (redditTickers.has(normalizeTicker(ticker))) {
       const badge = document.createElement("span");
       badge.className = "brief-badge";
-      badge.textContent = "CONSENSUS";
+      badge.textContent = "C";
+      badge.title = "CONSENSUS";
       rightGroup.appendChild(badge);
+    }
+
+    const biasRaw = item && item.bias ? String(item.bias).toLowerCase() : "";
+    let biasLabel = "";
+    let biasClass = "";
+    if (biasRaw === "bull" || /\u5f37\u6c17|\u8cb7\u3044|\u4e0a/.test(biasRaw)) {
+      biasLabel = "B";
+      biasClass = "bias-bull";
+    } else if (biasRaw === "bear" || /\u5f31\u6c17|\u58f2\u308a|\u4e0b/.test(biasRaw)) {
+      biasLabel = "S";
+      biasClass = "bias-bear";
+    }
+    if (biasLabel) {
+      const biasBadge = document.createElement("span");
+      biasBadge.className = `brief-badge ${biasClass}`;
+      biasBadge.textContent = biasLabel;
+      biasBadge.title = biasLabel === "B" ? "\u5f37\u6c17" : "\u5f31\u6c17";
+      rightGroup.appendChild(biasBadge);
     }
 
     const deadlineInfo = classifyDeadline(item && item.valid_until ? String(item.valid_until) : "");
