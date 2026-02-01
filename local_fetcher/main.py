@@ -35,6 +35,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WORKER_URL = os.getenv("WORKER_URL") 
 INGEST_TOKEN = os.getenv("INGEST_TOKEN")
 STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
+CALENDAR_FILE = os.path.join(BASE_DIR, "finnhub_calendar.json")
 SPAM_SCORE_THRESHOLD = int(os.getenv("SPAM_SCORE_THRESHOLD", "6"))
 SPAM_DUP_THRESHOLD = int(os.getenv("SPAM_DUP_THRESHOLD", "2"))
 SPAM_ID_LIMIT = int(os.getenv("SPAM_ID_LIMIT", "25"))
@@ -529,7 +530,7 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[], doughcon_data=None, sahm_data=None):
+def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[], doughcon_data=None, sahm_data=None, earnings_hints=None):
     """
     Combined analysis: Extracts tickers, Generates Summary, AND Comparative Insight.
     """
@@ -560,6 +561,10 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     if sahm_data:
         crisis_context += f"SAHM RULE RECESSION SIGNAL: {sahm_data.get('value')} (Status: {sahm_data.get('state')})."
 
+    earnings_context = ""
+    if earnings_hints:
+        earnings_context = f"EARNINGS_HINTS (Top tickers from 5ch+Reddit, reference only): {json.dumps(earnings_hints, ensure_ascii=False)}"
+
     prompt_text = f"""
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
@@ -571,6 +576,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     1. PREVIOUS RUN (Use for "Breaking News" comparison): {context_info}
     2. {reddit_context}
     3. {crisis_context}
+    4. {earnings_context}
 
     1. Identify US stock tickers:
        - Map company names to valid US tickers (e.g. "Apple","アップル","林檎" -> AAPL).
@@ -1116,6 +1122,56 @@ def load_prev_state():
             return None
     return None
 
+def load_finnhub_calendar():
+    if not os.path.exists(CALENDAR_FILE):
+        return []
+    try:
+        with open(CALENDAR_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        items = data.get("earnings", [])
+        return items if isinstance(items, list) else []
+    except Exception as e:
+        logging.warning(f"Failed to load finnhub_calendar.json: {e}")
+        return []
+
+def build_ticker_pool(prev_state, reddit_rankings, limit=20):
+    seen = set()
+    ordered = []
+    for item in (prev_state or {}).get("rankings", [])[:limit]:
+        ticker = str(item.get("ticker") or "").upper()
+        if ticker and ticker not in seen:
+            seen.add(ticker)
+            ordered.append(ticker)
+    for item in (reddit_rankings or [])[:limit]:
+        ticker = str(item.get("ticker") or "").upper()
+        if ticker and ticker not in seen:
+            seen.add(ticker)
+            ordered.append(ticker)
+        if len(ordered) >= limit:
+            break
+    return ordered[:limit]
+
+def build_earnings_hints(earnings, tickers):
+    if not earnings or not tickers:
+        return []
+    ticker_set = set(tickers)
+    earliest = {}
+    for item in earnings:
+        if not isinstance(item, dict):
+            continue
+        symbol = str(item.get("symbol") or "").upper()
+        date = str(item.get("date") or "")
+        if not symbol or not date or symbol not in ticker_set:
+            continue
+        if symbol not in earliest or date < earliest[symbol]:
+            earliest[symbol] = date
+    hints = []
+    for ticker in tickers:
+        date = earliest.get(ticker)
+        if date:
+            hints.append({"ticker": ticker, "date": date})
+    return hints
+
 def save_current_state(data):
     try:
         with open(STATE_FILE, "w", encoding="utf-8") as f:
@@ -1299,6 +1355,9 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
 
     # Load Previous State
     prev_state = load_prev_state()
+    earnings_calendar = load_finnhub_calendar()
+    ticker_pool = build_ticker_pool(prev_state, reddit_data, limit=20)
+    earnings_hints = build_earnings_hints(earnings_calendar, ticker_pool)
 
     all_text = ""
     source_meta = []
@@ -1320,7 +1379,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
 
     # Combined Gemini Analysis with Context
     tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, brief_swing, brief_long, ai_model = analyze_market_data(
-        all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data
+        all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data, earnings_hints
     )
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
