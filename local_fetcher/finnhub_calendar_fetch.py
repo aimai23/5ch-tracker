@@ -50,7 +50,7 @@ def chunk_dates(start: datetime.date, end: datetime.date, chunk_days: int) -> Li
         cursor = chunk_end + datetime.timedelta(days=1)
     return chunks
 
-def fetch_earnings_range(from_date: str, to_date: str, token: str, include_international: bool, chunk_days: int) -> Dict[str, Any]:
+def fetch_earnings_range(from_date: str, to_date: str, token: str, chunk_days: int) -> Dict[str, Any]:
     start = datetime.datetime.strptime(from_date, "%Y-%m-%d").date()
     end = datetime.datetime.strptime(to_date, "%Y-%m-%d").date()
     items: List[Dict[str, Any]] = []
@@ -63,9 +63,6 @@ def fetch_earnings_range(from_date: str, to_date: str, token: str, include_inter
             "to": iso_day(chunk_end),
             "token": token,
         }
-        if include_international:
-            params["international"] = "true"
-
         try:
             data = fetch_json(f"{BASE_URL}/calendar/earnings", params)
         except Exception:
@@ -138,7 +135,6 @@ def main() -> int:
     parser.add_argument("--to", dest="to_date", help="To date (YYYY-MM-DD)")
     parser.add_argument("--days", type=int, default=30, help="Range length in days when from/to not set")
     parser.add_argument("--out", default=DEFAULT_OUT, help="Output JSON path")
-    parser.add_argument("--include-international", action="store_true", help="Include international earnings")
     parser.add_argument("--chunk-days", type=int, default=7, help="Chunk size in days to avoid API truncation")
     args = parser.parse_args()
 
@@ -154,7 +150,6 @@ def main() -> int:
         from_date,
         to_date,
         api_key,
-        args.include_international,
         max(1, args.chunk_days),
     )
     errors: List[str] = list(earnings_raw.get("errors", []))
