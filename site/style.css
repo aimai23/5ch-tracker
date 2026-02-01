@@ -2740,8 +2740,19 @@ footer a {
   gap: 0.35rem;
 }
 
+.brief-history-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.brief-card-trend {
+  display: inline-flex;
+  align-items: center;
+}
+
 .brief-history-toggle {
-  align-self: flex-start;
   border: 1px solid rgba(0, 240, 255, 0.35);
   background: rgba(0, 240, 255, 0.08);
   color: var(--accent-cyan);

@@ -538,8 +538,6 @@ function renderInvestBrief(data) {
       rightGroup.appendChild(evidenceBadge);
     }
 
-    rightGroup.appendChild(trendEl);
-
     if (redditTickers.has(normalizeTicker(ticker))) {
       const badge = document.createElement("span");
       badge.className = "brief-badge";
@@ -578,6 +576,10 @@ function renderInvestBrief(data) {
       deadlineEl.textContent = "未定";
       rightGroup.appendChild(deadlineEl);
     }
+
+    const trendWrap = document.createElement("div");
+    trendWrap.className = "brief-card-trend";
+    trendWrap.appendChild(trendEl);
 
     header.appendChild(tickerEl);
     header.appendChild(rightGroup);
@@ -630,7 +632,12 @@ function renderInvestBrief(data) {
     if (meta.childNodes.length > 0) {
       card.appendChild(meta);
     }
-    historyWrap.appendChild(historyToggle);
+    const historyRow = document.createElement("div");
+    historyRow.className = "brief-history-row";
+    historyRow.appendChild(historyToggle);
+    historyRow.appendChild(trendWrap);
+
+    historyWrap.appendChild(historyRow);
     historyWrap.appendChild(history);
     card.appendChild(historyWrap);
 
