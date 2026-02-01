@@ -2,7 +2,6 @@ import argparse
 import datetime
 import json
 import os
-import re
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -12,13 +11,6 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(BASE_DIR, "finnhub_calendar.json")
 BASE_URL = "https://finnhub.io/api/v1"
-
-
-def parse_date(value: str) -> str:
-    if not value:
-        return ""
-    match = re.search(r"\d{4}-\d{2}-\d{2}", value)
-    return match.group(0) if match else ""
 
 
 def iso_day(dt: datetime.date) -> str:
@@ -101,28 +93,6 @@ def normalize_earnings(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return output
 
 
-def normalize_economic(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    output: List[Dict[str, Any]] = []
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        time_value = item.get("time") or ""
-        date = parse_date(time_value)
-        output.append({
-            "date": date,
-            "time": time_value,
-            "event": item.get("event"),
-            "country": item.get("country"),
-            "actual": item.get("actual"),
-            "estimate": item.get("estimate"),
-            "previous": item.get("prev"),
-            "unit": item.get("unit"),
-            "impact": item.get("impact"),
-        })
-    output.sort(key=lambda x: (x.get("date") or "", x.get("time") or "", x.get("event") or ""))
-    return output
-
-
 def main() -> int:
     load_dotenv()
     api_key = os.getenv("FINNHUB_API_KEY")
@@ -140,12 +110,6 @@ def main() -> int:
 
     from_date, to_date = build_range(args.from_date, args.to_date, args.days)
 
-    economic_params: Dict[str, Any] = {
-        "from": from_date,
-        "to": to_date,
-        "token": api_key,
-    }
-
     earnings_raw = fetch_earnings_range(
         from_date,
         to_date,
@@ -153,28 +117,13 @@ def main() -> int:
         max(1, args.chunk_days),
     )
     errors: List[str] = list(earnings_raw.get("errors", []))
-    try:
-        economic_raw = fetch_json(f"{BASE_URL}/calendar/economic", economic_params)
-    except requests.HTTPError as exc:
-        economic_raw = {}
-        status = getattr(exc.response, "status_code", None)
-        if status in (401, 403, 429):
-            errors.append(f"economic_calendar_unavailable_status_{status}")
-        else:
-            errors.append(f"economic_calendar_error_{status or 'unknown'}")
-    except Exception:
-        economic_raw = {}
-        errors.append("economic_calendar_error_unknown")
-
     earnings_list = normalize_earnings(earnings_raw.get("earningsCalendar", []) or [])
-    economic_list = normalize_economic(economic_raw.get("economicCalendar", []) or [])
 
     payload = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "range": {"from": from_date, "to": to_date, "days": args.days},
         "source": "finnhub",
         "earnings": earnings_list,
-        "economic": economic_list,
     }
     if errors:
         payload["errors"] = errors
@@ -183,7 +132,7 @@ def main() -> int:
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
-    print(f"Wrote {len(earnings_list)} earnings and {len(economic_list)} economic events to {args.out}")
+    print(f"Wrote {len(earnings_list)} earnings events to {args.out}")
     return 0
 
 
