@@ -10,7 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20260202-3">
+  <link rel="stylesheet" href="./style.css?v=20260202-4">
 </head>
 
 <body>
@@ -196,8 +196,33 @@
           </div>
         </div>
 
-        <!-- Bottom Row: DOUGHCON & SAHM RULE -->
+        <!-- Bottom Row: Status Cards -->
         <div class="status-grid">
+
+          <!-- CNN FEAR & GREED -->
+          <div class="status-card cnn-fg-wrapper">
+            <div class="status-title"
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              🧠 CNN FEAR & GREED
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:220px; bottom: 120%;">
+                  米CNNの株式市場センチメント指標(0-100)。
+                </div>
+              </div>
+            </div>
+            <div id="cnn-fg-level"
+              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
+              --</div>
+            <div id="cnn-fg-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank"
+                style="color:#666; text-decoration:none;">CNN</a>
+            </div>
+          </div>
 
           <!-- CRYPTO FEAR & GREED -->
           <div class="status-card crypto-fg-wrapper">
@@ -224,28 +249,55 @@
             </div>
           </div>
 
-          <!-- DOUGHCON -->
-          <div class="status-card doughcon-wrapper">
+          <!-- VIX / MOVE -->
+          <div class="status-card vol-wrapper">
             <div class="status-title"
               style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
-              🍕 PENTAGON PIZZA INDEX
+              🌪️ VIX / MOVE
               <div class="tooltip-container">
                 <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
-                <div class="tooltip-text" style="width:200px; bottom: 120%;">
-                  ペンタゴン周辺のピザ屋の混雑具合から算出された軍事警戒レベル指標です。
+                <div class="tooltip-text" style="width:240px; bottom: 120%;">
+                  株（VIX）と債券（MOVE）のボラティリティ。<br>リスクオフの兆候を早期検知。
                 </div>
               </div>
             </div>
-            <div id="doughcon-level"
+            <div id="vol-level"
               style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
               --</div>
-            <div id="doughcon-desc"
+            <div id="vol-desc"
               style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
-              SCANNING...
+              LOADING...
             </div>
             <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
-              Source: <a href="https://www.pizzint.watch/" target="_blank"
-                style="color:#666; text-decoration:none;">pizzint.watch</a>
+              Source: <a href="https://fred.stlouisfed.org/series/VIXCLS" target="_blank"
+                style="color:#666; text-decoration:none;">FRED (VIX)</a> /
+              <a href="https://finance.yahoo.com/quote/%5EMOVE" target="_blank"
+                style="color:#666; text-decoration:none;">Yahoo (MOVE)</a>
+            </div>
+          </div>
+
+          <!-- HIGH YIELD OAS -->
+          <div class="status-card hy-oas-wrapper">
+            <div class="status-title"
+              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
+              💳 HY OAS (CREDIT SPREAD)
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:240px; bottom: 120%;">
+                  ハイイールド債の信用スプレッド。<br>リスク資産のストレス指標として有効です。
+                </div>
+              </div>
+            </div>
+            <div id="hy-oas-level"
+              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
+              --</div>
+            <div id="hy-oas-desc"
+              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
+              LOADING...
+            </div>
+            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
+              Source: <a href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank"
+                style="color:#666; text-decoration:none;">FRED (St. Louis Fed)</a>
             </div>
           </div>
 
@@ -299,31 +351,6 @@
             </div>
           </div>
 
-          <!-- HIGH YIELD OAS -->
-          <div class="status-card hy-oas-wrapper">
-            <div class="status-title"
-              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
-              💳 HY OAS (CREDIT SPREAD)
-              <div class="tooltip-container">
-                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
-                <div class="tooltip-text" style="width:240px; bottom: 120%;">
-                  ハイイールド債の信用スプレッド。<br>リスク資産のストレス指標として有効です。
-                </div>
-              </div>
-            </div>
-            <div id="hy-oas-level"
-              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
-              --</div>
-            <div id="hy-oas-desc"
-              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
-              LOADING...
-            </div>
-            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
-              Source: <a href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank"
-                style="color:#666; text-decoration:none;">FRED (St. Louis Fed)</a>
-            </div>
-          </div>
-
           <!-- MARKET BREADTH -->
           <div class="status-card breadth-wrapper">
             <div class="status-title"
@@ -349,30 +376,28 @@
             </div>
           </div>
 
-          <!-- VIX / MOVE -->
-          <div class="status-card vol-wrapper">
+          <!-- DOUGHCON -->
+          <div class="status-card doughcon-wrapper">
             <div class="status-title"
               style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
-              🌪️ VIX / MOVE
+              🍕 PENTAGON PIZZA INDEX
               <div class="tooltip-container">
                 <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
-                <div class="tooltip-text" style="width:240px; bottom: 120%;">
-                  株（VIX）と債券（MOVE）のボラティリティ。<br>リスクオフの兆候を早期検知。
+                <div class="tooltip-text" style="width:200px; bottom: 120%;">
+                  ペンタゴン周辺のピザ屋の混雑具合から算出された軍事警戒レベル指標です。
                 </div>
               </div>
             </div>
-            <div id="vol-level"
+            <div id="doughcon-level"
               style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
               --</div>
-            <div id="vol-desc"
+            <div id="doughcon-desc"
               style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
-              LOADING...
+              SCANNING...
             </div>
             <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
-              Source: <a href="https://fred.stlouisfed.org/series/VIXCLS" target="_blank"
-                style="color:#666; text-decoration:none;">FRED (VIX)</a> /
-              <a href="https://finance.yahoo.com/quote/%5EMOVE" target="_blank"
-                style="color:#666; text-decoration:none;">Yahoo (MOVE)</a>
+              Source: <a href="https://www.pizzint.watch/" target="_blank"
+                style="color:#666; text-decoration:none;">pizzint.watch</a>
             </div>
           </div>
 
@@ -624,7 +649,7 @@
     ↑
   </button>
 
-  <script src="./app.js?v=20260202-3"></script>
+  <script src="./app.js?v=20260202-4"></script>
 </body>
 
 </html>

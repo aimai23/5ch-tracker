@@ -1134,6 +1134,7 @@ async function main() {
         cnnEl.textContent = `🇺🇸 CNN Fear & Greed: ${data.cnn_fear_greed.score} (${data.cnn_fear_greed.rating})`;
       }
     }
+    updateCnnFG(data.cnn_fear_greed || null);
 
     // NEW: Radar Chart Update
     if (data.radar) {
@@ -1718,6 +1719,36 @@ function updateYieldCurve(data) {
   if (data.value < 0) color = "#ff0000";       // Inverted
   else if (data.value < 0.2) color = "#ffff00"; // Flattening
 
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
+}
+
+function updateCnnFG(data) {
+  const levelEl = document.getElementById("cnn-fg-level");
+  const descEl = document.getElementById("cnn-fg-desc");
+
+  if (!levelEl) return;
+  if (!data) {
+    levelEl.textContent = "NO DATA";
+    if (descEl) descEl.textContent = "";
+    return;
+  }
+
+  const score = typeof data.score === "number" ? data.score : null;
+  const rating = data.rating ? String(data.rating) : "";
+  levelEl.textContent = rating ? rating.toUpperCase() : "FEAR & GREED";
+  if (descEl) {
+    descEl.textContent = score === null ? "" : `Value: ${score.toFixed(1)}`;
+  }
+
+  let color = "#ffffff";
+  if (score !== null) {
+    if (score <= 25) color = "#ff0000";
+    else if (score <= 46) color = "#ff6600";
+    else if (score <= 54) color = "#ffff00";
+    else if (score <= 75) color = "#ccff00";
+    else color = "#00ff00";
+  }
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 10px ${color}55`;
 }
