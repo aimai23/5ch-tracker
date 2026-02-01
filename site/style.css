@@ -2197,6 +2197,19 @@ footer a {
   text-transform: uppercase;
 }
 
+.brief-model-mode {
+  display: inline-flex;
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  font-family: 'JetBrains Mono', sans-serif;
+  border: 1px solid rgba(255, 200, 72, 0.35);
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
 .brief-meta-row {
   display: flex;
   align-items: center;
@@ -2751,6 +2764,11 @@ footer a {
 
   .brief-model-name {
     font-size: 0.65rem;
+  }
+
+  .brief-model-mode {
+    font-size: 0.6rem;
+    padding: 2px 6px;
   }
 
   .brief-guide-link {

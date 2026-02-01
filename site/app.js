@@ -313,6 +313,7 @@ function renderInvestBrief(data) {
   const regimeEl = document.getElementById("brief-regime");
   const updatedEl = document.getElementById("brief-updated");
   const modelEl = document.getElementById("brief-model-name");
+  const modeEl = document.getElementById("brief-model-mode");
   const themesEl = document.getElementById("brief-themes");
   const cautionsEl = document.getElementById("brief-cautions");
   const watchlistEl = document.getElementById("brief-watchlist");
@@ -340,11 +341,23 @@ function renderInvestBrief(data) {
   headlineEl.textContent = displayBrief.headline || "投資ブリーフ準備中";
 
   if (modelEl) {
-    if (data && data.ai_model) {
-      modelEl.textContent = `POWERED BY ${String(data.ai_model).toUpperCase()}`;
+    const modelName = data && data.ai_model ? String(data.ai_model) : "";
+    if (modelName) {
+      modelEl.textContent = `POWERED BY ${modelName.toUpperCase()}`;
     } else {
       modelEl.textContent = "POWERED BY --";
     }
+  }
+
+  if (modeEl) {
+    const raw = data && data.ai_model ? String(data.ai_model).toLowerCase() : "";
+    let modeLabel = "";
+    if (raw.includes("gemini-2.5-flash")) {
+      modeLabel = "低性能モード";
+    } else if (raw.includes("gemini-3")) {
+      modeLabel = "高性能モード";
+    }
+    modeEl.textContent = modeLabel || "モード: --";
   }
 
   if (displayBrief.market_regime) {
