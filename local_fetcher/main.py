@@ -217,6 +217,21 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             else:
                 valid_until = "\u672a\u5b9a"
 
+        if bias_raw in ["bull", "bear", "neutral"]:
+            bias = bias_raw
+        else:
+            bias_source = " ".join([reason_raw, catalyst_raw, risk_raw, invalidation_raw]).lower()
+            bull_keys = ["強気", "上昇", "反発", "買い", "回復", "期待", "需要", "追い風", "好決算", "増", "上振れ", "支え", "底打ち", "安定", "資金流入", "上向き", "bull", "long"]
+            bear_keys = ["弱気", "下落", "売り", "懸念", "警戒", "減速", "失速", "暴落", "崩壊", "下振れ", "逆風", "売却", "利確", "ロスカット", "下押し", "bear", "short"]
+            bull_score = sum(1 for k in bull_keys if k in bias_source)
+            bear_score = sum(1 for k in bear_keys if k in bias_source)
+            if bull_score == 0 and bear_score == 0:
+                bias = "neutral"
+            elif bull_score >= bear_score:
+                bias = "bull"
+            else:
+                bias = "bear"
+
         watchlist.append({
             "ticker": ticker,
             "reason": reason,
@@ -225,7 +240,7 @@ def sanitize_brief(brief, max_watchlist=8, mode="swing"):
             "invalidation": invalidation,
             "valid_until": valid_until,
             "confidence": confidence,
-            "bias": bias_raw if bias_raw in ["bull", "bear", "neutral"] else ""
+            "bias": bias
         })
         if len(watchlist) >= max_watchlist:
             break
@@ -629,7 +644,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Use tickers that appear in TEXT/CONTEXT. For those tickers, you MAY add general market context not in the TEXT; prefix it with "一般知識:" and set confidence="low".
        - If evidence is weak or implicit, still answer with short, generic wording and lower the confidence instead of omitting.
        - Confidence: "high" (explicit), "mid" (implied), "low" (generic/assumption).
-       - Bias per watchlist item: "bull" (上方向の示唆), "bear" (下方向の示唆), "neutral" (中立/様子見).
+       - Bias per watchlist item: "bull" (上方向の示唆), "bear" (下方向の示唆), "neutral" (中立/様子見). Bias is REQUIRED; if unclear use "neutral".
        - Provide TWO briefs: "brief_swing" and "brief_long" with the same keys.
        - Each brief must include:
          - "headline" (Max 80 chars)
