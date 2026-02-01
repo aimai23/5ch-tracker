@@ -1134,22 +1134,24 @@ def load_finnhub_calendar():
         logging.warning(f"Failed to load finnhub_calendar.json: {e}")
         return []
 
-def build_ticker_pool(prev_state, reddit_rankings, limit=20):
+def build_ticker_pool(prev_state, reddit_rankings, limit=40):
     seen = set()
     ordered = []
-    for item in (prev_state or {}).get("rankings", [])[:limit]:
+    for item in (prev_state or {}).get("rankings", [])[:20]:
         ticker = str(item.get("ticker") or "").upper()
         if ticker and ticker not in seen:
             seen.add(ticker)
             ordered.append(ticker)
-    for item in (reddit_rankings or [])[:limit]:
+
+    reddit_source = (prev_state or {}).get("reddit_rankings") or reddit_rankings or []
+    for item in reddit_source[:20]:
         ticker = str(item.get("ticker") or "").upper()
         if ticker and ticker not in seen:
             seen.add(ticker)
             ordered.append(ticker)
         if len(ordered) >= limit:
             break
-    return ordered[:limit]
+    return ordered if limit is None else ordered[:limit]
 
 def build_earnings_hints(earnings, tickers):
     if not earnings or not tickers:
@@ -1356,7 +1358,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     # Load Previous State
     prev_state = load_prev_state()
     earnings_calendar = load_finnhub_calendar()
-    ticker_pool = build_ticker_pool(prev_state, reddit_data, limit=20)
+    ticker_pool = build_ticker_pool(prev_state, reddit_data, limit=40)
     earnings_hints = build_earnings_hints(earnings_calendar, ticker_pool)
 
     all_text = ""
