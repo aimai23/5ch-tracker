@@ -626,7 +626,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
          - "headline" (Max 80 chars)
          - "market_regime"
          - "focus_themes" (2-5)
-         - "watchlist" (up to 8 items):
+         - "watchlist" (exactly 8 items; pad with low-confidence items if needed):
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence" }
          - "cautions" (2-4)
          - "catalyst_calendar" (3-6 items):
