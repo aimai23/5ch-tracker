@@ -624,7 +624,7 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - Provide TWO briefs: "brief_swing" and "brief_long" with the same keys.
        - Each brief must include:
          - "headline" (Max 80 chars)
-         - "market_regime"
+         - "market_regime" (日本語のみ。英語フレーズは使わず簡潔に翻訳)
          - "focus_themes" (2-5)
          - "watchlist" (exactly 8 items; pad with low-confidence items if needed):
            { "ticker", "reason", "catalyst", "risk", "invalidation", "valid_until", "confidence" }

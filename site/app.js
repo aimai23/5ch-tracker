@@ -69,25 +69,6 @@ function getOngiCommentText(payload) {
   return "";
 }
 
-function localizeMarketRegime(value) {
-  if (!value) return "";
-  let text = String(value);
-  const replacements = [
-    { en: /Deep\s*Fear/gi, ja: "深い恐怖" },
-    { en: /Liquidation\s*Mode/gi, ja: "投げ売りモード" },
-    { en: /Macro\s*Transition/gi, ja: "マクロ転換" },
-    { en: /Volatility\s*Expansion/gi, ja: "ボラ拡大" },
-    { en: /Risk[\s-]*On/gi, ja: "リスクオン" },
-    { en: /Risk[\s-]*Off/gi, ja: "リスクオフ" },
-    { en: /Mixed/gi, ja: "混在" },
-    { en: /Neutral/gi, ja: "中立" },
-  ];
-  replacements.forEach(({ en, ja }) => {
-    text = text.replace(en, ja);
-  });
-  return text;
-}
-
 function getSnapshotTime(snapshot) {
   if (!snapshot) return null;
   const payload = snapshot.payload || {};
@@ -381,7 +362,7 @@ function renderInvestBrief(data) {
   }
 
   if (displayBrief.market_regime) {
-    regimeEl.textContent = localizeMarketRegime(displayBrief.market_regime);
+    regimeEl.textContent = displayBrief.market_regime;
     regimeEl.style.display = "inline-flex";
   } else {
     regimeEl.textContent = "--";
