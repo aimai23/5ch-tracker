@@ -1,4 +1,5 @@
 import re
+import math
 import os
 import sys
 import json
@@ -283,6 +284,85 @@ def coerce_text(value):
         parts = [str(x).strip() for x in value if isinstance(x, (str, int, float))]
         return " ".join([p for p in parts if p])
     return str(value).strip()
+
+def sanitize_for_json(value):
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            return None
+        return value
+    if isinstance(value, dict):
+        return {k: sanitize_for_json(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [sanitize_for_json(v) for v in value]
+    return value
+
+def extract_json_from_text(text):
+    if not text:
+        return ""
+    cleaned = text.strip()
+    cleaned = cleaned.replace("```json", "").replace("```", "").strip()
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return cleaned[start:end+1]
+    return cleaned
+
+def parse_json_lenient(raw_text):
+    if not raw_text:
+        return None
+    candidates = []
+    extracted = extract_json_from_text(raw_text)
+    if extracted:
+        candidates.append(extracted)
+    if extracted != raw_text:
+        candidates.append(raw_text.strip())
+
+    for cand in candidates:
+        if not cand:
+            continue
+        # Remove ASCII control chars that break JSON parsing
+        cleaned = re.sub(r"[\x00-\x1f\x7f]", " ", cand)
+        cleaned = cleaned.strip()
+        for attempt in (cand, cleaned, re.sub(r",\s*([}\]])", r"\1", cleaned)):
+            try:
+                return json.loads(attempt)
+            except Exception:
+                continue
+    return None
+
+def repair_json_with_gemini(raw_text, model_name="gemini-2.5-flash-lite"):
+    if not raw_text:
+        return None
+    snippet = raw_text.strip()
+    if len(snippet) > 12000:
+        snippet = snippet[:12000]
+
+    prompt = f"""
+    You are a JSON repair tool.
+    Fix the following content into VALID JSON only.
+    - Output must be a single JSON object.
+    - Do not add commentary or code fences.
+
+    Input:
+    {snippet}
+    """
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"response_mime_type": "application/json"}
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=60)
+        if resp.status_code != 200:
+            return None
+        result = resp.json()
+        content = result["candidates"][0]["content"]["parts"][0]["text"]
+        return parse_json_lenient(content)
+    except Exception:
+        return None
 
 def normalize_ticker_items(items, exclude_set):
     output = []
@@ -580,7 +660,11 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     if earnings_hints:
         earnings_context = f"EARNINGS_HINTS (Top tickers from 5ch+Reddit, reference only): {json.dumps(earnings_hints, ensure_ascii=False)}"
 
-    prompt_text = f"""
+    max_chars_primary = int(os.getenv("GEMINI_MAX_INPUT_CHARS", "300000"))
+    max_chars_fallback = int(os.getenv("GEMINI_FALLBACK_INPUT_CHARS", "180000"))
+
+    def build_prompt(max_chars):
+        return f"""
     You are a cynical 5ch Market AI.
     IMPORTANT POLICY: The PRIMARY GOAL is accurate Ticker Ranking. Extracting every single mentioned ticker is the #1 PRIORITY.
     Prioritize ACCURACY over speed. Take your time to ensure high precision in ticker extraction and sentiment analysis.
@@ -678,13 +762,15 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
        - "summary" and "ongi_comment" must be plain strings, not nested objects.
        - Each ticker object must include "count" (>=1) and "sentiment" (-1.0 to 1.0).
     Text:
-    {text[:400000]}
+    {text[:max_chars]}
     """
 
     # Use fast and cost-effective models
     models = ["gemini-3-flash-preview", "gemini-2.5-flash"]
     
-    for model_name in models:
+    for i, model_name in enumerate(models):
+        max_chars = max_chars_primary if i == 0 else max_chars_fallback
+        prompt_text = build_prompt(max_chars)
         logging.info(f"Trying model: {model_name}...")
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
@@ -704,7 +790,13 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                 logging.info(f"Token Usage - Input: {prompt_tokens}, Total: {total_tokens}")
                 try:
                     content = result["candidates"][0]["content"]["parts"][0]["text"]
-                    data = json.loads(content)
+                    data = parse_json_lenient(content)
+                    if data is None:
+                        data = repair_json_with_gemini(content)
+                        if data is not None:
+                            logging.info(f"Repaired JSON response via Gemini for {model_name}")
+                    if data is None:
+                        raise ValueError("JSON parse failed")
                     if isinstance(data, dict) and isinstance(data.get("result"), dict):
                         data = data["result"]
 
@@ -759,8 +851,8 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
                         brief_long = build_brief_from_tickers(tickers_raw, summary_text, mode="long")
 
                     return tickers_raw, summary_text, fear_greed_score, radar, ongi_comment, breaking_news, comparative_insight, brief_swing, brief_long, model_name
-                except Exception:
-                    logging.warning(f"Parsing response failed for {model_name}")
+                except Exception as parse_err:
+                    logging.warning(f"Parsing response failed for {model_name}: {parse_err}")
             else:
                 logging.warning(f"Model {model_name} returned status: {resp.status_code}")
                 
@@ -839,6 +931,31 @@ def fetch_apewisdom_rankings():
     
     return []
 
+def post_json_with_retry(url, headers, payload, retries=3, timeout=30):
+    body = None
+    try:
+        body = json.dumps(payload, ensure_ascii=False, allow_nan=False)
+    except ValueError:
+        safe_payload = sanitize_for_json(payload)
+        body = json.dumps(safe_payload, ensure_ascii=False, allow_nan=False)
+
+    last_resp = None
+    for attempt in range(retries):
+        try:
+            resp = requests.post(url, data=body, headers=headers, timeout=timeout)
+            last_resp = resp
+            if resp.status_code < 500 and resp.status_code != 429:
+                return resp
+            logging.warning(f"Worker upload attempt {attempt + 1} failed: {resp.status_code}")
+        except Exception as e:
+            logging.warning(f"Worker upload attempt {attempt + 1} error: {e}")
+
+        if attempt < retries - 1:
+            sleep_s = 5 * (2 ** attempt)
+            time.sleep(sleep_s)
+
+    return last_resp
+
 def fetch_doughcon_data():
     """Fetch Doughcon data from the API."""
     logging.info("Fetching Doughcon data...")
@@ -906,15 +1023,22 @@ def    send_to_worker(
     url = f"{base_url}/internal/ingest"
     headers = { "Authorization": f"Bearer {INGEST_TOKEN}", "Content-Type": "application/json" }
     
-    try:
-        resp = requests.post(url, json=payload, headers=headers)
-        if resp.status_code == 200:
-            logging.info("Success! Data uploaded.")
-        else:
-            logging.error(f"Worker Error: {resp.status_code}")
-            logging.error(f"Worker Response: {resp.text}")
-    except Exception as e:
-        logging.error(f"Upload failed: {e}")
+    resp = post_json_with_retry(url, headers, payload, retries=3, timeout=30)
+    if resp is None:
+        logging.error("Upload failed: no response")
+        return
+    if resp.status_code == 200:
+        logging.info("Success! Data uploaded.")
+        try:
+            res_json = resp.json()
+            if isinstance(res_json, dict) and res_json.get("warnings"):
+                logging.warning(f"Worker warnings: {res_json.get('warnings')}")
+        except Exception:
+            pass
+        return
+
+    logging.error(f"Worker Error: {resp.status_code}")
+    logging.error(f"Worker Response: {resp.text}")
 
 def fetch_polymarket_events():
     logging.info("Fetching Polymarket data with Diversified Search...")

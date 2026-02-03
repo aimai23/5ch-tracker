@@ -70,8 +70,13 @@ export default {
       const window = url.searchParams.get("window") || "24h";
       const limitRaw = Number.parseInt(url.searchParams.get("limit") || "10", 10);
       const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(10, limitRaw)) : 10;
-      const history = await getRankingHistory(env, window, limit);
-      return json({ window, history }, 200, commonCorsHeaders);
+      try {
+        const history = await getRankingHistory(env, window, limit);
+        return json({ window, history }, 200, commonCorsHeaders);
+      } catch (e) {
+        console.error("getRankingHistory failed", e);
+        return json({ window, history: [] }, 200, commonCorsHeaders);
+      }
     }
 
     if (url.pathname === "/api/ranking") {
@@ -117,7 +122,10 @@ export default {
         return json({ ok: false, error: "invalid json" }, 400, corsHeaders(origin));
       }
 
-      const window = (body.window ?? "24h").toLowerCase();
+      const window =
+        typeof body.window === "string" && body.window.length > 0
+          ? body.window.toLowerCase()
+          : "24h";
       const payload: RankingPayload = {
         updatedAt: body.updatedAt ?? new Date().toISOString(),
         window,
@@ -146,26 +154,58 @@ export default {
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 
-      // Only aggregated data is stored.
-      await putRanking(env, window, payload);
+      const warnings: string[] = [];
+
+      try {
+        // Only aggregated data is stored.
+        await putRanking(env, window, payload);
+      } catch (e) {
+        console.error("putRanking failed", e);
+        try {
+          await putMeta(env, {
+            lastRunAt: new Date().toISOString(),
+            lastStatus: "error",
+            lastError: "putRanking failed"
+          });
+        } catch (metaErr) {
+          console.error("putMeta failed after putRanking error", metaErr);
+        }
+        return json({ ok: false, error: "putRanking failed" }, 500, corsHeaders(origin));
+      }
+
       try {
         await saveRankingHistory(env, window, payload, 10);
       } catch (e) {
         console.warn("Failed to save ranking history", e);
+        warnings.push("ranking_history");
       }
 
-      // Save Ongi History if available
-      if (typeof payload.fear_greed === 'number') {
-        await saveOngiHistory(env, payload.fear_greed, "", payload.radar || { hype: 0, panic: 0, faith: 0, gamble: 0, iq: 0 });
+      if (typeof payload.fear_greed === "number") {
+        try {
+          await saveOngiHistory(
+            env,
+            payload.fear_greed,
+            "",
+            payload.radar || { hype: 0, panic: 0, faith: 0, gamble: 0, iq: 0 }
+          );
+        } catch (e) {
+          console.warn("Failed to save ongi history", e);
+          warnings.push("ongi_history");
+        }
       }
 
-      await putMeta(env, {
-        lastRunAt: new Date().toISOString(),
-        lastStatus: "success",
-        lastError: null
-      });
+      try {
+        await putMeta(env, {
+          lastRunAt: new Date().toISOString(),
+          lastStatus: "success",
+          lastError: warnings.length ? warnings.join(",") : null
+        });
+      } catch (e) {
+        console.warn("Failed to update meta", e);
+        warnings.push("meta");
+      }
 
-      return json({ ok: true }, 200, corsHeaders(origin));
+      return json({ ok: true, warnings }, 200, corsHeaders(origin));
     }
 
     if (request.method === "GET" && pathname === "/") {

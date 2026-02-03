@@ -211,11 +211,23 @@ export async function saveRankingHistory(
   limit = HISTORY_LIMIT_DEFAULT
 ): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
+  const historyPayload: RankingPayload = {
+    updatedAt: payload.updatedAt ?? null,
+    window,
+    items: Array.isArray(payload.items) ? payload.items : [],
+    topics: [],
+    sources: [],
+    overview: payload.overview,
+    summary: payload.summary,
+    ongi_comment: payload.ongi_comment,
+    fear_greed: payload.fear_greed,
+    radar: payload.radar
+  };
 
   await env.DB.prepare(
     "INSERT INTO ranking_history (window, timestamp, payload) VALUES (?, ?, ?)"
   )
-    .bind(window, now, JSON.stringify(payload))
+    .bind(window, now, JSON.stringify(historyPayload))
     .run();
 
   // Keep only the latest N snapshots per window
