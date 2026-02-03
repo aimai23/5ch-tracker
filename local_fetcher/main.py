@@ -1651,6 +1651,13 @@ def fetch_volatility():
         "state": state
     }
 
+def safe_fetch(label, fn, default):
+    try:
+        return fn()
+    except Exception as e:
+        logging.warning(f"Failed to fetch {label}: {e}")
+        return default
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
@@ -1658,8 +1665,8 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     # Polymarket Fetch (skip AI translation in debug mode)
     polymarket_data = []
     if not debug_mode:
-        polymarket_raw = fetch_polymarket_events()
-        polymarket_data = translate_polymarket_events(polymarket_raw)
+        polymarket_raw = safe_fetch("Polymarket events", fetch_polymarket_events, [])
+        polymarket_data = safe_fetch("Polymarket translation", lambda: translate_polymarket_events(polymarket_raw), [])
     else:
         logging.info("DEBUG MODE: Skipping Polymarket translation (AI).")
 
@@ -1669,37 +1676,37 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         return
 
     # External data (non-AI) should run before AI analysis
-    reddit_data = fetch_apewisdom_rankings()
+    reddit_data = safe_fetch("ApeWisdom", fetch_apewisdom_rankings, [])
 
-    doughcon_data = fetch_doughcon_level()
+    doughcon_data = safe_fetch("DOUGHCON", fetch_doughcon_level, None)
     if doughcon_data:
         logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
 
-    sahm_data = fetch_sahm_rule()
+    sahm_data = safe_fetch("Sahm Rule", fetch_sahm_rule, None)
     if sahm_data:
         logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
 
-    crypto_fg = fetch_crypto_fear_greed()
+    crypto_fg = safe_fetch("Crypto Fear & Greed", fetch_crypto_fear_greed, None)
     if crypto_fg:
         logging.info(f"Crypto F&G Fetched: {crypto_fg['value']} ({crypto_fg['classification']})")
 
-    cnn_fg = fetch_cnn_fear_greed()
+    cnn_fg = safe_fetch("CNN Fear & Greed", fetch_cnn_fear_greed, None)
     if cnn_fg:
         logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
 
-    yield_curve_data = fetch_yield_curve()
+    yield_curve_data = safe_fetch("Yield Curve", fetch_yield_curve, None)
     if yield_curve_data:
         logging.info(f"Yield Curve Fetched: {yield_curve_data['value']} ({yield_curve_data['state']})")
 
-    hy_oas_data = fetch_hy_oas()
+    hy_oas_data = safe_fetch("HY OAS", fetch_hy_oas, None)
     if hy_oas_data:
         logging.info(f"HY OAS Fetched: {hy_oas_data['value']} ({hy_oas_data['state']})")
 
-    market_breadth_data = fetch_market_breadth()
+    market_breadth_data = safe_fetch("Market Breadth", fetch_market_breadth, None)
     if market_breadth_data:
         logging.info(f"Market Breadth Fetched: {market_breadth_data.get('state')} ({market_breadth_data.get('value')})")
 
-    volatility_data = fetch_volatility()
+    volatility_data = safe_fetch("Volatility", fetch_volatility, None)
     if volatility_data:
         logging.info(f"Volatility Fetched: VIX={volatility_data.get('vix')} MOVE={volatility_data.get('move')} ({volatility_data.get('state')})")
 
