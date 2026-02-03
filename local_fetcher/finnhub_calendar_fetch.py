@@ -91,45 +91,6 @@ def fetch_earnings_range(from_date: str, to_date: str, token: str, chunk_days: i
 
     return {"earningsCalendar": items, "errors": errors}
 
-def fetch_fred_release_dates(from_date: str, to_date: str, api_key: str) -> Dict[str, Any]:
-    url = f"{FRED_BASE_URL}/releases/dates"
-    params: Dict[str, Any] = {
-        "api_key": api_key,
-        "file_type": "json",
-        "realtime_start": from_date,
-        "realtime_end": to_date,
-        "order_by": "release_date",
-        "sort_order": "asc",
-        "include_release_dates_with_no_data": "true",
-        "limit": 1000,
-        "offset": 0,
-    }
-
-    items: List[Dict[str, Any]] = []
-    errors: List[str] = []
-
-    while True:
-        try:
-            data = fetch_json(url, params)
-        except Exception:
-            errors.append(f"fred_release_dates_error_offset_{params.get('offset', 0)}")
-            break
-
-        batch = data.get("release_dates") or []
-        if isinstance(batch, list):
-            for item in batch:
-                if isinstance(item, dict):
-                    items.append(item)
-
-        count = int(data.get("count") or 0)
-        offset = int(data.get("offset") or params.get("offset", 0))
-        limit = int(data.get("limit") or params.get("limit", 1000))
-        if count == 0 or (offset + limit) >= count:
-            break
-        params["offset"] = offset + limit
-
-    return {"release_dates": items, "errors": errors}
-
 def fetch_fred_releases_list(api_key: str) -> Dict[str, Any]:
     url = f"{FRED_BASE_URL}/releases"
     params: Dict[str, Any] = {
@@ -212,21 +173,6 @@ def normalize_earnings(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "symbol": item.get("symbol"),
         })
     output.sort(key=lambda x: (x.get("date") or "", x.get("symbol") or ""))
-    return output
-
-def normalize_fred_releases(items: List[Dict[str, Any]], from_date: str, to_date: str) -> List[Dict[str, Any]]:
-    output: List[Dict[str, Any]] = []
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        date = item.get("date") or ""
-        if date and (date < from_date or date > to_date):
-            continue
-        output.append({
-            "date": date,
-            "release_name": item.get("release_name"),
-        })
-    output.sort(key=lambda x: (x.get("date") or "", x.get("release_name") or ""))
     return output
 
 def build_fred_key_releases(
@@ -325,7 +271,6 @@ def main() -> int:
 
     errors: List[str] = []
     earnings_list: List[Dict[str, Any]] = []
-    fred_releases: List[Dict[str, Any]] = []
     fred_key_releases: List[Dict[str, Any]] = []
 
     if api_key:
@@ -341,10 +286,6 @@ def main() -> int:
         errors.append("FINNHUB_API_KEY_missing")
 
     if fred_key:
-        fred_raw = fetch_fred_release_dates(from_date, to_date, fred_key)
-        errors.extend(list(fred_raw.get("errors", [])))
-        fred_releases = normalize_fred_releases(fred_raw.get("release_dates", []) or [], from_date, to_date)
-
         releases_raw = fetch_fred_releases_list(fred_key)
         errors.extend(list(releases_raw.get("errors", [])))
         key_list, key_errors = build_fred_key_releases(
@@ -364,7 +305,6 @@ def main() -> int:
         "range": {"from": from_date, "to": to_date, "days": args.days},
         "source": "finnhub+fred" if api_key and fred_key else ("finnhub" if api_key else "fred"),
         "earnings": earnings_list,
-        "fred_releases": fred_releases,
         "fred_key_releases": fred_key_releases,
     }
     if errors:

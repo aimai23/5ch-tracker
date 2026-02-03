@@ -1581,32 +1581,18 @@ def fetch_market_breadth():
 
 def fetch_volatility():
     vix = fetch_fred_series_value("VIXCLS")
-    move = None
     if vix is None:
         return None
 
-    risk_score = 0
-    if vix is not None:
-        if vix >= 25:
-            risk_score += 2
-        elif vix >= 20:
-            risk_score += 1
-    if move is not None:
-        if move >= 110:
-            risk_score += 2
-        elif move >= 90:
-            risk_score += 1
-
-    if risk_score >= 3:
+    if vix >= 25:
         state = "Stress"
-    elif risk_score >= 1:
+    elif vix >= 20:
         state = "Elevated"
     else:
         state = "Calm"
 
     return {
         "vix": vix,
-        "move": move,
         "state": state
     }
 
