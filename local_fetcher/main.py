@@ -1523,25 +1523,6 @@ def fetch_hy_oas():
         "state": state
     }
 
-def fetch_yahoo_quotes(symbols):
-    if not symbols:
-        return {}
-    url = "https://query1.finance.yahoo.com/v7/finance/quote"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*"
-    }
-    params = { "symbols": ",".join(symbols) }
-    try:
-        resp = requests.get(url, params=params, headers=headers, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            results = data.get("quoteResponse", {}).get("result", [])
-            return { item.get("symbol"): item for item in results if item.get("symbol") }
-    except Exception as e:
-        logging.warning(f"Failed to fetch Yahoo quotes: {e}")
-    return {}
-
 def fetch_market_breadth():
     try:
         url = "https://indexmood.com/breadth/advance-decline/today"
@@ -1596,34 +1577,12 @@ def fetch_market_breadth():
     except Exception as e:
         logging.warning(f"Failed to fetch IndexMood breadth: {e}")
 
-    quotes = fetch_yahoo_quotes(["^NYAD"])
-    quote = quotes.get("^NYAD")
-    if not quote:
-        return None
-    change = quote.get("regularMarketChange")
-    if change is None:
-        return None
-    state = "Flat"
-    if change > 0:
-        state = "Advancing"
-    elif change < 0:
-        state = "Declining"
-    return {
-        "value": quote.get("regularMarketPrice"),
-        "change": change,
-        "change_percent": quote.get("regularMarketChangePercent"),
-        "state": state
-    }
+    return None
 
 def fetch_volatility():
     vix = fetch_fred_series_value("VIXCLS")
-    quotes = fetch_yahoo_quotes(["^MOVE"])
-    move_quote = quotes.get("^MOVE")
     move = None
-    if move_quote and move_quote.get("regularMarketPrice") is not None:
-        move = float(move_quote.get("regularMarketPrice"))
-
-    if vix is None and move is None:
+    if vix is None:
         return None
 
     risk_score = 0

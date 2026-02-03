@@ -224,7 +224,6 @@ def normalize_fred_releases(items: List[Dict[str, Any]], from_date: str, to_date
             continue
         output.append({
             "date": date,
-            "release_id": item.get("release_id"),
             "release_name": item.get("release_name"),
         })
     output.sort(key=lambda x: (x.get("date") or "", x.get("release_name") or ""))
@@ -300,7 +299,6 @@ def build_fred_key_releases(
             seen.add(key)
             key_events.append({
                 "date": date,
-                "release_id": release_id,
                 "release_name": name,
             })
 
