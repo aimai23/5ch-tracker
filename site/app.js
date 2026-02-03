@@ -1165,7 +1165,7 @@ async function main() {
     // NEW: MARKET BREADTH
     updateMarketBreadth(data.market_breadth || null);
 
-    // NEW: VIX / MOVE
+    // VIX
     updateVolatility(data.volatility || null);
 
     // NEW: CRYPTO FEAR & GREED
@@ -1822,18 +1822,16 @@ function updateVolatility(data) {
   }
 
   const vix = typeof data.vix === "number" ? data.vix : null;
-  const move = typeof data.move === "number" ? data.move : null;
   let risk = "low";
-  if ((vix !== null && vix >= 25) || (move !== null && move >= 110)) {
+  if (vix !== null && vix >= 25) {
     risk = "high";
-  } else if ((vix !== null && vix >= 20) || (move !== null && move >= 90)) {
+  } else if (vix !== null && vix >= 20) {
     risk = "mid";
   }
   applyRiskLevel(levelEl, risk);
 
   const parts = [];
   parts.push(`VIX ${vix !== null ? vix.toFixed(1) : "N/A"}`);
-  parts.push(`MOVE ${move !== null ? move.toFixed(1) : "N/A"}`);
   if (descEl) descEl.textContent = parts.join(" / ");
 }
 
