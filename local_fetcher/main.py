@@ -1387,47 +1387,38 @@ def fetch_with_retry(url, retries=3, delay=2):
     return None
 
 def fetch_fred_series_value(series_id):
-    if FRED_API_KEY:
-        try:
-            url = "https://api.stlouisfed.org/fred/series/observations"
-            params = {
-                "series_id": series_id,
-                "api_key": FRED_API_KEY,
-                "file_type": "json",
-                "sort_order": "desc",
-                "limit": 5
-            }
-            resp = requests.get(url, params=params, timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
-                for obs in data.get("observations", []):
-                    val = obs.get("value")
-                    if val is None:
-                        continue
-                    if isinstance(val, str) and val.strip() == ".":
-                        continue
-                    try:
-                        return float(val)
-                    except Exception:
-                        continue
-            else:
-                logging.warning(f"FRED API error {series_id}: {resp.status_code}")
-        except Exception as e:
-            logging.warning(f"Failed to fetch FRED API series {series_id}: {e}")
-    else:
-        logging.warning("FRED_API_KEY not set. Falling back to web scraping for FRED.")
+    if not FRED_API_KEY:
+        logging.warning("FRED_API_KEY not set. Skipping FRED API call.")
+        return None
 
     try:
-        url = f"https://fred.stlouisfed.org/series/{series_id}"
-        resp = fetch_with_retry(url)
-        if resp:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            val_el = soup.find(class_="series-meta-observation-value")
-            if val_el:
-                val_text = val_el.get_text(strip=True).replace(",", "")
-                return float(val_text)
+        url = "https://api.stlouisfed.org/fred/series/observations"
+        params = {
+            "series_id": series_id,
+            "api_key": FRED_API_KEY,
+            "file_type": "json",
+            "sort_order": "desc",
+            "limit": 5
+        }
+        resp = requests.get(url, params=params, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            for obs in data.get("observations", []):
+                val = obs.get("value")
+                if val is None:
+                    continue
+                if isinstance(val, str) and val.strip() == ".":
+                    continue
+                try:
+                    value = float(val)
+                    logging.info(f"FRED API Success {series_id}: {value}")
+                    return value
+                except Exception:
+                    continue
+        else:
+            logging.warning(f"FRED API error {series_id}: {resp.status_code}")
     except Exception as e:
-        logging.warning(f"Failed to fetch FRED series {series_id} via web: {e}")
+        logging.warning(f"Failed to fetch FRED API series {series_id}: {e}")
     return None
 
 def fetch_doughcon_level():

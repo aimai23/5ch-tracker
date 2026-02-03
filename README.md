@@ -94,6 +94,8 @@ INGEST_TOKEN=your_ingest_token
 FRED_API_KEY=your_fred_api_key
 ```
 
+*FRED は規約対応のため API 必須（スクレイピングは無効）。*
+
 実行:
 
 ```bash
