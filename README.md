@@ -91,6 +91,7 @@ pip install -r requirements.txt
 GEMINI_API_KEY=your_gemini_api_key
 WORKER_URL=https://<your-worker>.workers.dev
 INGEST_TOKEN=your_ingest_token
+FRED_API_KEY=your_fred_api_key
 ```
 
 実行:

@@ -35,6 +35,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WORKER_URL = os.getenv("WORKER_URL") 
 INGEST_TOKEN = os.getenv("INGEST_TOKEN")
+FRED_API_KEY = os.getenv("FRED_API_KEY")
 STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
 CALENDAR_FILE = os.path.join(BASE_DIR, "finnhub_calendar.json")
 SPAM_SCORE_THRESHOLD = int(os.getenv("SPAM_SCORE_THRESHOLD", "6"))
@@ -939,10 +940,16 @@ def post_json_with_retry(url, headers, payload, retries=3, timeout=30):
         safe_payload = sanitize_for_json(payload)
         body = json.dumps(safe_payload, ensure_ascii=False, allow_nan=False)
 
+    body_bytes = body.encode("utf-8")
+    send_headers = dict(headers or {})
+    content_type = send_headers.get("Content-Type") or send_headers.get("content-type")
+    if not content_type or "charset" not in content_type.lower():
+        send_headers["Content-Type"] = "application/json; charset=utf-8"
+
     last_resp = None
     for attempt in range(retries):
         try:
-            resp = requests.post(url, data=body, headers=headers, timeout=timeout)
+            resp = requests.post(url, data=body_bytes, headers=send_headers, timeout=timeout)
             last_resp = resp
             if resp.status_code < 500 and resp.status_code != 429:
                 return resp
@@ -1380,6 +1387,36 @@ def fetch_with_retry(url, retries=3, delay=2):
     return None
 
 def fetch_fred_series_value(series_id):
+    if FRED_API_KEY:
+        try:
+            url = "https://api.stlouisfed.org/fred/series/observations"
+            params = {
+                "series_id": series_id,
+                "api_key": FRED_API_KEY,
+                "file_type": "json",
+                "sort_order": "desc",
+                "limit": 5
+            }
+            resp = requests.get(url, params=params, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                for obs in data.get("observations", []):
+                    val = obs.get("value")
+                    if val is None:
+                        continue
+                    if isinstance(val, str) and val.strip() == ".":
+                        continue
+                    try:
+                        return float(val)
+                    except Exception:
+                        continue
+            else:
+                logging.warning(f"FRED API error {series_id}: {resp.status_code}")
+        except Exception as e:
+            logging.warning(f"Failed to fetch FRED API series {series_id}: {e}")
+    else:
+        logging.warning("FRED_API_KEY not set. Falling back to web scraping for FRED.")
+
     try:
         url = f"https://fred.stlouisfed.org/series/{series_id}"
         resp = fetch_with_retry(url)
@@ -1390,7 +1427,7 @@ def fetch_fred_series_value(series_id):
                 val_text = val_el.get_text(strip=True).replace(",", "")
                 return float(val_text)
     except Exception as e:
-        logging.warning(f"Failed to fetch FRED series {series_id}: {e}")
+        logging.warning(f"Failed to fetch FRED series {series_id} via web: {e}")
     return None
 
 def fetch_doughcon_level():
@@ -1417,25 +1454,23 @@ def fetch_doughcon_level():
 
 def fetch_sahm_rule():
     try:
-        url = "https://fred.stlouisfed.org/series/SAHMREALTIME"
-        resp = fetch_with_retry(url)
-        if resp:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            val_el = soup.find(class_="series-meta-observation-value")
-            if val_el:
-                val = float(val_el.get_text(strip=True))
-                # Sahm Rule Logic
-                # >= 0.50: Danger
-                # >= 0.30: Warning
-                # < 0.30: Safe
-                state = "Safe"
-                if val >= 0.50: state = "Recession Signal"
-                elif val >= 0.30: state = "Warning"
-                
-                return {
-                    "value": val,
-                    "state": state
-                }
+        val = fetch_fred_series_value("SAHMREALTIME")
+        if val is None:
+            return None
+        # Sahm Rule Logic
+        # >= 0.50: Danger
+        # >= 0.30: Warning
+        # < 0.30: Safe
+        state = "Safe"
+        if val >= 0.50:
+            state = "Recession Signal"
+        elif val >= 0.30:
+            state = "Warning"
+
+        return {
+            "value": val,
+            "state": state
+        }
     except Exception as e:
         logging.warning(f"Failed to fetch Sahm Rule: {e}")
     return None
@@ -1459,25 +1494,23 @@ def fetch_crypto_fear_greed():
 
 def fetch_yield_curve():
     try:
-        url = "https://fred.stlouisfed.org/series/T10Y2Y"
-        resp = fetch_with_retry(url)
-        if resp:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            val_el = soup.find(class_="series-meta-observation-value")
-            if val_el:
-                val = float(val_el.get_text(strip=True))
-                # Yield Curve Logic
-                # < 0: Inverted (Danger)
-                # 0 - 0.2: Flattening (Warning)
-                # > 0.2: Normal (Safe)
-                state = "Normal"
-                if val < 0: state = "Inverted"
-                elif val < 0.2: state = "Flattening"
-                
-                return {
-                    "value": val,
-                    "state": state
-                }
+        val = fetch_fred_series_value("T10Y2Y")
+        if val is None:
+            return None
+        # Yield Curve Logic
+        # < 0: Inverted (Danger)
+        # 0 - 0.2: Flattening (Warning)
+        # > 0.2: Normal (Safe)
+        state = "Normal"
+        if val < 0:
+            state = "Inverted"
+        elif val < 0.2:
+            state = "Flattening"
+
+        return {
+            "value": val,
+            "state": state
+        }
     except Exception as e:
         logging.warning(f"Failed to fetch Yield Curve: {e}")
     return None
