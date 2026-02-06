@@ -3,11 +3,14 @@ import math
 import os
 import sys
 import json
+import html
 import requests
 import time
 import logging
 import datetime
 import glob
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -46,6 +49,26 @@ LOG_RETENTION_DAYS = int(os.getenv("LOG_RETENTION_DAYS", "30"))
 if not GEMINI_API_KEY:
     logging.error("GEMINI_API_KEY is not set.")
     exit(1)
+
+THREAD_URL_PATTERN = re.compile(r"https?://([^/]+)/test/read\.cgi/([^/]+)/(\d+)/?")
+POST_ID_PATTERN = re.compile(r"ID:([A-Za-z0-9+/]+)")
+NORMALIZE_URL_PATTERN = re.compile(r"https?://\S+")
+WHITESPACE_PATTERN = re.compile(r"\s+")
+NON_WORD_PATTERN = re.compile(r"[\W_]+")
+CLEAN_URL_PATTERN = re.compile(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+")
+HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
+JSON_CONTROL_CHARS_PATTERN = re.compile(r"[\x00-\x1f\x7f]")
+JSON_TRAILING_COMMA_PATTERN = re.compile(r",\s*([}\]])")
+TICKER_FORMAT_PATTERN = re.compile(r"^[A-Z]{1,6}(?:\.[A-Z])?$")
+TICKER_SCAN_PATTERN = re.compile(r"\$?[A-Z]{1,6}(?:\.[A-Z])?\b")
+SHORT_NAME_SYMBOL_PATTERN = re.compile(r"[^\w\s]")
+SPAM_REPEAT_PATTERN = re.compile(r"(.)\1{8,}")
+SPAM_NOISE_PATTERN = re.compile(r"[!\uFF01?\uFF1Fw\uFF57]{6,}")
+SPAM_URL_PATTERN = re.compile(r"https?://")
+SPAM_MEANINGFUL_PATTERN = re.compile(r"[A-Za-z0-9?-??-??-?]")
+SPAM_TICKER_HINT_PATTERN = re.compile(r"\$[A-Za-z]{1,5}\b|\b[A-Z]{2,5}\b")
+
+_JANOME_TOKENIZER = None
 
 def cleanup_old_files():
     # Cleanup Cache (Keep top 20)
@@ -130,25 +153,24 @@ def discover_threads():
 def extract_post_id(meta_text):
     if not meta_text:
         return None
-    m = re.search(r"ID:([A-Za-z0-9+/]+)", meta_text)
+    m = POST_ID_PATTERN.search(meta_text)
     return m.group(1) if m else None
 
 def normalize_message(text):
     if not text:
         return ""
-    text = text.lower()
-    text = re.sub(r"https?://\S+", "", text)
-    text = re.sub(r"\s+", "", text)
-    text = re.sub(r"[\W_]+", "", text)
-    return text
+    normalized = text.lower()
+    normalized = NORMALIZE_URL_PATTERN.sub("", normalized)
+    normalized = WHITESPACE_PATTERN.sub("", normalized)
+    normalized = NON_WORD_PATTERN.sub("", normalized)
+    return normalized
 
 def clean_message(text):
-    import html
     if not text:
         return ""
-    text = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", text)
-    text = re.sub(r"<[^>]+>", " ", text)
-    return html.unescape(text).strip()
+    cleaned = CLEAN_URL_PATTERN.sub("", text)
+    cleaned = HTML_TAG_PATTERN.sub(" ", cleaned)
+    return html.unescape(cleaned).strip()
 
 def sanitize_brief(brief, max_watchlist=8, mode="swing"):
     def to_text(value):
@@ -322,9 +344,9 @@ def parse_json_lenient(raw_text):
         if not cand:
             continue
         # Remove ASCII control chars that break JSON parsing
-        cleaned = re.sub(r"[\x00-\x1f\x7f]", " ", cand)
+        cleaned = JSON_CONTROL_CHARS_PATTERN.sub(" ", cand)
         cleaned = cleaned.strip()
-        for attempt in (cand, cleaned, re.sub(r",\s*([}\]])", r"\1", cleaned)):
+        for attempt in (cand, cleaned, JSON_TRAILING_COMMA_PATTERN.sub(r"\1", cleaned)):
             try:
                 return json.loads(attempt)
             except Exception:
@@ -370,7 +392,6 @@ def normalize_ticker_items(items, exclude_set):
     if not isinstance(items, list):
         return output
 
-    ticker_pattern = re.compile(r"^[A-Z]{1,6}(?:\.[A-Z])?$")
     for item in items:
         ticker = ""
         count = 1
@@ -401,7 +422,7 @@ def normalize_ticker_items(items, exclude_set):
             continue
         if exclude_set and ticker in exclude_set:
             continue
-        if not ticker_pattern.match(ticker):
+        if not TICKER_FORMAT_PATTERN.match(ticker):
             continue
         if count <= 0:
             count = 1
@@ -414,12 +435,11 @@ def fallback_extract_tickers(text, nicknames, exclude_set):
         return []
 
     counts = {}
-    ticker_pattern = re.compile(r"\$?[A-Z]{1,6}(?:\.[A-Z])?\b")
-    for match in ticker_pattern.findall(text):
+    for match in TICKER_SCAN_PATTERN.findall(text):
         ticker = match.lstrip("$")
         if exclude_set and ticker in exclude_set:
             continue
-        if not re.match(r"^[A-Z]{1,6}(?:\.[A-Z])?$", ticker):
+        if not TICKER_FORMAT_PATTERN.match(ticker):
             continue
         counts[ticker] = counts.get(ticker, 0) + 1
 
@@ -430,7 +450,7 @@ def fallback_extract_tickers(text, nicknames, exclude_set):
             tick = str(ticker).strip().upper()
             if exclude_set and tick in exclude_set:
                 continue
-            if not re.match(r"^[A-Z]{1,6}(?:\.[A-Z])?$", tick):
+            if not TICKER_FORMAT_PATTERN.match(tick):
                 continue
             if not isinstance(names, list):
                 continue
@@ -438,7 +458,7 @@ def fallback_extract_tickers(text, nicknames, exclude_set):
                 if not name:
                     continue
                 name_str = str(name)
-                if len(name_str) < 2 and not re.search(r"[^\w\s]", name_str):
+                if len(name_str) < 2 and not SHORT_NAME_SYMBOL_PATTERN.search(name_str):
                     continue
                 count = text.count(name_str)
                 if count:
@@ -481,16 +501,16 @@ def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None
     if length >= 1000:
         score += 3
 
-    if re.search(r"(.)\1{8,}", message):
+    if SPAM_REPEAT_PATTERN.search(message):
         score += 3
-    if re.search(r"[!\uFF01?\uFF1Fw\uFF57]{6,}", message):
+    if SPAM_NOISE_PATTERN.search(message):
         score += 2
-    if re.search(r"https?://", message):
+    if SPAM_URL_PATTERN.search(message):
         score += 2
 
-    compact = re.sub(r"\s+", "", message)
+    compact = WHITESPACE_PATTERN.sub("", message)
     if compact:
-        meaningful = len(re.findall(r"[A-Za-z0-9?-??-??-?]", compact))
+        meaningful = len(SPAM_MEANINGFUL_PATTERN.findall(compact))
         ratio = meaningful / max(len(compact), 1)
         if ratio < 0.3 and len(compact) > 10:
             score += 2
@@ -510,18 +530,21 @@ def spam_score_message(message, spam_list, dup_counter, id_counter, user_id=None
         if id_counter[user_id] > SPAM_ID_LIMIT + 10:
             score += 2
 
-    if re.search(r"\$[A-Za-z]{1,5}\b|\b[A-Z]{2,5}\b", message):
+    if SPAM_TICKER_HINT_PATTERN.search(message):
         score = max(score - 2, 0)
 
     return score
 
-def parse_dat_content(text_data, spam_list=[]):
+def parse_dat_content(text_data, spam_list=None):
+    if not text_data:
+        return ""
+    spam_terms = spam_list or ()
     comments = []
     dup_counter = {}
     id_counter = {}
     filtered = 0
     for line in text_data.splitlines()[1:]:
-        parts = line.split("<>")
+        parts = line.split("<>", 4)
         if len(parts) >= 4:
             meta = parts[2]
             msg = parts[3]
@@ -531,7 +554,7 @@ def parse_dat_content(text_data, spam_list=[]):
                 continue
 
             user_id = extract_post_id(meta)
-            score = spam_score_message(clean_msg, spam_list, dup_counter, id_counter, user_id)
+            score = spam_score_message(clean_msg, spam_terms, dup_counter, id_counter, user_id)
             if score >= SPAM_SCORE_THRESHOLD:
                 filtered += 1
                 continue
@@ -545,14 +568,15 @@ def parse_dat_content(text_data, spam_list=[]):
     if len(full_text) > 15000: return full_text[:15000]
     return full_text
 
-def fetch_thread_text(url, spam_list=[]):
+def fetch_thread_text(url, spam_list=None):
+    spam_terms = spam_list or ()
     # Setup Cache
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     # Convert to dat URL
     dat_url = None
     thread_id = None
-    m = re.match(r"https?://([^/]+)/test/read\.cgi/([^/]+)/(\d+)/?", url)
+    m = THREAD_URL_PATTERN.match(url)
     if m:
         host, board, tid = m.groups()
         thread_id = tid
@@ -566,7 +590,7 @@ def fetch_thread_text(url, spam_list=[]):
                     content = f.read()
                     if content.count('\n') >= 995: 
                         logging.info(f"Using cached (finished): {thread_id}")
-                        return parse_dat_content(content, spam_list)
+                        return parse_dat_content(content, spam_terms)
             except Exception as e:
                 logging.warning(f"Cache read error: {e}")
 
@@ -587,7 +611,7 @@ def fetch_thread_text(url, spam_list=[]):
                 cache_path = os.path.join(CACHE_DIR, f"{thread_id}.dat")
                 with open(cache_path, "w", encoding="utf-8") as f:
                     f.write(text_data)
-            return parse_dat_content(text_data, spam_list)
+            return parse_dat_content(text_data, spam_terms)
             
         logging.info("Fallback to HTML parsing...")
         resp.encoding = "CP932"
@@ -607,7 +631,7 @@ def fetch_thread_text(url, spam_list=[]):
             if not clean_text:
                 continue
 
-            score = spam_score_message(clean_text, spam_list, dup_counter, id_counter, None)
+            score = spam_score_message(clean_text, spam_terms, dup_counter, id_counter, None)
             if score >= SPAM_SCORE_THRESHOLD:
                 filtered += 1
                 continue
@@ -626,11 +650,14 @@ def fetch_thread_text(url, spam_list=[]):
         logging.error(f"Failed to fetch {url}: {e}")
         return ""
 
-def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddit_rankings=[], doughcon_data=None, sahm_data=None, earnings_hints=None):
+def analyze_market_data(text, exclude_list, nicknames=None, prev_state=None, reddit_rankings=None, doughcon_data=None, sahm_data=None, earnings_hints=None):
     """
     Combined analysis: Extracts tickers, Generates Summary, AND Comparative Insight.
     """
     logging.info("Analyzing with Gemini (Combined Ticker Extraction & Summary & Breaking News)...")
+    nicknames = nicknames or {}
+    reddit_rankings = reddit_rankings or []
+    earnings_hints = earnings_hints or []
     
     # Build Context String
     context_info = "No previous data available."
@@ -863,15 +890,21 @@ def analyze_market_data(text, exclude_list, nicknames={}, prev_state=None, reddi
     logging.error("All Gemini models failed.")
     return [], "要約生成失敗", 50, {}, "", [], "", {}, {}, "Gemini (Fallback)"
 
-def analyze_topics(text, stopwords_list=[]):
+def get_janome_tokenizer():
+    global _JANOME_TOKENIZER
+    if _JANOME_TOKENIZER is None:
+        from janome.tokenizer import Tokenizer
+        _JANOME_TOKENIZER = Tokenizer()
+    return _JANOME_TOKENIZER
+
+def analyze_topics(text, stopwords_list=None):
     logging.info("Analyzing topics (Keyword Extraction)...")
-    stop_words = set(stopwords_list)
+    stop_words = set(stopwords_list or [])
     
     words = []
     try:
-        from janome.tokenizer import Tokenizer
-        t = Tokenizer()
-        tokens = t.tokenize(text)
+        tokenizer = get_janome_tokenizer()
+        tokens = tokenizer.tokenize(text)
         for token in tokens:
             pos_parts = token.part_of_speech.split(',')
             main_pos = pos_parts[0]
@@ -893,7 +926,6 @@ def analyze_topics(text, stopwords_list=[]):
             if w not in stop_words and not w.isdigit() and len(w) > 1:
                 words.append(w)
 
-    from collections import Counter
     counter = Counter(words)
     
     # Format top 50
@@ -1091,6 +1123,7 @@ def fetch_polymarket_events():
             logging.info(f"Loaded {len(excluded_keywords)} exclusion keywords.")
         except Exception as e:
             logging.warning(f"Failed to load polymarket_exclude.json: {e}")
+    excluded_keywords_lower = [kw.lower() for kw in excluded_keywords if isinstance(kw, str) and kw]
 
     # Process and Filter
     all_events = []
@@ -1105,11 +1138,8 @@ def fetch_polymarket_events():
             title = e.get("title", "")
             
             # Exclusion Check
-            is_excluded = False
-            for kw in excluded_keywords:
-                if kw.lower() in title.lower():
-                    is_excluded = True
-                    break
+            title_lower = title.lower()
+            is_excluded = any(kw in title_lower for kw in excluded_keywords_lower)
             
             if is_excluded:
                 continue
@@ -1603,91 +1633,223 @@ def safe_fetch(label, fn, default):
         logging.warning(f"Failed to fetch {label}: {e}")
         return default
 
+def log_debug_timing_summary(phase_times, total_elapsed, external_task_times=None, external_meta=None):
+    logging.info("--- DEBUG TIMING SUMMARY ---")
+    for phase, elapsed in sorted(phase_times.items(), key=lambda x: x[1], reverse=True):
+        logging.info(f"DEBUG TIMING {phase}: {elapsed:.3f}s")
+    logging.info(f"DEBUG TIMING total: {total_elapsed:.3f}s")
+
+    if external_meta:
+        wall_time = external_meta.get("wall_time", 0.0)
+        sequential_estimate = external_meta.get("sequential_estimate", 0.0)
+        saved_time = max(sequential_estimate - wall_time, 0.0)
+        speedup = (sequential_estimate / wall_time) if wall_time > 0 else 0.0
+        logging.info(
+            "DEBUG TIMING external parallel: "
+            f"wall={wall_time:.3f}s, seq_est={sequential_estimate:.3f}s, "
+            f"saved={saved_time:.3f}s, speedup={speedup:.2f}x"
+        )
+        if external_task_times:
+            for key, elapsed in sorted(external_task_times.items(), key=lambda x: x[1], reverse=True):
+                logging.info(f"DEBUG TIMING external task {key}: {elapsed:.3f}s")
+
+def fetch_external_data(include_timing=False):
+    jobs = {
+        "reddit_data": ("ApeWisdom", fetch_apewisdom_rankings, []),
+        "doughcon_data": ("DOUGHCON", fetch_doughcon_level, None),
+        "sahm_data": ("Sahm Rule", fetch_sahm_rule, None),
+        "crypto_fg": ("Crypto Fear & Greed", fetch_crypto_fear_greed, None),
+        "cnn_fg": ("CNN Fear & Greed", fetch_cnn_fear_greed, None),
+        "yield_curve_data": ("Yield Curve", fetch_yield_curve, None),
+        "hy_oas_data": ("HY OAS", fetch_hy_oas, None),
+        "market_breadth_data": ("Market Breadth", fetch_market_breadth, None),
+        "volatility_data": ("Volatility", fetch_volatility, None),
+    }
+
+    results = {}
+    task_timings = {}
+
+    def timed_job(label, fn, default):
+        started = time.perf_counter()
+        value = safe_fetch(label, fn, default)
+        return value, time.perf_counter() - started
+
+    wall_started = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=min(8, len(jobs))) as executor:
+        future_to_key = {
+            executor.submit(timed_job, label, fn, default): (key, default)
+            for key, (label, fn, default) in jobs.items()
+        }
+        for future in as_completed(future_to_key):
+            key, default = future_to_key[future]
+            try:
+                value, elapsed = future.result()
+                results[key] = value
+                task_timings[key] = elapsed
+            except Exception:
+                results[key] = default
+                task_timings[key] = 0.0
+
+    wall_elapsed = time.perf_counter() - wall_started
+    for key, (_, _, default) in jobs.items():
+        results.setdefault(key, default)
+        task_timings.setdefault(key, 0.0)
+
+    if include_timing:
+        sequential_estimate = sum(task_timings.values())
+        meta = {
+            "wall_time": wall_elapsed,
+            "sequential_estimate": sequential_estimate
+        }
+        return results, task_timings, meta
+    return results
+
 def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
+    run_started = time.perf_counter()
+    phase_times = {}
+    external_task_times = {}
+    external_meta = None
+
+    phase_started = time.perf_counter()
     cleanup_old_files()
     stopwords, exclude, spam, nicknames = load_config()
+    phase_times["setup_and_config"] = time.perf_counter() - phase_started
     
     # Polymarket Fetch (skip AI translation in debug mode)
+    phase_started = time.perf_counter()
     polymarket_data = []
     if not debug_mode:
         polymarket_raw = safe_fetch("Polymarket events", fetch_polymarket_events, [])
         polymarket_data = safe_fetch("Polymarket translation", lambda: translate_polymarket_events(polymarket_raw), [])
     else:
         logging.info("DEBUG MODE: Skipping Polymarket translation (AI).")
+    phase_times["polymarket"] = time.perf_counter() - phase_started
 
     if poly_only:
+        if debug_mode:
+            log_debug_timing_summary(
+                phase_times,
+                time.perf_counter() - run_started,
+                external_task_times,
+                external_meta
+            )
         logging.info("--- POLYMARKET ONLY MODE ---")
         logging.info(json.dumps(polymarket_data, indent=2, ensure_ascii=False))
         return
 
     # External data (non-AI) should run before AI analysis
-    reddit_data = safe_fetch("ApeWisdom", fetch_apewisdom_rankings, [])
+    phase_started = time.perf_counter()
+    if debug_mode:
+        external_data, external_task_times, external_meta = fetch_external_data(include_timing=True)
+    else:
+        external_data = fetch_external_data()
+    phase_times["external_data_fetch"] = time.perf_counter() - phase_started
+    reddit_data = external_data["reddit_data"]
+    doughcon_data = external_data["doughcon_data"]
+    sahm_data = external_data["sahm_data"]
+    crypto_fg = external_data["crypto_fg"]
+    cnn_fg = external_data["cnn_fg"]
+    yield_curve_data = external_data["yield_curve_data"]
+    hy_oas_data = external_data["hy_oas_data"]
+    market_breadth_data = external_data["market_breadth_data"]
+    volatility_data = external_data["volatility_data"]
 
-    doughcon_data = safe_fetch("DOUGHCON", fetch_doughcon_level, None)
     if doughcon_data:
         logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
 
-    sahm_data = safe_fetch("Sahm Rule", fetch_sahm_rule, None)
     if sahm_data:
         logging.info(f"Sahm Rule Fetched: {sahm_data['value']} ({sahm_data['state']})")
 
-    crypto_fg = safe_fetch("Crypto Fear & Greed", fetch_crypto_fear_greed, None)
     if crypto_fg:
         logging.info(f"Crypto F&G Fetched: {crypto_fg['value']} ({crypto_fg['classification']})")
 
-    cnn_fg = safe_fetch("CNN Fear & Greed", fetch_cnn_fear_greed, None)
     if cnn_fg:
         logging.info(f"CNN Fear & Greed Fetched: {cnn_fg.get('score')} ({cnn_fg.get('rating')})")
 
-    yield_curve_data = safe_fetch("Yield Curve", fetch_yield_curve, None)
     if yield_curve_data:
         logging.info(f"Yield Curve Fetched: {yield_curve_data['value']} ({yield_curve_data['state']})")
 
-    hy_oas_data = safe_fetch("HY OAS", fetch_hy_oas, None)
     if hy_oas_data:
         logging.info(f"HY OAS Fetched: {hy_oas_data['value']} ({hy_oas_data['state']})")
 
-    market_breadth_data = safe_fetch("Market Breadth", fetch_market_breadth, None)
     if market_breadth_data:
         logging.info(f"Market Breadth Fetched: {market_breadth_data.get('state')} ({market_breadth_data.get('value')})")
 
-    volatility_data = safe_fetch("Volatility", fetch_volatility, None)
     if volatility_data:
         logging.info(f"Volatility Fetched: VIX={volatility_data.get('vix')} MOVE={volatility_data.get('move')} ({volatility_data.get('state')})")
 
+    phase_started = time.perf_counter()
     threads = discover_threads()
+    phase_times["discover_threads"] = time.perf_counter() - phase_started
     if not threads:
+        if debug_mode:
+            log_debug_timing_summary(
+                phase_times,
+                time.perf_counter() - run_started,
+                external_task_times,
+                external_meta
+            )
         logging.info("No threads found.")
         return
 
     # Load Previous State
+    phase_started = time.perf_counter()
     prev_state = load_prev_state()
     earnings_calendar = load_finnhub_calendar()
     ticker_pool = build_ticker_pool(prev_state, reddit_data, limit=40)
     earnings_hints = build_earnings_hints(earnings_calendar, ticker_pool)
+    phase_times["load_state_and_hints"] = time.perf_counter() - phase_started
 
-    all_text = ""
+    phase_started = time.perf_counter()
+    all_text_chunks = []
     source_meta = []
     
     for t in threads:
+        thread_started = time.perf_counter()
         text = fetch_thread_text(t["url"], spam)
+        thread_elapsed = time.perf_counter() - thread_started
         if text:
-            all_text += f"\n--- Thread: {t['name']} ---\n{text}"
+            all_text_chunks.append(f"\n--- Thread: {t['name']} ---\n{text}")
             source_meta.append({"name": t["name"], "url": t["url"]})
+        if debug_mode:
+            logging.info(
+                f"DEBUG TIMING thread_fetch {t['num']}: "
+                f"{thread_elapsed:.3f}s, chars={len(text) if text else 0}"
+            )
         time.sleep(1) 
+    phase_times["thread_fetch_total"] = time.perf_counter() - phase_started
     
-    if not all_text.strip(): return
+    all_text = "".join(all_text_chunks)
+    if not all_text.strip():
+        if debug_mode:
+            log_debug_timing_summary(
+                phase_times,
+                time.perf_counter() - run_started,
+                external_task_times,
+                external_meta
+            )
+        return
 
+    phase_started = time.perf_counter()
     topics = analyze_topics(all_text, stopwords)
+    phase_times["topic_analysis"] = time.perf_counter() - phase_started
 
     if debug_mode:
+        log_debug_timing_summary(
+            phase_times,
+            time.perf_counter() - run_started,
+            external_task_times,
+            external_meta
+        )
         logging.info("DEBUG MODE: Skipping AI and Upload.")
         return
 
     # Combined Gemini Analysis with Context
+    phase_started = time.perf_counter()
     tickers_raw, market_summary, fear_greed, radar_data, ongi_comment, breaking_news, comparative_insight, brief_swing, brief_long, ai_model = analyze_market_data(
         all_text, exclude, nicknames, prev_state, reddit_data, doughcon_data, sahm_data, earnings_hints
     )
+    phase_times["ai_analysis"] = time.perf_counter() - phase_started
     if market_summary == "要約生成失敗":
         logging.error("Analysis Failed (Gemini API Error).")
         
@@ -1786,6 +1948,15 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
 
     if comparative_insight:
         logging.info(f"Comparative Insight: {comparative_insight}")
+
+    phase_times["total"] = time.perf_counter() - run_started
+    logging.info(
+        f"TIMING total={phase_times['total']:.3f}s "
+        f"(thread_fetch={phase_times.get('thread_fetch_total', 0.0):.3f}s, "
+        f"external={phase_times.get('external_data_fetch', 0.0):.3f}s, "
+        f"topics={phase_times.get('topic_analysis', 0.0):.3f}s, "
+        f"ai={phase_times.get('ai_analysis', 0.0):.3f}s)"
+    )
 
     send_to_worker(
         final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data,

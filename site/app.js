@@ -15,6 +15,13 @@ let insightHistoryBound = false;
 let investBriefMode = "swing";
 let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
+let sourceTabsBound = false;
+let rankingPayload = null;
+let rankingUpdateTable = null;
+let mainInFlight = false;
+let mainQueued = false;
+let mainIntervalId = null;
+let currentSource = "5ch";
 const WATCHLIST_TARGET = 8;
 const NO_DATA_LABEL = "NO DATA";
 
@@ -783,6 +790,48 @@ function updateInsightControls() {
   }
 }
 
+function syncSourceTabsActive() {
+  document.querySelectorAll(".source-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.source === currentSource);
+  });
+}
+
+function bindSourceTabs() {
+  if (sourceTabsBound) return;
+  document.querySelectorAll(".source-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const nextSource = tab.dataset.source;
+      if (!nextSource || nextSource === currentSource) return;
+      currentSource = nextSource;
+      syncSourceTabsActive();
+      if (typeof rankingUpdateTable === "function") {
+        rankingUpdateTable();
+      }
+    });
+  });
+  sourceTabsBound = true;
+}
+
+async function runMainSafely() {
+  if (mainInFlight) {
+    mainQueued = true;
+    return;
+  }
+
+  mainInFlight = true;
+  try {
+    await main();
+  } catch (err) {
+    console.error("main execution failed:", err);
+  } finally {
+    mainInFlight = false;
+    if (mainQueued) {
+      mainQueued = false;
+      runMainSafely();
+    }
+  }
+}
+
 // Tab Switching
 document.addEventListener("DOMContentLoaded", () => {
   // --- Slide Menu Logic ---
@@ -912,9 +961,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadChart("SPX"); // Default
-  main();
+  runMainSafely();
   // Refresh every 30s for Monitor Mode
-  setInterval(main, 30000);
+  if (mainIntervalId) {
+    clearInterval(mainIntervalId);
+  }
+  mainIntervalId = setInterval(runMainSafely, 30000);
 });
 
 // ... (rest of main function remains until end of file)
@@ -1169,14 +1221,7 @@ async function main() {
     updateVolatility(data.volatility || null);
 
     // NEW: CRYPTO FEAR & GREED
-    if (data.crypto_fear_greed) {
-      updateCryptoFG(data.crypto_fear_greed);
-    }
-
-    // NEW: CRYPTO FEAR & GREED
-    if (data.crypto_fear_greed) {
-      updateCryptoFG(data.crypto_fear_greed);
-    }
+    updateCryptoFG(data.crypto_fear_greed || null);
 
     // AI Overview
     // ...
@@ -1294,27 +1339,18 @@ async function main() {
     }
 
     // Store global data
-    let globalData = data;
-    let currentSource = "5ch";
-
-    // Source Tabs Logic
-    document.querySelectorAll(".source-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".source-tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        currentSource = tab.dataset.source;
-        updateTable();
-      });
-    });
+    rankingPayload = data;
+    bindSourceTabs();
+    syncSourceTabsActive();
 
     function updateTable() {
-      if (!globalData) return;
+      if (!rankingPayload) return;
 
       let items = [];
       if (currentSource === "reddit") {
-        items = globalData.reddit_rankings || [];
+        items = rankingPayload.reddit_rankings || [];
       } else {
-        items = globalData.items || [];
+        items = rankingPayload.items || [];
       }
 
       renderTable(items, currentSource);
@@ -1441,6 +1477,7 @@ async function main() {
     }
 
     // Initial render
+    rankingUpdateTable = updateTable;
     updateTable();
   } catch (err) {
     console.error(err);
