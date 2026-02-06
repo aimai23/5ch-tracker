@@ -1698,40 +1698,44 @@ if (tooltipOverlay) {
   });
 }
 
+const RISK_LEVEL_PALETTE = {
+  low: { text: "SAFE", color: "#00ff88" },
+  mid: { text: "WARNING", color: "#f6d365" },
+  high: { text: "DANGER", color: "#ff6b6b" }
+};
+
+function applyRiskStyle(levelEl, color) {
+  if (!levelEl) return;
+  levelEl.style.color = color;
+  levelEl.style.textShadow = `0 0 10px ${color}55`;
+}
+
 function updateDoughcon(data) {
   const levelEl = document.getElementById("doughcon-level");
   const descEl = document.getElementById("doughcon-desc");
 
   if (!data || !levelEl) return;
 
-  levelEl.textContent = data.description;
+  const level = Number.parseInt(data.level, 10);
+  let risk = "mid";
+  if (!Number.isNaN(level)) {
+    if (level <= 2) risk = "high";
+    else if (level === 3) risk = "mid";
+    else risk = "low";
+  }
+  const entry = RISK_LEVEL_PALETTE[risk] || RISK_LEVEL_PALETTE.mid;
+  const label = data.description ? String(data.description).toUpperCase() : entry.text;
+  levelEl.textContent = label;
+  applyRiskStyle(levelEl, entry.color);
+
   if (descEl) descEl.textContent = `DEFCON ${data.level}`;
-
-  // Color Logic (1=Red, 2=Orange, 3=Yellow, 4-5=Green)
-  let color = "#fff";
-  const level = parseInt(data.level);
-
-  if (level === 1) color = "#ff0000";       // Critical (Red)
-  else if (level <= 2) color = "#ff6600";   // High (Orange)
-  else if (level <= 3) color = "#ffff00";   // High (Yellow)
-  else if (level <= 5) color = "#00ff00";   // Lower-band (Green)
-  else color = "#00ff00";                   // Fallback
-
-  levelEl.style.color = color;
-  levelEl.style.textShadow = `0 0 8px ${color}`;
 }
 
 function applyRiskLevel(levelEl, level) {
   if (!levelEl) return;
-  const palette = {
-    low: { text: "SAFE", color: "#00ff88" },
-    mid: { text: "WARNING", color: "#f6d365" },
-    high: { text: "DANGER", color: "#ff6b6b" }
-  };
-  const entry = palette[level] || palette.mid;
+  const entry = RISK_LEVEL_PALETTE[level] || RISK_LEVEL_PALETTE.mid;
   levelEl.textContent = entry.text;
-  levelEl.style.color = entry.color;
-  levelEl.style.textShadow = `0 0 10px ${entry.color}55`;
+  applyRiskStyle(levelEl, entry.color);
 }
 
 function updateSahmRule(data) {
