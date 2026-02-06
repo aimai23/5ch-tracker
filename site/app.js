@@ -1707,15 +1707,15 @@ function updateDoughcon(data) {
   levelEl.textContent = data.description;
   if (descEl) descEl.textContent = `DEFCON ${data.level}`;
 
-  // Color Logic (1=Red, 2=Orange, 3=Yellow, 4=Blue, 5=Green)
+  // Color Logic (1=Red, 2=Orange, 3=Yellow, 4-5=Green)
   let color = "#fff";
   const level = parseInt(data.level);
 
   if (level === 1) color = "#ff0000";       // Critical (Red)
   else if (level <= 2) color = "#ff6600";   // High (Orange)
   else if (level <= 3) color = "#ffff00";   // High (Yellow)
-  else if (level <= 4) color = "#00aaff";   // Elevated (Blue)
-  else color = "#00ff00";                   // Low (Green)
+  else if (level <= 5) color = "#00ff00";   // Lower-band (Green)
+  else color = "#00ff00";                   // Fallback
 
   levelEl.style.color = color;
   levelEl.style.textShadow = `0 0 8px ${color}`;
