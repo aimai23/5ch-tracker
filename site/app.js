@@ -2051,6 +2051,8 @@ function updateHindenburgOmen(data) {
   const highs = typeof details.new_highs === "number" ? details.new_highs : null;
   const lows = typeof details.new_lows === "number" ? details.new_lows : null;
   const threshold = typeof details.threshold_count === "number" ? details.threshold_count : null;
+  const cluster30 = typeof details.cluster_signal_count_30td === "number" ? details.cluster_signal_count_30td : null;
+  const trend50 = typeof details.trend_condition === "boolean" ? details.trend_condition : null;
   const litTotal = typeof history.lit_count_total === "number" ? history.lit_count_total : null;
   const lit30 = typeof history.lit_count_30d === "number" ? history.lit_count_30d : null;
   const lit90 = typeof history.lit_count_90d === "number" ? history.lit_count_90d : null;
@@ -2062,6 +2064,8 @@ function updateHindenburgOmen(data) {
   const descParts = [];
   if (highs !== null && lows !== null) descParts.push(`H/L ${highs}/${lows}`);
   if (threshold !== null) descParts.push(`TH ${threshold}`);
+  if (cluster30 !== null) descParts.push(`C30 ${cluster30}`);
+  if (trend50 !== null) descParts.push(`T50 ${trend50 ? "UP" : "DOWN"}`);
   if (details.mcclellan != null && Number.isFinite(Number(details.mcclellan))) {
     descParts.push(`McClellan ${Number(details.mcclellan).toFixed(2)}`);
   }

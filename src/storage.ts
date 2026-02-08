@@ -95,6 +95,7 @@ export type RankingPayload = {
       recent?: Array<{
         date: string;
         lamp_on?: boolean;
+        base_signal?: boolean;
         state?: string;
         mode?: string;
         risk?: string;
@@ -107,19 +108,29 @@ export type RankingPayload = {
       new_highs?: number;
       new_lows?: number;
       threshold_count?: number;
+      threshold_base_count?: number;
+      threshold_base_source?: string;
       highs_condition?: boolean;
       lows_condition?: boolean;
       high_low_ratio_condition?: boolean;
+      base_signal?: boolean;
       advances?: number;
       declines?: number;
       net_advances?: number;
       trin?: number;
       nyse_composite?: number;
+      nyse_50d_ago?: number;
       nyse_sma50?: number;
       trend_condition?: boolean | null;
       mcclellan?: number;
       mcclellan_negative?: boolean | null;
+      cluster_signal_count_30td?: number;
+      cluster_signal_count_90td?: number;
+      cluster_condition?: boolean;
+      latest_signal_date?: string;
       history_points?: number;
+      history_days?: number;
+      strict_history_ready?: boolean;
       strict_ready?: boolean;
     };
   };

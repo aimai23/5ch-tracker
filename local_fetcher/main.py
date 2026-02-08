@@ -1659,6 +1659,56 @@ def parse_bool_text(value):
         return False
     return None
 
+def compute_hindenburg_threshold(issues_traded=None, advances=None, declines=None):
+    adv_num = parse_numeric_text(advances)
+    dec_num = parse_numeric_text(declines)
+    issues_num = parse_numeric_text(issues_traded)
+
+    base_count = None
+    base_source = None
+    if adv_num is not None and dec_num is not None and (adv_num + dec_num) > 0:
+        base_count = int(round(adv_num + dec_num))
+        base_source = "advances+declines"
+    elif issues_num is not None and issues_num > 0:
+        base_count = int(round(issues_num))
+        base_source = "issues_traded"
+
+    if base_count is None or base_count <= 0:
+        return None, None, None
+
+    threshold_count = int(math.ceil(base_count * 0.028))
+    return threshold_count, base_count, base_source
+
+def evaluate_hindenburg_base_signal(highs, lows, issues_traded=None, advances=None, declines=None):
+    highs_num = parse_numeric_text(highs)
+    lows_num = parse_numeric_text(lows)
+    threshold_count, threshold_base_count, threshold_base_source = compute_hindenburg_threshold(
+        issues_traded=issues_traded,
+        advances=advances,
+        declines=declines
+    )
+
+    cond_highs = (
+        threshold_count is not None and highs_num is not None and highs_num >= threshold_count
+    )
+    cond_lows = (
+        threshold_count is not None and lows_num is not None and lows_num >= threshold_count
+    )
+    cond_ratio = (
+        highs_num is not None and lows_num is not None and lows_num > 0 and highs_num <= (lows_num * 2)
+    )
+    base_signal = bool(cond_highs and cond_lows and cond_ratio)
+
+    return {
+        "base_signal": base_signal,
+        "cond_highs": bool(cond_highs),
+        "cond_lows": bool(cond_lows),
+        "cond_ratio": bool(cond_ratio),
+        "threshold_count": threshold_count,
+        "threshold_base_count": threshold_base_count,
+        "threshold_base_source": threshold_base_source
+    }
+
 def parse_wsj_diary_date(value):
     if not value:
         return None
@@ -1786,11 +1836,14 @@ def load_hindenburg_history(limit=400):
             continue
         items.append({
             "date": date_text,
+            "advances": parse_numeric_text(item.get("advances")),
+            "declines": parse_numeric_text(item.get("declines")),
             "net_advances": parse_numeric_text(item.get("net_advances")),
             "new_highs": parse_numeric_text(item.get("new_highs")),
             "new_lows": parse_numeric_text(item.get("new_lows")),
             "issues_traded": parse_numeric_text(item.get("issues_traded")),
             "trin": parse_numeric_text(item.get("trin")),
+            "base_signal": parse_bool_text(item.get("base_signal")),
             "state": str(item.get("state") or "").strip() or None,
             "mode": str(item.get("mode") or "").strip() or None,
             "risk": str(item.get("risk") or "").strip() or None,
@@ -1816,11 +1869,14 @@ def save_hindenburg_history(history, limit=400):
             continue
         normalized.append({
             "date": date_text,
+            "advances": parse_numeric_text(item.get("advances")),
+            "declines": parse_numeric_text(item.get("declines")),
             "net_advances": parse_numeric_text(item.get("net_advances")),
             "new_highs": parse_numeric_text(item.get("new_highs")),
             "new_lows": parse_numeric_text(item.get("new_lows")),
             "issues_traded": parse_numeric_text(item.get("issues_traded")),
             "trin": parse_numeric_text(item.get("trin")),
+            "base_signal": parse_bool_text(item.get("base_signal")),
             "state": str(item.get("state") or "").strip() or None,
             "mode": str(item.get("mode") or "").strip() or None,
             "risk": str(item.get("risk") or "").strip() or None,
@@ -1854,11 +1910,14 @@ def upsert_hindenburg_entry(history, entry):
 
     clean = {
         "date": date_text,
+        "advances": parse_numeric_text(entry.get("advances")),
+        "declines": parse_numeric_text(entry.get("declines")),
         "net_advances": parse_numeric_text(entry.get("net_advances")),
         "new_highs": parse_numeric_text(entry.get("new_highs")),
         "new_lows": parse_numeric_text(entry.get("new_lows")),
         "issues_traded": parse_numeric_text(entry.get("issues_traded")),
         "trin": parse_numeric_text(entry.get("trin")),
+        "base_signal": parse_bool_text(entry.get("base_signal")),
         "state": str(entry.get("state") or "").strip() or None,
         "mode": str(entry.get("mode") or "").strip() or None,
         "risk": str(entry.get("risk") or "").strip() or None,
@@ -1951,10 +2010,20 @@ def fetch_hindenburg_omen():
     if issues_latest is None or highs_latest is None or lows_latest is None:
         return None
 
-    threshold_count = max(70, int(math.ceil(issues_latest * 0.022)))
-    cond_highs = highs_latest >= threshold_count
-    cond_lows = lows_latest >= threshold_count
-    cond_ratio = lows_latest > 0 and highs_latest <= (lows_latest * 2)
+    base_eval_today = evaluate_hindenburg_base_signal(
+        highs=highs_latest,
+        lows=lows_latest,
+        issues_traded=issues_latest,
+        advances=adv_latest,
+        declines=dec_latest
+    )
+    threshold_count = base_eval_today["threshold_count"]
+    threshold_base_count = base_eval_today["threshold_base_count"]
+    threshold_base_source = base_eval_today["threshold_base_source"]
+    cond_highs = base_eval_today["cond_highs"]
+    cond_lows = base_eval_today["cond_lows"]
+    cond_ratio = base_eval_today["cond_ratio"]
+    base_signal_today = base_eval_today["base_signal"]
     net_advances = (adv_latest - dec_latest) if (adv_latest is not None and dec_latest is not None) else None
 
     timestamp_text = str(diary_data.get("timestamp") or "").strip()
@@ -1967,30 +2036,53 @@ def fetch_hindenburg_omen():
     history = load_hindenburg_history(limit=500)
     upsert_hindenburg_entry(history, {
         "date": current_day.isoformat(),
+        "advances": adv_latest,
+        "declines": dec_latest,
         "net_advances": (adv_latest - dec_latest) if (adv_latest is not None and dec_latest is not None) else None,
         "new_highs": highs_latest,
         "new_lows": lows_latest,
         "issues_traded": issues_latest,
         "trin": trin_latest,
+        "base_signal": base_signal_today,
         "derived": False
     })
     if prev_day:
+        base_eval_prev = evaluate_hindenburg_base_signal(
+            highs=highs_prev,
+            lows=lows_prev,
+            issues_traded=issues_prev,
+            advances=adv_prev,
+            declines=dec_prev
+        )
         upsert_hindenburg_entry(history, {
             "date": prev_day.isoformat(),
+            "advances": adv_prev,
+            "declines": dec_prev,
             "net_advances": (adv_prev - dec_prev) if (adv_prev is not None and dec_prev is not None) else None,
             "new_highs": highs_prev,
             "new_lows": lows_prev,
             "issues_traded": issues_prev,
             "trin": trin_prev,
+            "base_signal": base_eval_prev["base_signal"],
             "derived": True
         })
+    base_eval_week = evaluate_hindenburg_base_signal(
+        highs=highs_week,
+        lows=lows_week,
+        issues_traded=issues_week,
+        advances=adv_week,
+        declines=dec_week
+    )
     upsert_hindenburg_entry(history, {
         "date": week_day.isoformat(),
+        "advances": adv_week,
+        "declines": dec_week,
         "net_advances": (adv_week - dec_week) if (adv_week is not None and dec_week is not None) else None,
         "new_highs": highs_week,
         "new_lows": lows_week,
         "issues_traded": issues_week,
         "trin": trin_week,
+        "base_signal": base_eval_week["base_signal"],
         "derived": True
     })
     history.sort(key=lambda x: x.get("date", ""))
@@ -2004,22 +2096,112 @@ def fetch_hindenburg_omen():
     nyse_closes = fetch_yahoo_chart_closes("^NYA", range_key="6mo", interval="1d")
     nyse_latest = nyse_closes[-1] if nyse_closes else None
     nyse_sma50 = None
+    nyse_50d_ago = None
     trend_condition = None
     if len(nyse_closes) >= 50:
         tail = nyse_closes[-50:]
         nyse_sma50 = sum(tail) / len(tail) if tail else None
-        if nyse_latest is not None and nyse_sma50 is not None:
-            trend_condition = nyse_latest > nyse_sma50
+    if len(nyse_closes) >= 51:
+        nyse_50d_ago = nyse_closes[-51]
+        if nyse_latest is not None:
+            trend_condition = nyse_latest > nyse_50d_ago
 
-    strict_ready = (mcclellan is not None and trend_condition is not None)
-    strict_triggered = strict_ready and cond_highs and cond_lows and cond_ratio and cond_mcclellan_negative and bool(trend_condition)
+    def build_signal_rows(history_items):
+        rows_out = []
+        for item in history_items:
+            date_text = str(item.get("date") or "").strip()
+            date_obj = parse_history_date(date_text)
+            if date_obj is None:
+                continue
+
+            row_adv = parse_numeric_text(item.get("advances"))
+            row_dec = parse_numeric_text(item.get("declines"))
+            row_issues = parse_numeric_text(item.get("issues_traded"))
+            row_highs = parse_numeric_text(item.get("new_highs"))
+            row_lows = parse_numeric_text(item.get("new_lows"))
+            row_eval = evaluate_hindenburg_base_signal(
+                highs=row_highs,
+                lows=row_lows,
+                issues_traded=row_issues,
+                advances=row_adv,
+                declines=row_dec
+            )
+            row_base_signal = parse_bool_text(item.get("base_signal"))
+            if row_base_signal is None:
+                row_base_signal = row_eval["base_signal"]
+
+            row_state = str(item.get("state") or "").strip() or None
+            row_mode = str(item.get("mode") or "").strip() or None
+            row_risk = str(item.get("risk") or "").strip() or None
+            row_triggered = parse_bool_text(item.get("triggered"))
+            row_lamp = parse_bool_text(item.get("lamp_on"))
+
+            if row_triggered is None:
+                row_triggered = bool(row_state and "TRIGGER" in str(row_state).upper())
+
+            if row_lamp is None:
+                if row_state:
+                    row_lamp = is_hindenburg_lamp_on(row_state, row_triggered)
+                else:
+                    row_lamp = bool(row_base_signal)
+
+            if not row_state:
+                if row_triggered:
+                    row_state = "TRIGGERED"
+                elif row_lamp:
+                    row_state = "WATCH (HISTORY)"
+                else:
+                    row_state = "NO SIGNAL"
+
+            rows_out.append({
+                "date": date_text,
+                "date_obj": date_obj,
+                "advances": row_adv,
+                "declines": row_dec,
+                "issues_traded": row_issues,
+                "new_highs": row_highs,
+                "new_lows": row_lows,
+                "base_signal": bool(row_base_signal),
+                "threshold_count": row_eval["threshold_count"],
+                "threshold_base_count": row_eval["threshold_base_count"],
+                "threshold_base_source": row_eval["threshold_base_source"],
+                "highs_condition": row_eval["cond_highs"],
+                "lows_condition": row_eval["cond_lows"],
+                "high_low_ratio_condition": row_eval["cond_ratio"],
+                "lamp_on": bool(row_lamp),
+                "state": row_state,
+                "mode": row_mode,
+                "risk": row_risk,
+                "triggered": bool(row_triggered)
+            })
+        rows_out.sort(key=lambda x: x["date"])
+        return rows_out
+
+    signal_rows_pre = build_signal_rows(history)
+    recent_30_trading_rows = signal_rows_pre[-30:]
+    cluster_signal_count_30td = sum(1 for row in recent_30_trading_rows if row["base_signal"])
+    cluster_condition = cluster_signal_count_30td >= 2
+    recent_90_trading_rows = signal_rows_pre[-90:]
+    cluster_signal_count_90td = sum(1 for row in recent_90_trading_rows if row["base_signal"])
+    latest_signal_row = next((row for row in reversed(signal_rows_pre) if row["base_signal"]), None)
+    latest_signal_date = latest_signal_row["date"] if latest_signal_row else None
+
+    history_days = len(signal_rows_pre)
+    strict_history_ready = history_days >= 40 and len(net_series) >= 40
+    strict_ready = strict_history_ready and (mcclellan is not None) and (trend_condition is not None)
+    strict_triggered = (
+        strict_ready and
+        cluster_condition and
+        cond_mcclellan_negative and
+        bool(trend_condition)
+    )
 
     lite_breadth_negative = False
     if net_advances is not None and net_advances < 0:
         lite_breadth_negative = True
     if trin_latest is not None and trin_latest > 1.0:
         lite_breadth_negative = True
-    lite_triggered = cond_highs and cond_lows and cond_ratio and (trend_condition is not False) and lite_breadth_negative
+    lite_triggered = base_signal_today and (trend_condition is not False) and lite_breadth_negative
 
     if strict_ready:
         mode = "strict"
@@ -2027,8 +2209,11 @@ def fetch_hindenburg_omen():
         if strict_triggered:
             state = "TRIGGERED"
             risk = "high"
-        elif cond_highs and cond_lows:
-            state = "NO SIGNAL"
+        elif base_signal_today and bool(trend_condition):
+            state = "WATCH (STRICT-INITIAL)"
+            risk = "mid"
+        elif cluster_condition and bool(trend_condition):
+            state = "WATCH (STRICT-CLUSTER)"
             risk = "mid"
         else:
             state = "NO SIGNAL"
@@ -2039,6 +2224,9 @@ def fetch_hindenburg_omen():
         if lite_triggered:
             state = "WATCH (LITE)"
             risk = "mid"
+        elif base_signal_today:
+            state = "WATCH (LITE-BASE)"
+            risk = "mid"
         else:
             state = "NO SIGNAL"
             risk = "low"
@@ -2046,11 +2234,14 @@ def fetch_hindenburg_omen():
     lamp_on = is_hindenburg_lamp_on(state, triggered)
     upsert_hindenburg_entry(history, {
         "date": current_day.isoformat(),
+        "advances": adv_latest,
+        "declines": dec_latest,
         "net_advances": net_advances,
         "new_highs": highs_latest,
         "new_lows": lows_latest,
         "issues_traded": issues_latest,
         "trin": trin_latest,
+        "base_signal": base_signal_today,
         "state": state,
         "mode": mode,
         "risk": risk,
@@ -2061,48 +2252,7 @@ def fetch_hindenburg_omen():
     history.sort(key=lambda x: x.get("date", ""))
     save_hindenburg_history(history, limit=500)
 
-    signal_rows = []
-    for item in history:
-        date_text = str(item.get("date") or "").strip()
-        date_obj = parse_history_date(date_text)
-        if date_obj is None:
-            continue
-        row_state = str(item.get("state") or "").strip() or None
-        row_mode = str(item.get("mode") or "").strip() or None
-        row_risk = str(item.get("risk") or "").strip() or None
-        row_triggered = parse_bool_text(item.get("triggered"))
-        row_lamp = parse_bool_text(item.get("lamp_on"))
-
-        if row_lamp is None:
-            hist_highs = parse_numeric_text(item.get("new_highs"))
-            hist_lows = parse_numeric_text(item.get("new_lows"))
-            hist_issues = parse_numeric_text(item.get("issues_traded"))
-            if hist_highs is not None and hist_lows is not None and hist_issues is not None and hist_lows > 0:
-                hist_threshold = max(70, int(math.ceil(hist_issues * 0.022)))
-                hist_ratio_ok = hist_highs <= (hist_lows * 2)
-                row_lamp = bool(hist_highs >= hist_threshold and hist_lows >= hist_threshold and hist_ratio_ok)
-                if row_lamp and not row_state:
-                    row_state = "WATCH (HISTORY)"
-
-        if row_lamp is None:
-            row_lamp = is_hindenburg_lamp_on(row_state, row_triggered)
-        if row_triggered is None:
-            row_triggered = bool(row_state and "TRIGGER" in str(row_state).upper())
-
-        if not row_state and not row_lamp and row_triggered is False:
-            continue
-
-        signal_rows.append({
-            "date": date_text,
-            "date_obj": date_obj,
-            "lamp_on": bool(row_lamp),
-            "state": row_state or ("LAMP ON" if row_lamp else "NO SIGNAL"),
-            "mode": row_mode,
-            "risk": row_risk,
-            "triggered": bool(row_triggered)
-        })
-
-    signal_rows.sort(key=lambda x: x["date"])
+    signal_rows = build_signal_rows(history)
     cutoff_30 = current_day - datetime.timedelta(days=29)
     cutoff_90 = current_day - datetime.timedelta(days=89)
     lit_count_total = sum(1 for row in signal_rows if row["lamp_on"])
@@ -2113,6 +2263,7 @@ def fetch_hindenburg_omen():
         {
             "date": row["date"],
             "lamp_on": row["lamp_on"],
+            "base_signal": row["base_signal"],
             "state": row["state"],
             "mode": row["mode"],
             "risk": row["risk"],
@@ -2147,19 +2298,29 @@ def fetch_hindenburg_omen():
             "new_highs": highs_latest,
             "new_lows": lows_latest,
             "threshold_count": threshold_count,
+            "threshold_base_count": threshold_base_count,
+            "threshold_base_source": threshold_base_source,
             "highs_condition": cond_highs,
             "lows_condition": cond_lows,
             "high_low_ratio_condition": cond_ratio,
+            "base_signal": base_signal_today,
             "advances": adv_latest,
             "declines": dec_latest,
             "net_advances": net_advances,
             "trin": trin_latest,
             "nyse_composite": round(float(nyse_latest), 2) if nyse_latest is not None else None,
+            "nyse_50d_ago": round(float(nyse_50d_ago), 2) if nyse_50d_ago is not None else None,
             "nyse_sma50": round(float(nyse_sma50), 2) if nyse_sma50 is not None else None,
             "trend_condition": trend_condition,
             "mcclellan": round(float(mcclellan), 2) if mcclellan is not None else None,
             "mcclellan_negative": cond_mcclellan_negative if mcclellan is not None else None,
+            "cluster_signal_count_30td": cluster_signal_count_30td,
+            "cluster_signal_count_90td": cluster_signal_count_90td,
+            "cluster_condition": cluster_condition,
+            "latest_signal_date": latest_signal_date,
             "history_points": len(net_series),
+            "history_days": history_days,
+            "strict_history_ready": strict_history_ready,
             "strict_ready": strict_ready
         }
     }
