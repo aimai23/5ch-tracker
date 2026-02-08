@@ -459,6 +459,25 @@ body {
   font-size: 0.85rem;
 }
 
+.hindenburg-guide-link {
+  border: 1px solid rgba(255, 179, 179, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 91, 91, 0.12);
+  color: #ffdede;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  padding: 0.12rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.hindenburg-guide-link:hover {
+  background: rgba(255, 91, 91, 0.2);
+  border-color: rgba(255, 179, 179, 0.7);
+  color: #fff;
+}
+
 .hindenburg-zone-chips {
   display: flex;
   gap: 0.4rem;
@@ -475,6 +494,12 @@ body {
   font-size: 0.68rem;
   font-family: var(--font-mono);
   letter-spacing: 0.06em;
+}
+
+.hindenburg-chip-trial {
+  color: #ffd8a8;
+  border-color: rgba(255, 188, 114, 0.5);
+  background: rgba(255, 166, 0, 0.12);
 }
 
 .hindenburg-zone-main {
@@ -664,6 +689,15 @@ body {
   .hindenburg-zone-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .hindenburg-zone-title {
+    flex-wrap: wrap;
+  }
+
+  .hindenburg-guide-link {
+    font-size: 0.58rem;
+    padding: 0.11rem 0.42rem;
   }
 
   .hindenburg-zone-main {
@@ -2602,6 +2636,21 @@ footer a {
   color: var(--text-primary);
 }
 
+.brief-rule-card {
+  margin: 0.45rem 0 0.7rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(0, 22, 34, 0.5);
+}
+
+.brief-rule-line {
+  margin: 0.24rem 0;
+  font-family: 'JetBrains Mono', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 .brief-guide-note {
   margin: 0.8rem 0 0;
   padding-top: 0.7rem;
@@ -2609,6 +2658,25 @@ footer a {
   font-size: 0.78rem;
   color: var(--text-secondary);
   opacity: 0.85;
+}
+
+.hindenburg-guide-overlay {
+  z-index: 10060;
+}
+
+.hindenburg-guide-modal {
+  border-color: rgba(255, 91, 91, 0.3);
+  background:
+    radial-gradient(130% 140% at 100% 0%, rgba(255, 91, 91, 0.13), transparent 60%),
+    rgba(8, 12, 21, 0.96);
+}
+
+.hindenburg-guide-header h3 {
+  color: #ffb3b3;
+}
+
+.hindenburg-guide-content h4 {
+  color: #ffb3b3;
 }
 
 .brief-toggle {

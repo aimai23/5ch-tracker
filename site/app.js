@@ -943,6 +943,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- ONGENBURG Guide Modal ---
+  const hindenburgGuideOpen = document.getElementById("hindenburg-guide-open");
+  const hindenburgGuideOverlay = document.getElementById("hindenburg-guide-overlay");
+  const hindenburgGuideClose = document.getElementById("hindenburg-guide-close");
+
+  const openHindenburgGuide = () => {
+    if (hindenburgGuideOverlay) hindenburgGuideOverlay.style.display = "flex";
+  };
+
+  const closeHindenburgGuide = () => {
+    if (hindenburgGuideOverlay) hindenburgGuideOverlay.style.display = "none";
+  };
+
+  if (hindenburgGuideOpen && hindenburgGuideOverlay && hindenburgGuideClose) {
+    hindenburgGuideOpen.addEventListener("click", openHindenburgGuide);
+    hindenburgGuideClose.addEventListener("click", closeHindenburgGuide);
+    hindenburgGuideOverlay.addEventListener("click", (e) => {
+      if (e.target === hindenburgGuideOverlay) closeHindenburgGuide();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && hindenburgGuideOverlay.style.display === "flex") {
+        closeHindenburgGuide();
+      }
+    });
+  }
+
   // --- View Switching Logic ---
   const allViews = ["view-dashboard", "view-topics", "view-invest-brief", "view-ongi-greed", "view-about"];
 
@@ -1974,7 +2000,7 @@ function formatHindenburgDate(value) {
 function updateHindenburgOmen(data) {
   const lampEl = document.getElementById("hindenburg-lamp");
   const lampLabelEl = document.getElementById("hindenburg-lamp-label");
-  const modeEl = document.getElementById("hindenburg-mode");
+  const trialEl = document.getElementById("hindenburg-trial");
   const stateEl = document.getElementById("hindenburg-state");
   const totalEl = document.getElementById("hindenburg-count-total");
   const count30El = document.getElementById("hindenburg-count-30d");
@@ -1982,20 +2008,21 @@ function updateHindenburgOmen(data) {
   const descEl = document.getElementById("hindenburg-desc");
   const historyListEl = document.getElementById("hindenburg-history-list");
 
-  if (!lampEl || !lampLabelEl || !modeEl || !stateEl || !historyListEl) return;
+  if (!lampEl || !lampLabelEl || !stateEl || !historyListEl) return;
+  if (trialEl) trialEl.textContent = "試用運転中";
 
   const setLampClass = (className) => {
     lampEl.classList.remove("is-off", "is-on-mid", "is-on-high");
     lampEl.classList.add(className);
   };
 
-  const setNoHistory = () => {
+  const setNoHistory = (labelText = "点灯履歴なし") => {
     historyListEl.innerHTML = "";
     const item = document.createElement("div");
     item.className = "hindenburg-history-item is-off";
     item.innerHTML = `
       <span class="hindenburg-history-date">--</span>
-      <span class="hindenburg-history-state">NO HISTORY</span>
+      <span class="hindenburg-history-state">${safeText(labelText)}</span>
     `;
     historyListEl.appendChild(item);
   };
@@ -2003,18 +2030,16 @@ function updateHindenburgOmen(data) {
   if (!data) {
     setLampClass("is-off");
     lampLabelEl.textContent = "LAMP OFF";
-    modeEl.textContent = "MODE --";
     stateEl.textContent = "STATE NO DATA";
     if (totalEl) totalEl.textContent = "--";
     if (count30El) count30El.textContent = "--";
     if (count90El) count90El.textContent = "--";
     if (descEl) descEl.textContent = "Hindenburg signal data is unavailable.";
-    setNoHistory();
+    setNoHistory("データ待機中");
     return;
   }
 
   const state = String(data.state || "NO SIGNAL").toUpperCase();
-  const mode = String(data.mode || "--").toUpperCase();
   const riskRaw = String(data.risk || "").toLowerCase();
   const lampOn = (
     data &&
@@ -2033,7 +2058,6 @@ function updateHindenburgOmen(data) {
 
   setLampClass(lampClass);
   lampLabelEl.textContent = lampOn ? "LAMP ON" : "LAMP OFF";
-  modeEl.textContent = `MODE ${mode}`;
   stateEl.textContent = `STATE ${state}`;
 
   const stateColor = lampClass === "is-on-high"
@@ -2043,8 +2067,6 @@ function updateHindenburgOmen(data) {
       : "#b7c6d8";
   stateEl.style.color = stateColor;
   stateEl.style.borderColor = `${stateColor}88`;
-  modeEl.style.color = "#c8d2de";
-  modeEl.style.borderColor = "rgba(255, 255, 255, 0.2)";
 
   const details = (data && typeof data.details === "object" && data.details) || {};
   const history = (data && typeof data.history === "object" && data.history) || {};
@@ -2071,9 +2093,11 @@ function updateHindenburgOmen(data) {
   }
   if (descEl) descEl.textContent = descParts.length ? descParts.join(" / ") : "WSJ + NYSE breadth monitor";
 
-  const recent = Array.isArray(history.recent) ? history.recent.slice(0, 10) : [];
+  const recent = Array.isArray(history.recent)
+    ? history.recent.filter((row) => !!(row && row.lamp_on)).slice(0, 10)
+    : [];
   if (recent.length === 0) {
-    setNoHistory();
+    setNoHistory("まだ点灯なし");
     return;
   }
 

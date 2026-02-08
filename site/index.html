@@ -417,16 +417,11 @@
         <section class="hindenburg-zone" aria-label="Hindenburg Omen Lamp Board">
           <div class="hindenburg-zone-head">
             <div class="hindenburg-zone-title">
-              （試用運転）ONGENBURG OMEN（データ蓄積中）
-              <div class="tooltip-container">
-                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
-                <div class="tooltip-text" style="width:260px; bottom: 120%;">
-                  点灯は WATCH/TRIGGER 状態を示します。点灯回数は履歴から集計されます。
-                </div>
-              </div>
+              <span>（試用運転）ONGENBURG OMEN（データ蓄積中）</span>
+              <button type="button" id="hindenburg-guide-open" class="hindenburg-guide-link">判定ルール</button>
             </div>
             <div class="hindenburg-zone-chips">
-              <span id="hindenburg-mode" class="hindenburg-chip">MODE --</span>
+              <span id="hindenburg-trial" class="hindenburg-chip hindenburg-chip-trial">試用運転中</span>
               <span id="hindenburg-state" class="hindenburg-chip">STATE --</span>
             </div>
           </div>
@@ -455,11 +450,11 @@
           </div>
 
           <div class="hindenburg-history-block">
-            <div class="hindenburg-history-title">Recent Lamp History</div>
+            <div class="hindenburg-history-title">点灯履歴（点灯日のみ）</div>
             <div id="hindenburg-history-list" class="hindenburg-history-list">
               <div class="hindenburg-history-item is-off">
                 <span class="hindenburg-history-date">--</span>
-                <span class="hindenburg-history-state">NO HISTORY</span>
+                <span class="hindenburg-history-state">点灯履歴なし</span>
               </div>
             </div>
           </div>
@@ -679,24 +674,88 @@
           <button type="button" id="brief-guide-close" class="brief-guide-close" aria-label="閉じる">✕</button>
         </div>
         <div class="brief-guide-content">
-          <p>掲示板（5ch/Reddit）の話題量と要約を、投資判断のヒントとして整理した画面です。数値やラベルは「注目度・変化・期限」を示します。</p>
-          <h4>アイコン・表示の意味</h4>
+          <p>ARAKAWA BRIEF は 5ch / Reddit の話題を監視し、短期の温度感と監視優先度を整理するための画面です。売買推奨ではなく、観測・警戒のためのダッシュボードとして使ってください。</p>
+
+          <h4>1. ARAKAWA BRIEF の基本</h4>
           <ul>
-            <li><strong>変化トップ3</strong>：直近2回の比較で話題数の増減が大きい銘柄。<strong>NEW</strong>は前回0件からの出現。</li>
-            <li><strong>CONSENSUS</strong>：複数スレ/ソースで共通して強い言及がある時の印。</li>
-            <li><strong>▲ / ▼ / →</strong>：直近の話題カウントの方向（増加/減少/横ばい）。</li>
-            <li><strong>期限バッジ</strong>：右上の色で時間軸を可視化。<strong>赤=24h以内</strong> / <strong>黄=今週</strong> / <strong>青=それ以外</strong> / <strong>灰=未定</strong>。</li>
-            <li><strong>High/Mid/Low</strong>：触媒カレンダーの影響度目安（Highほど要注意）。</li>
+            <li><strong>SWING / LONG:</strong> 監視の時間軸を切り替えます。数日〜数週を SWING、数週〜数か月を LONG として扱います。</li>
+            <li><strong>Watchlist:</strong> 話題量・継続性・リスク情報をまとめた監視対象です。投資助言ではありません。</li>
+            <li><strong>Changes:</strong> 直近スナップショット比で注目が増減した銘柄を優先表示します。</li>
+            <li><strong>Cautions / Calendar:</strong> ボラティリティ要因とイベント日程の整理です。必ず一次情報で再確認してください。</li>
           </ul>
-          <h4>カード内の項目</h4>
+
+          <h4>2. 画面の読み方（実務）</h4>
           <ul>
-            <li><strong>触媒</strong>：動きの起点になり得る材料/イベント。</li>
-            <li><strong>リスク</strong>：逆風や下落要因。</li>
-            <li><strong>無効化</strong>：シナリオが崩れる条件。</li>
-            <li><strong>期限</strong>：注目を維持する目安。</li>
-            <li><strong>推移</strong>：話題数の推移（直近最大10回・古→新）。</li>
+            <li><strong>Headline:</strong> まず相場全体の温度感を確認します。</li>
+            <li><strong>Watchlist:</strong> 監視優先度の高い銘柄を把握します。</li>
+            <li><strong>Changes:</strong> 前回比で監視優先度が動いた銘柄を追います。</li>
+            <li><strong>Cautions / Calendar:</strong> 近いリスクイベントを先に確認します。</li>
           </ul>
-          <p class="brief-guide-note">※ 本ブリーフは掲示板の話題を整理したエンターテイメント要素を含む情報であり、投資助言ではありません。</p>
+
+          <h4>3. 運用ルール</h4>
+          <ul>
+            <li>ヘッドラインで地合い確認 → Watchlist で候補抽出 → Changes で優先順位更新、の順で使います。</li>
+            <li>ONGENBURG OMEN の詳細ルールは MARKET タブ下部の「判定ルール」から確認してください。</li>
+            <li>イベント日（Calendar）前後は、通常よりポジションサイズを抑える運用を推奨します。</li>
+          </ul>
+
+          <h4>4. 注意点</h4>
+          <ul>
+            <li>話題量は価格方向を保証しません。価格・出来高・決算情報を必ず照合してください。</li>
+            <li>速報値は改定される場合があります。重要判断は直前データで再確認してください。</li>
+            <li>本画面は情報整理用途です。最終判断は必ずご自身で行ってください。</li>
+          </ul>
+
+          <p class="brief-guide-note">※ 本ブリーフは情報整理を目的とした表示であり、投資助言ではありません。最終判断は必ずご自身で行ってください。</p>
+        </div>
+      </div>
+    </div>
+    <!-- ONGENBURG Guide Overlay -->
+    <div id="hindenburg-guide-overlay" class="brief-guide-overlay hindenburg-guide-overlay" style="display: none;">
+      <div class="brief-guide-modal hindenburg-guide-modal" role="dialog" aria-modal="true" aria-labelledby="hindenburg-guide-title">
+        <div class="brief-guide-header hindenburg-guide-header">
+          <h3 id="hindenburg-guide-title">ONGENBURG OMEN 判定ルール</h3>
+          <button type="button" id="hindenburg-guide-close" class="brief-guide-close" aria-label="閉じる">✕</button>
+        </div>
+        <div class="brief-guide-content hindenburg-guide-content">
+          <p>本表示はヒンデンブルグ系シグナルを、ルールを固定して一貫運用するための監視UIです。流派差が大きい指標のため、下記ルールを明示して点灯判定しています。</p>
+
+          <h4>1. 採用データ</h4>
+          <div class="brief-rule-card">
+            <p class="brief-rule-line"><strong>NYSE breadth:</strong> WSJ Market Diary（Advances / Declines / New Highs / New Lows）</p>
+            <p class="brief-rule-line"><strong>トレンド参照:</strong> Yahoo Finance（^NYA 終値）</p>
+          </div>
+
+          <h4>2. ベース条件（点灯候補）</h4>
+          <div class="brief-rule-card">
+            <p class="brief-rule-line"><strong>同時成立:</strong> 新高値・新安値がどちらも閾値以上</p>
+            <p class="brief-rule-line"><strong>偏り制限:</strong> 新高値 <= 新安値 x 2</p>
+            <p class="brief-rule-line"><strong>閾値:</strong> ceil(2.8% x (Advances + Declines))。欠損時のみ Issues Traded を代替</p>
+          </div>
+
+          <h4>3. Strict 条件（TRIGGER 判定）</h4>
+          <div class="brief-rule-card">
+            <p class="brief-rule-line"><strong>クラスタ:</strong> 30 営業日内にベース条件が 2 回以上</p>
+            <p class="brief-rule-line"><strong>トレンド:</strong> ^NYA が 50 営業日前終値を上回る</p>
+            <p class="brief-rule-line"><strong>内部モメンタム:</strong> McClellan Oscillator（EMA19-EMA39 of Net Advances）< 0</p>
+            <p class="brief-rule-line"><strong>履歴条件:</strong> strict 判定は履歴 40 営業日以上で有効化</p>
+          </div>
+
+          <h4>4. UI 表示ルール</h4>
+          <ul>
+            <li><strong>LAMP ON:</strong> WATCH / TRIGGER 系の状態。</li>
+            <li><strong>点灯回数:</strong> TOTAL / 30D / 90D を表示。</li>
+            <li><strong>履歴:</strong> 点灯日だけを表示（最新順）。</li>
+          </ul>
+
+          <h4>5. 運用上の注意</h4>
+          <ul>
+            <li>ヒンデンブルグオーメンは流派差があります。本UIは上記ルールで固定運用します。</li>
+            <li>単独指標で将来を断定せず、VIX・クレジット・マクロ指標と併用してください。</li>
+            <li>速報値改定や欠損補完により、過去履歴が更新される場合があります。</li>
+          </ul>
+
+          <p class="brief-guide-note">※ 本表示は情報提供であり、投資助言ではありません。最終判断は必ずご自身で行ってください。</p>
         </div>
       </div>
     </div>
