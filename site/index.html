@@ -4,6 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://5ch-tracker.arakawa47.workers.dev https://*.tradingview.com wss://*.tradingview.com; frame-src https://*.tradingview.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none';" />
   <title>ARAKAWA TRACKER</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,7 +189,7 @@
 
         <!-- Middle Row: History Chart -->
         <div class="history-chart-container" style="width: 100%; margin-bottom: 1rem; text-align: center;">
-          <h3 id="history-header" onclick="toggleHistoryChart()" class="history-header">
+          <h3 id="history-header" class="history-header" role="button" tabindex="0">
             <span id="history-toggle-icon" style="display:inline-block; transition: transform 0.3s;">▼</span> ONGI &
             GREED INDEX HISTORY (30 DAYS)
           </h3>
@@ -420,8 +422,7 @@
           </div>
         </h2>
         <!-- NEW: Imakita Sangyo (TL;DR) - Moved Top & Accordion -->
-        <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem; cursor: pointer;"
-          onclick="document.getElementById('imakita-content').style.display = document.getElementById('imakita-content').style.display === 'none' ? 'flex' : 'none'; this.querySelector('.arrow').textContent = document.getElementById('imakita-content').style.display === 'none' ? '▶' : '▼';">
+        <div id="imakita-container" class="market-overview" style="display: none; margin-bottom: 1rem; cursor: pointer;" role="button" tabindex="0">
           <div class="overview-header" style="justify-content: space-between; border-bottom: none; margin-bottom: 0;">
             <span class="overview-title">⚡ 今北産業</span>
             <span class="arrow" style="color: var(--accent-cyan); font-size: 0.8rem;">▶</span>
@@ -596,7 +597,7 @@
     <div id="mobile-tooltip-overlay" class="tooltip-overlay" style="display: none;">
       <div class="tooltip-modal">
         <div id="mobile-tooltip-text"></div>
-        <div class="tooltip-close" onclick="document.getElementById('mobile-tooltip-overlay').style.display='none'">閉じる
+        <div class="tooltip-close" id="mobile-tooltip-close">閉じる
         </div>
       </div>
     </div>
@@ -631,10 +632,10 @@
       </div>
     </div>
 <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./vendor/wordcloud2.min.js"></script>
+    <script src="./vendor/chart.umd.min.js"></script>
     <!-- TradingView Widget Script -->
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript" src="./vendor/tv.js"></script>
 
     <footer>
       <p>Powered by <a href="https://target-url.com" target="_blank">Gemini & Cloudflare</a></p>

@@ -6,6 +6,19 @@ export type Env = {
    */
   INGEST_TOKEN: string;
   GEMINI_API_KEY: string;
+  /**
+   * Comma-separated allowlist for frontend origins.
+   * Example: https://example.com,https://app.example.com
+   */
+  FRONTEND_ORIGINS?: string;
+  /**
+   * Optional per-IP limit for public GET APIs within one window.
+   */
+  PUBLIC_API_RATE_LIMIT?: string;
+  /**
+   * Optional window length (seconds) for PUBLIC_API_RATE_LIMIT.
+   */
+  PUBLIC_API_RATE_WINDOW_SEC?: string;
 };
 
 export interface D1Result<T = unknown> {

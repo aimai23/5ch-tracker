@@ -12,3 +12,9 @@ database_id = "621699fa-e616-44f1-a52b-2904a4ff069f"
 
 [observability]
 enabled = true
+
+[vars]
+# Comma-separated allowlist. Add your frontend production origin(s) here.
+FRONTEND_ORIGINS = "https://5ch-tracker.arakawa47.workers.dev"
+PUBLIC_API_RATE_LIMIT = "120"
+PUBLIC_API_RATE_WINDOW_SEC = "60"

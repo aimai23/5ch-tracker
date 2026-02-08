@@ -1448,7 +1448,7 @@ async function main() {
                 </td>
                 <td>
                 <div class="ticker-cell">
-                    <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${logoTicker}?format=png" loading="lazy" onerror="this.style.display='none'">
+                    <img class="ticker-icon" src="https://assets.parqet.com/logos/symbol/${logoTicker}?format=png" loading="lazy">
                     <div class="ticker-info">
                         <span class="ticker-name">${safeTicker}</span>
                         ${moodHtml}
@@ -1464,6 +1464,13 @@ async function main() {
                 </div>
                 </td>
             `;
+
+        const logoImg = row.querySelector(".ticker-icon");
+        if (logoImg) {
+          logoImg.addEventListener("error", () => {
+            logoImg.style.display = "none";
+          }, { once: true });
+        }
 
         row.addEventListener("click", () => {
           document.querySelectorAll(".ranking-row").forEach(r => r.classList.remove("selected"));
@@ -1697,6 +1704,12 @@ if (tooltipOverlay) {
     }
   });
 }
+const tooltipCloseBtn = document.getElementById('mobile-tooltip-close');
+if (tooltipOverlay && tooltipCloseBtn) {
+  tooltipCloseBtn.addEventListener('click', () => {
+    tooltipOverlay.style.display = 'none';
+  });
+}
 
 const RISK_LEVEL_PALETTE = {
   low: { text: "SAFE", color: "#00ff88" },
@@ -1919,6 +1932,23 @@ function toggleHistoryChart() {
   }
 }
 
+function toggleImakitaPanel() {
+  const container = document.getElementById('imakita-container');
+  const content = document.getElementById('imakita-content');
+  if (!container || !content) return;
+
+  const arrow = container.querySelector('.arrow');
+  const isHidden = content.style.display === 'none' || content.style.display === '';
+
+  if (isHidden) {
+    content.style.display = 'flex';
+    if (arrow) arrow.textContent = '▼';
+  } else {
+    content.style.display = 'none';
+    if (arrow) arrow.textContent = '▶';
+  }
+}
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1939,6 +1969,30 @@ document.addEventListener("DOMContentLoaded", () => {
         top: 0,
         behavior: "smooth"
       });
+    });
+  }
+
+  const historyHeader = document.getElementById("history-header");
+  if (historyHeader) {
+    historyHeader.addEventListener("click", toggleHistoryChart);
+    historyHeader.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleHistoryChart();
+      }
+    });
+  }
+
+  const imakitaContainer = document.getElementById("imakita-container");
+  if (imakitaContainer) {
+    imakitaContainer.addEventListener("click", () => {
+      toggleImakitaPanel();
+    });
+    imakitaContainer.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleImakitaPanel();
+      }
     });
   }
 
