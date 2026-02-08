@@ -2001,10 +2001,6 @@ function updateHindenburgOmen(data) {
   const lampEl = document.getElementById("hindenburg-lamp");
   const lampLabelEl = document.getElementById("hindenburg-lamp-label");
   const trialEl = document.getElementById("hindenburg-trial");
-  const totalEl = document.getElementById("hindenburg-count-total");
-  const count30El = document.getElementById("hindenburg-count-30d");
-  const count90El = document.getElementById("hindenburg-count-90d");
-  const descEl = document.getElementById("hindenburg-desc");
   const historyListEl = document.getElementById("hindenburg-history-list");
 
   if (!lampEl || !lampLabelEl || !historyListEl) return;
@@ -2018,10 +2014,9 @@ function updateHindenburgOmen(data) {
   const setNoHistory = (labelText = "点灯履歴なし") => {
     historyListEl.innerHTML = "";
     const item = document.createElement("div");
-    item.className = "hindenburg-history-item is-off";
+    item.className = "hindenburg-history-item is-empty";
     item.innerHTML = `
-      <span class="hindenburg-history-date">--</span>
-      <span class="hindenburg-history-state">${safeText(labelText)}</span>
+      <span class="hindenburg-history-date">${safeText(labelText)}</span>
     `;
     historyListEl.appendChild(item);
   };
@@ -2029,10 +2024,6 @@ function updateHindenburgOmen(data) {
   if (!data) {
     setLampClass("is-off");
     lampLabelEl.textContent = "LAMP OFF";
-    if (totalEl) totalEl.textContent = "--";
-    if (count30El) count30El.textContent = "--";
-    if (count90El) count90El.textContent = "--";
-    if (descEl) descEl.textContent = "Hindenburg signal data is unavailable.";
     setNoHistory("データ待機中");
     return;
   }
@@ -2057,30 +2048,7 @@ function updateHindenburgOmen(data) {
   setLampClass(lampClass);
   lampLabelEl.textContent = lampOn ? "LAMP ON" : "LAMP OFF";
 
-  const details = (data && typeof data.details === "object" && data.details) || {};
   const history = (data && typeof data.history === "object" && data.history) || {};
-  const highs = typeof details.new_highs === "number" ? details.new_highs : null;
-  const lows = typeof details.new_lows === "number" ? details.new_lows : null;
-  const threshold = typeof details.threshold_count === "number" ? details.threshold_count : null;
-  const cluster30 = typeof details.cluster_signal_count_30td === "number" ? details.cluster_signal_count_30td : null;
-  const trend50 = typeof details.trend_condition === "boolean" ? details.trend_condition : null;
-  const litTotal = typeof history.lit_count_total === "number" ? history.lit_count_total : null;
-  const lit30 = typeof history.lit_count_30d === "number" ? history.lit_count_30d : null;
-  const lit90 = typeof history.lit_count_90d === "number" ? history.lit_count_90d : null;
-
-  if (totalEl) totalEl.textContent = litTotal === null ? "--" : String(litTotal);
-  if (count30El) count30El.textContent = lit30 === null ? "--" : String(lit30);
-  if (count90El) count90El.textContent = lit90 === null ? "--" : String(lit90);
-
-  const descParts = [];
-  if (highs !== null && lows !== null) descParts.push(`H/L ${highs}/${lows}`);
-  if (threshold !== null) descParts.push(`TH ${threshold}`);
-  if (cluster30 !== null) descParts.push(`C30 ${cluster30}`);
-  if (trend50 !== null) descParts.push(`T50 ${trend50 ? "UP" : "DOWN"}`);
-  if (details.mcclellan != null && Number.isFinite(Number(details.mcclellan))) {
-    descParts.push(`McClellan ${Number(details.mcclellan).toFixed(2)}`);
-  }
-  if (descEl) descEl.textContent = descParts.length ? descParts.join(" / ") : "WSJ + NYSE breadth monitor";
 
   const recent = Array.isArray(history.recent)
     ? history.recent.filter((row) => !!(row && row.lamp_on)).slice(0, 10)
@@ -2092,14 +2060,11 @@ function updateHindenburgOmen(data) {
 
   historyListEl.innerHTML = "";
   recent.forEach((row) => {
-    const isOn = !!(row && row.lamp_on);
     const item = document.createElement("div");
-    item.className = `hindenburg-history-item ${isOn ? "is-on" : "is-off"}`;
+    item.className = "hindenburg-history-item is-on";
     const dateText = formatHindenburgDate(row && row.date);
-    const stateText = row && row.state ? String(row.state).toUpperCase() : (isOn ? "LAMP ON" : "NO SIGNAL");
     item.innerHTML = `
       <span class="hindenburg-history-date">${safeText(dateText)}</span>
-      <span class="hindenburg-history-state">${safeText(stateText)}</span>
     `;
     historyListEl.appendChild(item);
   });

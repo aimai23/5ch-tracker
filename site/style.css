@@ -503,10 +503,9 @@ body {
 }
 
 .hindenburg-zone-main {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 1rem;
+  display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .hindenburg-lamp-stack {
@@ -633,7 +632,7 @@ body {
   background: rgba(255, 255, 255, 0.03);
   padding: 0.44rem 0.5rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.35rem;
   align-items: center;
 }
@@ -648,10 +647,18 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.hindenburg-history-item.is-empty {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .hindenburg-history-date {
-  color: #8ea3ba;
-  font-size: 0.72rem;
+  color: #dbe8f7;
+  font-size: 0.75rem;
+  font-weight: 700;
   font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .hindenburg-history-state {
@@ -701,8 +708,7 @@ body {
   }
 
   .hindenburg-zone-main {
-    grid-template-columns: 1fr;
-    gap: 0.7rem;
+    justify-content: center;
   }
 
   .hindenburg-lamp-stack {

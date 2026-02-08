@@ -107,6 +107,20 @@ python main.py
 - `--monitor` : 120秒ごとにループ実行
 - `--poly-only` : Polymarket取得のみ
 
+ヒンデンブルグ履歴の一括生成（1回実行・別スクリプト）:
+
+```bash
+python backfill_hindenburg_3m.py --days 95
+```
+
+PowerShell から実行する場合:
+
+```powershell
+.\backfill_hindenburg_3m.ps1 -Days 95
+```
+
+この処理は Barchart の公開価格履歴（`$ADVN/$DECN/$HIGN/$LOWN/$TRIN`）と Yahoo Finance（`^NYA`）を使って日次判定を再計算し、`local_fetcher/hindenburg_history.json` を更新します。生成後は `main.py` が同JSONへ日次追記を継続します。
+
 > 補足: `Janome` が入っているとトピック抽出精度が上がります（未導入なら自動で正規表現にフォールバック）
 
 ### 3) フロントエンド
@@ -137,4 +151,5 @@ python main.py
 
 - 5chは Worker からの直接アクセスが403になることが多いため、**ローカル Fetcher 前提**です。
 - `local_fetcher/last_run.json` は実行時に自動生成されます（`.gitignore` 済み）。
+- `local_fetcher/hindenburg_history.json` はヒンデンブルグ履歴バックフィル時に自動生成されます（`.gitignore` 済み）。
 - 解析・外部APIは失敗時に空データで進むことがあります（ログ参照）。
