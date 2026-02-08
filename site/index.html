@@ -460,9 +460,6 @@
 
           <div class="hindenburg-zone-source">
             Source:
-            <a href="https://www.wsj.com/market-data/stocks/marketsdiary" target="_blank">WSJ Market Diary</a>
-            /
-            <a href="https://query1.finance.yahoo.com/v8/finance/chart/%5ENYA" target="_blank">Yahoo Finance (^NYA)</a>
           </div>
         </section>
 
@@ -719,20 +716,14 @@
         <div class="brief-guide-content hindenburg-guide-content">
           <p>本表示はヒンデンブルグ系シグナルを、ルールを固定して一貫運用するための監視UIです。流派差が大きい指標のため、下記ルールを明示して点灯判定しています。</p>
 
-          <h4>1. 採用データ</h4>
-          <div class="brief-rule-card">
-            <p class="brief-rule-line"><strong>NYSE breadth:</strong> WSJ Market Diary（Advances / Declines / New Highs / New Lows）</p>
-            <p class="brief-rule-line"><strong>トレンド参照:</strong> Yahoo Finance（^NYA 終値）</p>
-          </div>
-
-          <h4>2. ベース条件（点灯候補）</h4>
+          <h4>1. ベース条件（点灯候補）</h4>
           <div class="brief-rule-card">
             <p class="brief-rule-line"><strong>同時成立:</strong> 新高値・新安値がどちらも閾値以上</p>
             <p class="brief-rule-line"><strong>偏り制限:</strong> 新高値 <= 新安値 x 2</p>
             <p class="brief-rule-line"><strong>閾値:</strong> ceil(2.8% x (Advances + Declines))。欠損時のみ Issues Traded を代替</p>
           </div>
 
-          <h4>3. Strict 条件（TRIGGER 判定）</h4>
+          <h4>2. Strict 条件（TRIGGER 判定）</h4>
           <div class="brief-rule-card">
             <p class="brief-rule-line"><strong>クラスタ:</strong> 30 営業日内にベース条件が 2 回以上</p>
             <p class="brief-rule-line"><strong>トレンド:</strong> ^NYA が 50 営業日前終値を上回る</p>
@@ -740,14 +731,14 @@
             <p class="brief-rule-line"><strong>履歴条件:</strong> strict 判定は履歴 40 営業日以上で有効化</p>
           </div>
 
-          <h4>4. UI 表示ルール</h4>
+          <h4>3. UI 表示ルール</h4>
           <ul>
             <li><strong>LAMP ON:</strong> WATCH / TRIGGER 系の状態。</li>
             <li><strong>点灯回数:</strong> TOTAL / 30D / 90D を表示。</li>
             <li><strong>履歴:</strong> 点灯日だけを表示（最新順）。</li>
           </ul>
 
-          <h4>5. 運用上の注意</h4>
+          <h4>4. 運用上の注意</h4>
           <ul>
             <li>ヒンデンブルグオーメンは流派差があります。本UIは上記ルールで固定運用します。</li>
             <li>単独指標で将来を断定せず、VIX・クレジット・マクロ指標と併用してください。</li>
