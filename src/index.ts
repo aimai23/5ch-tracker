@@ -84,6 +84,14 @@ function requestOrigin(request: Request): string | null {
   return normalizeOrigin(request.headers.get("referer"));
 }
 
+function inferSameSiteOrigin(request: Request, workerOrigin: string): string | null {
+  const site = (request.headers.get("sec-fetch-site") ?? "").toLowerCase();
+  if (site === "same-origin" || site === "same-site") {
+    return workerOrigin;
+  }
+  return null;
+}
+
 function corsHeaders(origin: string | null): Record<string, string> {
   return {
     ...(origin ? { "Access-Control-Allow-Origin": origin } : {}),
@@ -134,7 +142,13 @@ export default {
     const pathname = url.pathname;
     const allowlist = allowedOrigins(env, url.origin);
     const reqOrigin = requestOrigin(request);
-    const allowedOrigin = reqOrigin && allowlist.has(reqOrigin) ? reqOrigin : null;
+    let allowedOrigin = reqOrigin && allowlist.has(reqOrigin) ? reqOrigin : null;
+    if (!allowedOrigin && !reqOrigin) {
+      const inferred = inferSameSiteOrigin(request, url.origin);
+      if (inferred && allowlist.has(inferred)) {
+        allowedOrigin = inferred;
+      }
+    }
     const publicCorsHeaders = corsHeaders(allowedOrigin);
 
     if (request.method === "OPTIONS") {
