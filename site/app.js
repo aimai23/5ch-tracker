@@ -12,6 +12,8 @@ let insightHistoryIndex = 0;
 let insightHistoryLoaded = false;
 let insightHistoryLoading = false;
 let insightHistoryBound = false;
+let sentimentHistoryIndex = 0;
+let sentimentHistoryBound = false;
 let investBriefMode = "swing";
 let investBriefBound = false;
 let lastHistoryUpdatedAt = null;
@@ -696,6 +698,23 @@ function applyInsightSnapshot(snapshot, index) {
   }
 }
 
+function applySentimentSnapshot(snapshot, index) {
+  if (!snapshot || !snapshot.payload) return;
+  const payload = snapshot.payload;
+  const sentimentEl = document.getElementById("fear-ongi-comment");
+  const labelEl = document.getElementById("sentiment-history-label");
+
+  if (sentimentEl) {
+    const ongiText = getOngiCommentText(payload);
+    const overviewText = getOverviewText(payload);
+    sentimentEl.textContent = ongiText || overviewText || NO_DATA_LABEL;
+  }
+
+  if (labelEl) {
+    labelEl.textContent = formatInsightLabel(snapshot, index);
+  }
+}
+
 async function loadInsightHistory(windowKey = "24h") {
   if (insightHistoryLoading) return;
   insightHistoryLoading = true;
@@ -745,11 +764,17 @@ async function loadInsightHistory(windowKey = "24h") {
 
   const safeIndex = Math.min(insightHistoryIndex, insightHistory.length - 1);
   insightHistoryIndex = Math.max(0, safeIndex);
+  const safeSentimentIndex = Math.min(sentimentHistoryIndex, insightHistory.length - 1);
+  sentimentHistoryIndex = Math.max(0, safeSentimentIndex);
 
   if (insightHistory[insightHistoryIndex]) {
     applyInsightSnapshot(insightHistory[insightHistoryIndex], insightHistoryIndex);
   }
+  if (insightHistory[sentimentHistoryIndex]) {
+    applySentimentSnapshot(insightHistory[sentimentHistoryIndex], sentimentHistoryIndex);
+  }
   updateInsightControls();
+  updateSentimentHistoryControls();
 }
 
 function bindInsightControls() {
@@ -784,6 +809,44 @@ function updateInsightControls() {
   }
   if (nextBtn) {
     nextBtn.disabled = insightHistoryIndex <= 0;
+  }
+  if (labelEl && insightHistory.length === 0) {
+    labelEl.textContent = "--";
+  }
+}
+
+function bindSentimentHistoryControls() {
+  if (sentimentHistoryBound) return;
+  const prevBtn = document.getElementById("sentiment-history-prev");
+  const nextBtn = document.getElementById("sentiment-history-next");
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      if (sentimentHistoryIndex + 1 >= insightHistory.length) return;
+      sentimentHistoryIndex += 1;
+      applySentimentSnapshot(insightHistory[sentimentHistoryIndex], sentimentHistoryIndex);
+      updateSentimentHistoryControls();
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      if (sentimentHistoryIndex <= 0) return;
+      sentimentHistoryIndex -= 1;
+      applySentimentSnapshot(insightHistory[sentimentHistoryIndex], sentimentHistoryIndex);
+      updateSentimentHistoryControls();
+    });
+  }
+  sentimentHistoryBound = true;
+}
+
+function updateSentimentHistoryControls() {
+  const prevBtn = document.getElementById("sentiment-history-prev");
+  const nextBtn = document.getElementById("sentiment-history-next");
+  const labelEl = document.getElementById("sentiment-history-label");
+  if (prevBtn) {
+    prevBtn.disabled = sentimentHistoryIndex + 1 >= insightHistory.length;
+  }
+  if (nextBtn) {
+    nextBtn.disabled = sentimentHistoryIndex <= 0;
   }
   if (labelEl && insightHistory.length === 0) {
     labelEl.textContent = "--";
@@ -916,6 +979,13 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPolymarket(currentPolymarket);
       }, 50);
     } else if (targetId === 'ongi-greed') {
+      bindSentimentHistoryControls();
+      if (!insightHistoryLoaded) {
+        loadInsightHistory("24h");
+      } else if (insightHistory[sentimentHistoryIndex]) {
+        applySentimentSnapshot(insightHistory[sentimentHistoryIndex], sentimentHistoryIndex);
+        updateSentimentHistoryControls();
+      }
       fetchOngiHistory();
     } else if (targetId === 'invest-brief') {
       bindInvestBriefControls();
@@ -1121,10 +1191,15 @@ async function main() {
     }
 
     bindInsightControls();
+    bindSentimentHistoryControls();
     if (insightHistoryIndex === 0) {
       applyInsightSnapshot({ payload: data, timestamp: Math.floor(Date.now() / 1000) }, 0);
     }
+    if (sentimentHistoryIndex === 0) {
+      applySentimentSnapshot({ payload: data, timestamp: Math.floor(Date.now() / 1000) }, 0);
+    }
     updateInsightControls();
+    updateSentimentHistoryControls();
     const investView = document.getElementById("view-invest-brief");
     if (investView && investView.style.display !== "none") {
       renderInvestBrief(data);
@@ -1297,13 +1372,6 @@ async function main() {
         }
       });
     }
-
-  const ongiCommentEl = document.getElementById("fear-ongi-comment");
-  if (ongiCommentEl) {
-    const ongiText = getOngiCommentText(data);
-    const overviewText = getOverviewText(data);
-    ongiCommentEl.textContent = ongiText || overviewText || NO_DATA_LABEL;
-  }
 
     // Comparative Insight Logic
     const compToggle = document.getElementById("comparative-toggle");

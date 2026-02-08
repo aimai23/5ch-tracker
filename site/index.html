@@ -136,9 +136,20 @@
 
         <!-- Bottom Row: AI Insight (Moved to Top) -->
         <div class="market-overview" style="text-align: left; margin-bottom: 1rem;">
-          <div class="overview-header">
-            <span class="overview-title">🤖 AI SENTIMENT INSIGHT</span>
-            <span class="overview-blink">_</span>
+          <div class="overview-header overview-header-controls">
+            <div class="overview-title-group">
+              <span class="overview-title">🤖 AI SENTIMENT INSIGHT</span>
+              <span class="overview-blink">_</span>
+            </div>
+            <div class="overview-controls">
+              <button id="sentiment-history-prev" class="overview-btn" type="button" aria-label="Previous sentiment insight">
+                &#x25C0;
+              </button>
+              <span id="sentiment-history-label" class="overview-history-label">--</span>
+              <button id="sentiment-history-next" class="overview-btn" type="button" aria-label="Next sentiment insight">
+                &#x25B6;
+              </button>
+            </div>
           </div>
           <p id="fear-ongi-comment" class="overview-text">Waiting for AI analysis...</p>
         </div>
