@@ -276,6 +276,7 @@ export default {
         hy_oas: body.hy_oas,
         market_breadth: body.market_breadth,
         volatility: body.volatility,
+        hindenburg_omen: body.hindenburg_omen,
         sources: Array.isArray(body.sources) ? body.sources : []
       };
 

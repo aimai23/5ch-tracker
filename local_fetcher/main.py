@@ -41,6 +41,7 @@ INGEST_TOKEN = os.getenv("INGEST_TOKEN")
 FRED_API_KEY = os.getenv("FRED_API_KEY")
 STATE_FILE = os.path.join(BASE_DIR, "last_run.json")
 CALENDAR_FILE = os.path.join(BASE_DIR, "finnhub_calendar.json")
+HINDENBURG_HISTORY_FILE = os.path.join(BASE_DIR, "hindenburg_history.json")
 SPAM_SCORE_THRESHOLD = int(os.getenv("SPAM_SCORE_THRESHOLD", "6"))
 SPAM_DUP_THRESHOLD = int(os.getenv("SPAM_DUP_THRESHOLD", "2"))
 SPAM_ID_LIMIT = int(os.getenv("SPAM_ID_LIMIT", "25"))
@@ -1010,8 +1011,8 @@ def fetch_doughcon_data():
         logging.error(f"Failed to fetch Doughcon data: {e}")
     return None
 
-def    send_to_worker(
-        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg, hy_oas_data, market_breadth_data, volatility_data
+def send_to_worker(
+        tickers, topics, source_meta, summary, ongi_comment, fear_greed, radar, breaking_news, polymarket, cnn_fg, reddit_rankings, comparative_insight, brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data, crypto_fg, hy_oas_data, market_breadth_data, volatility_data, hindenburg_omen_data
     ):
     logging.info(f"Sending {len(tickers)} tickers, {len(topics)} topics, {len(polymarket or [])} polymarket, {len(reddit_rankings or [])} reddit items to Worker...")
     if not WORKER_URL or not INGEST_TOKEN:
@@ -1026,7 +1027,8 @@ def    send_to_worker(
         f"CryptoFG={crypto_fg is not None}, "
         f"HY_OAS={hy_oas_data is not None}, "
         f"Breadth={market_breadth_data is not None}, "
-        f"Volatility={volatility_data is not None}"
+        f"Volatility={volatility_data is not None}, "
+        f"Hindenburg={hindenburg_omen_data is not None}"
     )
     
     payload = {
@@ -1054,7 +1056,8 @@ def    send_to_worker(
         "yield_curve": yield_curve_data,
         "hy_oas": hy_oas_data,
         "market_breadth": market_breadth_data,
-        "volatility": volatility_data
+        "volatility": volatility_data,
+        "hindenburg_omen": hindenburg_omen_data
     }
     
     base_url = WORKER_URL.rstrip("/")
@@ -1608,6 +1611,431 @@ def fetch_market_breadth():
 
     return None
 
+def parse_numeric_text(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+            return None
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.lower() in {"n/a", "na", "n.d", "none", "null", "--", "..."}:
+        return None
+
+    cleaned = text.replace(",", "").replace("%", "")
+    cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
+    if cleaned in {"", "-", ".", "-."}:
+        return None
+    try:
+        num = float(cleaned)
+        if math.isnan(num) or math.isinf(num):
+            return None
+        return num
+    except Exception:
+        return None
+
+def parse_int_text(value):
+    num = parse_numeric_text(value)
+    if num is None:
+        return None
+    try:
+        return int(round(num))
+    except Exception:
+        return None
+
+def parse_wsj_diary_date(value):
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    patterns = [
+        "%A, %B %d, %Y",
+        "%A, %b %d, %Y",
+        "%B %d, %Y",
+        "%b %d, %Y"
+    ]
+    for fmt in patterns:
+        try:
+            return datetime.datetime.strptime(text, fmt).date()
+        except Exception:
+            continue
+    return None
+
+def previous_business_day(day):
+    if not isinstance(day, datetime.date):
+        return None
+    d = day - datetime.timedelta(days=1)
+    while d.weekday() >= 5:
+        d -= datetime.timedelta(days=1)
+    return d
+
+def fetch_wsj_markets_diary(markets_diary_type="diaries"):
+    url = "https://www.wsj.com/market-data/stocks/marketsdiary"
+    req_id = {
+        "application": "WSJ",
+        "marketsDiaryType": markets_diary_type
+    }
+    params = {
+        "id": json.dumps(req_id, separators=(",", ":")),
+        "type": "mdc_marketsdiary"
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json,text/plain,*/*",
+        "Referer": "https://www.wsj.com/market-data/stocks/marketsdiary"
+    }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            logging.warning(f"WSJ Market Diary status error: {resp.status_code}")
+            return None
+        payload = resp.json()
+        if not isinstance(payload, dict):
+            return None
+        data = payload.get("data")
+        return data if isinstance(data, dict) else None
+    except Exception as e:
+        logging.warning(f"Failed to fetch WSJ Market Diary: {e}")
+        return None
+
+def fetch_yahoo_chart_closes(symbol="^NYA", range_key="6mo", interval="1d"):
+    encoded = requests.utils.quote(symbol, safe="")
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{encoded}"
+    params = {
+        "range": range_key,
+        "interval": interval
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json,text/plain,*/*"
+    }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            logging.warning(f"Yahoo chart status error {symbol}: {resp.status_code}")
+            return []
+        payload = resp.json()
+        chart = payload.get("chart", {})
+        results = chart.get("result") or []
+        if not results:
+            return []
+        quote = ((results[0].get("indicators") or {}).get("quote") or [{}])[0]
+        closes = quote.get("close") or []
+        return [float(v) for v in closes if isinstance(v, (int, float))]
+    except Exception as e:
+        logging.warning(f"Failed Yahoo chart fetch {symbol}: {e}")
+        return []
+
+def parse_history_date(value):
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return datetime.date.fromisoformat(text)
+    except Exception:
+        return None
+
+def load_hindenburg_history(limit=400):
+    if not os.path.exists(HINDENBURG_HISTORY_FILE):
+        return []
+    try:
+        with open(HINDENBURG_HISTORY_FILE, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except Exception as e:
+        logging.warning(f"Failed to load hindenburg history: {e}")
+        return []
+
+    if not isinstance(raw, list):
+        return []
+
+    items = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        date_text = str(item.get("date") or "").strip()
+        if not date_text:
+            continue
+        if parse_history_date(date_text) is None:
+            continue
+        items.append({
+            "date": date_text,
+            "net_advances": parse_numeric_text(item.get("net_advances")),
+            "new_highs": parse_numeric_text(item.get("new_highs")),
+            "new_lows": parse_numeric_text(item.get("new_lows")),
+            "issues_traded": parse_numeric_text(item.get("issues_traded")),
+            "trin": parse_numeric_text(item.get("trin")),
+            "derived": bool(item.get("derived"))
+        })
+
+    items.sort(key=lambda x: x.get("date", ""))
+    if limit and len(items) > limit:
+        items = items[-limit:]
+    return items
+
+def save_hindenburg_history(history, limit=400):
+    if not isinstance(history, list):
+        return
+    normalized = []
+    for item in history:
+        if not isinstance(item, dict):
+            continue
+        date_text = str(item.get("date") or "").strip()
+        if parse_history_date(date_text) is None:
+            continue
+        normalized.append({
+            "date": date_text,
+            "net_advances": parse_numeric_text(item.get("net_advances")),
+            "new_highs": parse_numeric_text(item.get("new_highs")),
+            "new_lows": parse_numeric_text(item.get("new_lows")),
+            "issues_traded": parse_numeric_text(item.get("issues_traded")),
+            "trin": parse_numeric_text(item.get("trin")),
+            "derived": bool(item.get("derived"))
+        })
+
+    normalized.sort(key=lambda x: x.get("date", ""))
+    if limit and len(normalized) > limit:
+        normalized = normalized[-limit:]
+
+    try:
+        with open(HINDENBURG_HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(normalized, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.warning(f"Failed to save hindenburg history: {e}")
+
+def upsert_hindenburg_entry(history, entry):
+    if not isinstance(entry, dict):
+        return
+    date_text = str(entry.get("date") or "").strip()
+    if parse_history_date(date_text) is None:
+        return
+
+    idx = None
+    for i, item in enumerate(history):
+        if str(item.get("date") or "") == date_text:
+            idx = i
+            break
+
+    clean = {
+        "date": date_text,
+        "net_advances": parse_numeric_text(entry.get("net_advances")),
+        "new_highs": parse_numeric_text(entry.get("new_highs")),
+        "new_lows": parse_numeric_text(entry.get("new_lows")),
+        "issues_traded": parse_numeric_text(entry.get("issues_traded")),
+        "trin": parse_numeric_text(entry.get("trin")),
+        "derived": bool(entry.get("derived"))
+    }
+
+    if idx is None:
+        history.append(clean)
+        return
+
+    prev = history[idx]
+    prev_derived = bool(prev.get("derived"))
+    curr_derived = clean.get("derived", False)
+    if prev_derived and not curr_derived:
+        history[idx] = clean
+        return
+
+    merged = dict(prev)
+    for k, v in clean.items():
+        if k == "date":
+            continue
+        if v is not None:
+            merged[k] = v
+    merged["derived"] = prev_derived and curr_derived
+    history[idx] = merged
+
+def calculate_ema(values, period):
+    if not values or period <= 0:
+        return None
+    if len(values) < period:
+        return None
+    k = 2.0 / (period + 1.0)
+    ema_val = float(values[0])
+    for v in values[1:]:
+        ema_val = (float(v) - ema_val) * k + ema_val
+    return ema_val
+
+def fetch_hindenburg_omen():
+    diary_data = fetch_wsj_markets_diary("diaries")
+    if not diary_data:
+        return None
+
+    instrument_sets = diary_data.get("instrumentSets") or []
+    nyse_set = None
+    for item in instrument_sets:
+        if not isinstance(item, dict):
+            continue
+        headers = item.get("headerFields") or []
+        labels = [str(h.get("label") or "").strip().lower() for h in headers if isinstance(h, dict)]
+        if "nyse" in labels:
+            nyse_set = item
+            break
+    if not nyse_set:
+        return None
+
+    rows = {}
+    for row in nyse_set.get("instruments") or []:
+        if not isinstance(row, dict):
+            continue
+        rid = str(row.get("id") or "").strip().lower()
+        if rid and rid not in rows:
+            rows[rid] = row
+
+    issues_latest = parse_int_text((rows.get("issuestraded") or {}).get("latestClose"))
+    issues_prev = parse_int_text((rows.get("issuestraded") or {}).get("previousClose"))
+    issues_week = parse_int_text((rows.get("issuestraded") or {}).get("weekAgo"))
+
+    adv_latest = parse_int_text((rows.get("advances") or {}).get("latestClose"))
+    adv_prev = parse_int_text((rows.get("advances") or {}).get("previousClose"))
+    adv_week = parse_int_text((rows.get("advances") or {}).get("weekAgo"))
+
+    dec_latest = parse_int_text((rows.get("declines") or {}).get("latestClose"))
+    dec_prev = parse_int_text((rows.get("declines") or {}).get("previousClose"))
+    dec_week = parse_int_text((rows.get("declines") or {}).get("weekAgo"))
+
+    highs_latest = parse_int_text((rows.get("newhighs") or {}).get("latestClose"))
+    highs_prev = parse_int_text((rows.get("newhighs") or {}).get("previousClose"))
+    highs_week = parse_int_text((rows.get("newhighs") or {}).get("weekAgo"))
+
+    lows_latest = parse_int_text((rows.get("newlows") or {}).get("latestClose"))
+    lows_prev = parse_int_text((rows.get("newlows") or {}).get("previousClose"))
+    lows_week = parse_int_text((rows.get("newlows") or {}).get("weekAgo"))
+
+    trin_latest = parse_numeric_text((rows.get("closingarmstrin") or {}).get("latestClose"))
+    trin_prev = parse_numeric_text((rows.get("closingarmstrin") or {}).get("previousClose"))
+    trin_week = parse_numeric_text((rows.get("closingarmstrin") or {}).get("weekAgo"))
+
+    if issues_latest is None or highs_latest is None or lows_latest is None:
+        return None
+
+    threshold_count = max(70, int(math.ceil(issues_latest * 0.022)))
+    cond_highs = highs_latest >= threshold_count
+    cond_lows = lows_latest >= threshold_count
+    cond_ratio = lows_latest > 0 and highs_latest <= (lows_latest * 2)
+    net_advances = (adv_latest - dec_latest) if (adv_latest is not None and dec_latest is not None) else None
+
+    timestamp_text = str(diary_data.get("timestamp") or "").strip()
+    current_day = parse_wsj_diary_date(timestamp_text) or datetime.datetime.utcnow().date()
+    prev_day = previous_business_day(current_day)
+    week_day = current_day - datetime.timedelta(days=7)
+    while week_day.weekday() >= 5:
+        week_day -= datetime.timedelta(days=1)
+
+    history = load_hindenburg_history(limit=500)
+    upsert_hindenburg_entry(history, {
+        "date": current_day.isoformat(),
+        "net_advances": (adv_latest - dec_latest) if (adv_latest is not None and dec_latest is not None) else None,
+        "new_highs": highs_latest,
+        "new_lows": lows_latest,
+        "issues_traded": issues_latest,
+        "trin": trin_latest,
+        "derived": False
+    })
+    if prev_day:
+        upsert_hindenburg_entry(history, {
+            "date": prev_day.isoformat(),
+            "net_advances": (adv_prev - dec_prev) if (adv_prev is not None and dec_prev is not None) else None,
+            "new_highs": highs_prev,
+            "new_lows": lows_prev,
+            "issues_traded": issues_prev,
+            "trin": trin_prev,
+            "derived": True
+        })
+    upsert_hindenburg_entry(history, {
+        "date": week_day.isoformat(),
+        "net_advances": (adv_week - dec_week) if (adv_week is not None and dec_week is not None) else None,
+        "new_highs": highs_week,
+        "new_lows": lows_week,
+        "issues_traded": issues_week,
+        "trin": trin_week,
+        "derived": True
+    })
+    history.sort(key=lambda x: x.get("date", ""))
+    save_hindenburg_history(history, limit=500)
+
+    net_series = [float(x.get("net_advances")) for x in history if x.get("net_advances") is not None]
+    ema19 = calculate_ema(net_series, 19)
+    ema39 = calculate_ema(net_series, 39)
+    mcclellan = (ema19 - ema39) if (ema19 is not None and ema39 is not None) else None
+    cond_mcclellan_negative = (mcclellan is not None and mcclellan < 0)
+
+    nyse_closes = fetch_yahoo_chart_closes("^NYA", range_key="6mo", interval="1d")
+    nyse_latest = nyse_closes[-1] if nyse_closes else None
+    nyse_sma50 = None
+    trend_condition = None
+    if len(nyse_closes) >= 50:
+        tail = nyse_closes[-50:]
+        nyse_sma50 = sum(tail) / len(tail) if tail else None
+        if nyse_latest is not None and nyse_sma50 is not None:
+            trend_condition = nyse_latest > nyse_sma50
+
+    strict_ready = (mcclellan is not None and trend_condition is not None)
+    strict_triggered = strict_ready and cond_highs and cond_lows and cond_ratio and cond_mcclellan_negative and bool(trend_condition)
+
+    lite_breadth_negative = False
+    if net_advances is not None and net_advances < 0:
+        lite_breadth_negative = True
+    if trin_latest is not None and trin_latest > 1.0:
+        lite_breadth_negative = True
+    lite_triggered = cond_highs and cond_lows and cond_ratio and (trend_condition is not False) and lite_breadth_negative
+
+    if strict_ready:
+        mode = "strict"
+        triggered = strict_triggered
+        if strict_triggered:
+            state = "TRIGGERED"
+            risk = "high"
+        elif cond_highs and cond_lows:
+            state = "NO SIGNAL"
+            risk = "mid"
+        else:
+            state = "NO SIGNAL"
+            risk = "low"
+    else:
+        mode = "lite"
+        triggered = False
+        if lite_triggered:
+            state = "WATCH (LITE)"
+            risk = "mid"
+        else:
+            state = "NO SIGNAL"
+            risk = "low"
+
+    return {
+        "state": state,
+        "mode": mode,
+        "triggered": triggered,
+        "risk": risk,
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "source": "WSJ Market Diary + Yahoo Finance",
+        "details": {
+            "issues_traded": issues_latest,
+            "new_highs": highs_latest,
+            "new_lows": lows_latest,
+            "threshold_count": threshold_count,
+            "highs_condition": cond_highs,
+            "lows_condition": cond_lows,
+            "high_low_ratio_condition": cond_ratio,
+            "advances": adv_latest,
+            "declines": dec_latest,
+            "net_advances": net_advances,
+            "trin": trin_latest,
+            "nyse_composite": round(float(nyse_latest), 2) if nyse_latest is not None else None,
+            "nyse_sma50": round(float(nyse_sma50), 2) if nyse_sma50 is not None else None,
+            "trend_condition": trend_condition,
+            "mcclellan": round(float(mcclellan), 2) if mcclellan is not None else None,
+            "mcclellan_negative": cond_mcclellan_negative if mcclellan is not None else None,
+            "history_points": len(net_series),
+            "strict_ready": strict_ready
+        }
+    }
+
 def fetch_volatility():
     vix = fetch_fred_series_value("VIXCLS")
     if vix is None:
@@ -1663,6 +2091,7 @@ def fetch_external_data(include_timing=False):
         "hy_oas_data": ("HY OAS", fetch_hy_oas, None),
         "market_breadth_data": ("Market Breadth", fetch_market_breadth, None),
         "volatility_data": ("Volatility", fetch_volatility, None),
+        "hindenburg_omen_data": ("Hindenburg Omen", fetch_hindenburg_omen, None),
     }
 
     results = {}
@@ -1752,6 +2181,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
     hy_oas_data = external_data["hy_oas_data"]
     market_breadth_data = external_data["market_breadth_data"]
     volatility_data = external_data["volatility_data"]
+    hindenburg_omen_data = external_data["hindenburg_omen_data"]
 
     if doughcon_data:
         logging.info(f"DOUGHCON Fetched: Level {doughcon_data['level']}")
@@ -1776,6 +2206,13 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
 
     if volatility_data:
         logging.info(f"Volatility Fetched: VIX={volatility_data.get('vix')} MOVE={volatility_data.get('move')} ({volatility_data.get('state')})")
+
+    if hindenburg_omen_data:
+        logging.info(
+            "Hindenburg Omen Fetched: "
+            f"{hindenburg_omen_data.get('state')} "
+            f"mode={hindenburg_omen_data.get('mode')}"
+        )
 
     phase_started = time.perf_counter()
     threads = discover_threads()
@@ -1924,6 +2361,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
             "sahm_rule": sahm_data,
             "yield_curve": yield_curve_data,
             "crypto_fear_greed": crypto_fg,
+            "hindenburg_omen": hindenburg_omen_data,
             "reddit_rankings": reddit_data,
             "comparative_insight": comparative_insight,
             "ongi_comment": ongi_comment,
@@ -1961,7 +2399,7 @@ def run_analysis(debug_mode=False, poly_only=False, retry_count=0):
         final_items, topics, source_meta, market_summary, ongi_comment, fear_greed, radar_data,
         breaking_news, polymarket_data, cnn_fg, reddit_data, comparative_insight,
         brief_swing, brief_long, ai_model, doughcon_data, sahm_data, yield_curve_data,
-        crypto_fg, hy_oas_data, market_breadth_data, volatility_data
+        crypto_fg, hy_oas_data, market_breadth_data, volatility_data, hindenburg_omen_data
     )
 
 if __name__ == "__main__":

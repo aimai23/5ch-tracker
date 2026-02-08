@@ -74,6 +74,34 @@ export type RankingPayload = {
   hy_oas?: { value: number; state: string };
   market_breadth?: { value?: number; change?: number; change_percent?: number; state: string };
   volatility?: { vix?: number; move?: number; state?: string };
+  hindenburg_omen?: {
+    state: string;
+    mode?: string;
+    triggered?: boolean;
+    risk?: string;
+    timestamp?: string;
+    source?: string;
+    details?: {
+      issues_traded?: number;
+      new_highs?: number;
+      new_lows?: number;
+      threshold_count?: number;
+      highs_condition?: boolean;
+      lows_condition?: boolean;
+      high_low_ratio_condition?: boolean;
+      advances?: number;
+      declines?: number;
+      net_advances?: number;
+      trin?: number;
+      nyse_composite?: number;
+      nyse_sma50?: number;
+      trend_condition?: boolean | null;
+      mcclellan?: number;
+      mcclellan_negative?: boolean | null;
+      history_points?: number;
+      strict_ready?: boolean;
+    };
+  };
   sources: Array<{ name: string; url: string }>;
 };
 
@@ -149,6 +177,7 @@ export async function getRanking(env: Env, window: string): Promise<RankingPaylo
     hy_oas: meta.hy_oas,
     market_breadth: meta.market_breadth,
     volatility: meta.volatility,
+    hindenburg_omen: meta.hindenburg_omen,
     sources: meta.sources || [],
   };
 }
@@ -193,6 +222,7 @@ export async function putRanking(env: Env, window: string, payload: RankingPaylo
     hy_oas: payload.hy_oas,
     market_breadth: payload.market_breadth,
     volatility: payload.volatility,
+    hindenburg_omen: payload.hindenburg_omen,
   };
   statements.push(
     env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
@@ -221,7 +251,8 @@ export async function saveRankingHistory(
     summary: payload.summary,
     ongi_comment: payload.ongi_comment,
     fear_greed: payload.fear_greed,
-    radar: payload.radar
+    radar: payload.radar,
+    hindenburg_omen: payload.hindenburg_omen
   };
 
   await env.DB.prepare(

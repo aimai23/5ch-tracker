@@ -1295,6 +1295,9 @@ async function main() {
     // VIX
     updateVolatility(data.volatility || null);
 
+    // HINDENBURG OMEN
+    updateHindenburgOmen(data.hindenburg_omen || null);
+
     // NEW: CRYPTO FEAR & GREED
     updateCryptoFG(data.crypto_fear_greed || null);
 
@@ -1955,6 +1958,45 @@ function updateVolatility(data) {
   const parts = [];
   parts.push(`VIX ${vix !== null ? vix.toFixed(1) : "N/A"}`);
   if (descEl) descEl.textContent = parts.join(" / ");
+}
+
+function updateHindenburgOmen(data) {
+  const levelEl = document.getElementById("hindenburg-level");
+  const descEl = document.getElementById("hindenburg-desc");
+
+  if (!levelEl) return;
+  if (!data) {
+    levelEl.textContent = "NO DATA";
+    applyRiskStyle(levelEl, "#888");
+    if (descEl) descEl.textContent = "";
+    return;
+  }
+
+  const state = String(data.state || "NO SIGNAL").toUpperCase();
+  const riskRaw = String(data.risk || "").toLowerCase();
+
+  let risk = "low";
+  if (riskRaw === "high" || state.includes("TRIGGERED")) {
+    risk = "high";
+  } else if (riskRaw === "mid" || state.includes("WATCH")) {
+    risk = "mid";
+  }
+
+  const entry = RISK_LEVEL_PALETTE[risk] || RISK_LEVEL_PALETTE.mid;
+  levelEl.textContent = state;
+  applyRiskStyle(levelEl, entry.color);
+
+  if (!descEl) return;
+  const details = (data && typeof data.details === "object" && data.details) || {};
+  const highs = typeof details.new_highs === "number" ? details.new_highs : null;
+  const lows = typeof details.new_lows === "number" ? details.new_lows : null;
+  const threshold = typeof details.threshold_count === "number" ? details.threshold_count : null;
+  const parts = [];
+
+  if (data.mode) parts.push(`Mode: ${String(data.mode).toUpperCase()}`);
+  if (highs !== null && lows !== null) parts.push(`H/L ${highs}/${lows}`);
+  if (threshold !== null) parts.push(`TH ${threshold}`);
+  descEl.textContent = parts.length ? parts.join(" / ") : "WSJ breadth check";
 }
 
 function updateCryptoFG(data) {
