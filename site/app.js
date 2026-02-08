@@ -2001,14 +2001,13 @@ function updateHindenburgOmen(data) {
   const lampEl = document.getElementById("hindenburg-lamp");
   const lampLabelEl = document.getElementById("hindenburg-lamp-label");
   const trialEl = document.getElementById("hindenburg-trial");
-  const stateEl = document.getElementById("hindenburg-state");
   const totalEl = document.getElementById("hindenburg-count-total");
   const count30El = document.getElementById("hindenburg-count-30d");
   const count90El = document.getElementById("hindenburg-count-90d");
   const descEl = document.getElementById("hindenburg-desc");
   const historyListEl = document.getElementById("hindenburg-history-list");
 
-  if (!lampEl || !lampLabelEl || !stateEl || !historyListEl) return;
+  if (!lampEl || !lampLabelEl || !historyListEl) return;
   if (trialEl) trialEl.textContent = "試用運転中";
 
   const setLampClass = (className) => {
@@ -2030,7 +2029,6 @@ function updateHindenburgOmen(data) {
   if (!data) {
     setLampClass("is-off");
     lampLabelEl.textContent = "LAMP OFF";
-    stateEl.textContent = "STATE NO DATA";
     if (totalEl) totalEl.textContent = "--";
     if (count30El) count30El.textContent = "--";
     if (count90El) count90El.textContent = "--";
@@ -2058,15 +2056,6 @@ function updateHindenburgOmen(data) {
 
   setLampClass(lampClass);
   lampLabelEl.textContent = lampOn ? "LAMP ON" : "LAMP OFF";
-  stateEl.textContent = `STATE ${state}`;
-
-  const stateColor = lampClass === "is-on-high"
-    ? "#ff8f8f"
-    : lampClass === "is-on-mid"
-      ? "#ffd27b"
-      : "#b7c6d8";
-  stateEl.style.color = stateColor;
-  stateEl.style.borderColor = `${stateColor}88`;
 
   const details = (data && typeof data.details === "object" && data.details) || {};
   const history = (data && typeof data.history === "object" && data.history) || {};
