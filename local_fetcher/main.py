@@ -1645,6 +1645,20 @@ def parse_int_text(value):
     except Exception:
         return None
 
+def parse_bool_text(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return None
+
 def parse_wsj_diary_date(value):
     if not value:
         return None
@@ -1671,6 +1685,14 @@ def previous_business_day(day):
     while d.weekday() >= 5:
         d -= datetime.timedelta(days=1)
     return d
+
+def is_hindenburg_lamp_on(state, triggered):
+    if isinstance(triggered, bool) and triggered:
+        return True
+    state_text = str(state or "").upper()
+    if "WATCH" in state_text or "TRIGGER" in state_text:
+        return True
+    return False
 
 def fetch_wsj_markets_diary(markets_diary_type="diaries"):
     url = "https://www.wsj.com/market-data/stocks/marketsdiary"
@@ -1769,6 +1791,11 @@ def load_hindenburg_history(limit=400):
             "new_lows": parse_numeric_text(item.get("new_lows")),
             "issues_traded": parse_numeric_text(item.get("issues_traded")),
             "trin": parse_numeric_text(item.get("trin")),
+            "state": str(item.get("state") or "").strip() or None,
+            "mode": str(item.get("mode") or "").strip() or None,
+            "risk": str(item.get("risk") or "").strip() or None,
+            "triggered": parse_bool_text(item.get("triggered")),
+            "lamp_on": parse_bool_text(item.get("lamp_on")),
             "derived": bool(item.get("derived"))
         })
 
@@ -1794,6 +1821,11 @@ def save_hindenburg_history(history, limit=400):
             "new_lows": parse_numeric_text(item.get("new_lows")),
             "issues_traded": parse_numeric_text(item.get("issues_traded")),
             "trin": parse_numeric_text(item.get("trin")),
+            "state": str(item.get("state") or "").strip() or None,
+            "mode": str(item.get("mode") or "").strip() or None,
+            "risk": str(item.get("risk") or "").strip() or None,
+            "triggered": parse_bool_text(item.get("triggered")),
+            "lamp_on": parse_bool_text(item.get("lamp_on")),
             "derived": bool(item.get("derived"))
         })
 
@@ -1827,6 +1859,11 @@ def upsert_hindenburg_entry(history, entry):
         "new_lows": parse_numeric_text(entry.get("new_lows")),
         "issues_traded": parse_numeric_text(entry.get("issues_traded")),
         "trin": parse_numeric_text(entry.get("trin")),
+        "state": str(entry.get("state") or "").strip() or None,
+        "mode": str(entry.get("mode") or "").strip() or None,
+        "risk": str(entry.get("risk") or "").strip() or None,
+        "triggered": parse_bool_text(entry.get("triggered")),
+        "lamp_on": parse_bool_text(entry.get("lamp_on")),
         "derived": bool(entry.get("derived"))
     }
 
@@ -1957,7 +1994,6 @@ def fetch_hindenburg_omen():
         "derived": True
     })
     history.sort(key=lambda x: x.get("date", ""))
-    save_hindenburg_history(history, limit=500)
 
     net_series = [float(x.get("net_advances")) for x in history if x.get("net_advances") is not None]
     ema19 = calculate_ema(net_series, 19)
@@ -2007,6 +2043,84 @@ def fetch_hindenburg_omen():
             state = "NO SIGNAL"
             risk = "low"
 
+    lamp_on = is_hindenburg_lamp_on(state, triggered)
+    upsert_hindenburg_entry(history, {
+        "date": current_day.isoformat(),
+        "net_advances": net_advances,
+        "new_highs": highs_latest,
+        "new_lows": lows_latest,
+        "issues_traded": issues_latest,
+        "trin": trin_latest,
+        "state": state,
+        "mode": mode,
+        "risk": risk,
+        "triggered": triggered,
+        "lamp_on": lamp_on,
+        "derived": False
+    })
+    history.sort(key=lambda x: x.get("date", ""))
+    save_hindenburg_history(history, limit=500)
+
+    signal_rows = []
+    for item in history:
+        date_text = str(item.get("date") or "").strip()
+        date_obj = parse_history_date(date_text)
+        if date_obj is None:
+            continue
+        row_state = str(item.get("state") or "").strip() or None
+        row_mode = str(item.get("mode") or "").strip() or None
+        row_risk = str(item.get("risk") or "").strip() or None
+        row_triggered = parse_bool_text(item.get("triggered"))
+        row_lamp = parse_bool_text(item.get("lamp_on"))
+
+        if row_lamp is None:
+            hist_highs = parse_numeric_text(item.get("new_highs"))
+            hist_lows = parse_numeric_text(item.get("new_lows"))
+            hist_issues = parse_numeric_text(item.get("issues_traded"))
+            if hist_highs is not None and hist_lows is not None and hist_issues is not None and hist_lows > 0:
+                hist_threshold = max(70, int(math.ceil(hist_issues * 0.022)))
+                hist_ratio_ok = hist_highs <= (hist_lows * 2)
+                row_lamp = bool(hist_highs >= hist_threshold and hist_lows >= hist_threshold and hist_ratio_ok)
+                if row_lamp and not row_state:
+                    row_state = "WATCH (HISTORY)"
+
+        if row_lamp is None:
+            row_lamp = is_hindenburg_lamp_on(row_state, row_triggered)
+        if row_triggered is None:
+            row_triggered = bool(row_state and "TRIGGER" in str(row_state).upper())
+
+        if not row_state and not row_lamp and row_triggered is False:
+            continue
+
+        signal_rows.append({
+            "date": date_text,
+            "date_obj": date_obj,
+            "lamp_on": bool(row_lamp),
+            "state": row_state or ("LAMP ON" if row_lamp else "NO SIGNAL"),
+            "mode": row_mode,
+            "risk": row_risk,
+            "triggered": bool(row_triggered)
+        })
+
+    signal_rows.sort(key=lambda x: x["date"])
+    cutoff_30 = current_day - datetime.timedelta(days=29)
+    cutoff_90 = current_day - datetime.timedelta(days=89)
+    lit_count_total = sum(1 for row in signal_rows if row["lamp_on"])
+    lit_count_30d = sum(1 for row in signal_rows if row["lamp_on"] and row["date_obj"] >= cutoff_30)
+    lit_count_90d = sum(1 for row in signal_rows if row["lamp_on"] and row["date_obj"] >= cutoff_90)
+    recent_rows = list(reversed(signal_rows[-12:]))
+    recent_rows = [
+        {
+            "date": row["date"],
+            "lamp_on": row["lamp_on"],
+            "state": row["state"],
+            "mode": row["mode"],
+            "risk": row["risk"],
+            "triggered": row["triggered"]
+        }
+        for row in recent_rows
+    ]
+
     return {
         "state": state,
         "mode": mode,
@@ -2014,7 +2128,21 @@ def fetch_hindenburg_omen():
         "risk": risk,
         "timestamp": datetime.datetime.utcnow().isoformat(),
         "source": "WSJ Market Diary + Yahoo Finance",
+        "lamp": {
+            "on": lamp_on,
+            "level": risk,
+            "label": "ON" if lamp_on else "OFF",
+            "updated_day": current_day.isoformat()
+        },
+        "history": {
+            "recorded_days": len(signal_rows),
+            "lit_count_total": lit_count_total,
+            "lit_count_30d": lit_count_30d,
+            "lit_count_90d": lit_count_90d,
+            "recent": recent_rows
+        },
         "details": {
+            "as_of_date": current_day.isoformat(),
             "issues_traded": issues_latest,
             "new_highs": highs_latest,
             "new_lows": lows_latest,

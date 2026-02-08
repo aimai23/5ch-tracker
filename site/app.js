@@ -1960,43 +1960,132 @@ function updateVolatility(data) {
   if (descEl) descEl.textContent = parts.join(" / ");
 }
 
-function updateHindenburgOmen(data) {
-  const levelEl = document.getElementById("hindenburg-level");
-  const descEl = document.getElementById("hindenburg-desc");
+function formatHindenburgDate(value) {
+  if (!value) return "--";
+  const raw = String(value).trim();
+  if (!raw) return "--";
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? new Date(`${raw}T00:00:00`) : new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return `${String(parsed.getMonth() + 1).padStart(2, "0")}/${String(parsed.getDate()).padStart(2, "0")}`;
+  }
+  return raw;
+}
 
-  if (!levelEl) return;
+function updateHindenburgOmen(data) {
+  const lampEl = document.getElementById("hindenburg-lamp");
+  const lampLabelEl = document.getElementById("hindenburg-lamp-label");
+  const modeEl = document.getElementById("hindenburg-mode");
+  const stateEl = document.getElementById("hindenburg-state");
+  const totalEl = document.getElementById("hindenburg-count-total");
+  const count30El = document.getElementById("hindenburg-count-30d");
+  const count90El = document.getElementById("hindenburg-count-90d");
+  const descEl = document.getElementById("hindenburg-desc");
+  const historyListEl = document.getElementById("hindenburg-history-list");
+
+  if (!lampEl || !lampLabelEl || !modeEl || !stateEl || !historyListEl) return;
+
+  const setLampClass = (className) => {
+    lampEl.classList.remove("is-off", "is-on-mid", "is-on-high");
+    lampEl.classList.add(className);
+  };
+
+  const setNoHistory = () => {
+    historyListEl.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "hindenburg-history-item is-off";
+    item.innerHTML = `
+      <span class="hindenburg-history-date">--</span>
+      <span class="hindenburg-history-state">NO HISTORY</span>
+    `;
+    historyListEl.appendChild(item);
+  };
+
   if (!data) {
-    levelEl.textContent = "NO DATA";
-    applyRiskStyle(levelEl, "#888");
-    if (descEl) descEl.textContent = "";
+    setLampClass("is-off");
+    lampLabelEl.textContent = "LAMP OFF";
+    modeEl.textContent = "MODE --";
+    stateEl.textContent = "STATE NO DATA";
+    if (totalEl) totalEl.textContent = "--";
+    if (count30El) count30El.textContent = "--";
+    if (count90El) count90El.textContent = "--";
+    if (descEl) descEl.textContent = "Hindenburg signal data is unavailable.";
+    setNoHistory();
     return;
   }
 
   const state = String(data.state || "NO SIGNAL").toUpperCase();
+  const mode = String(data.mode || "--").toUpperCase();
   const riskRaw = String(data.risk || "").toLowerCase();
+  const lampOn = (
+    data &&
+    data.lamp &&
+    typeof data.lamp.on === "boolean"
+  ) ? data.lamp.on : (state.includes("WATCH") || state.includes("TRIGGER"));
 
-  let risk = "low";
-  if (riskRaw === "high" || state.includes("TRIGGERED")) {
-    risk = "high";
-  } else if (riskRaw === "mid" || state.includes("WATCH")) {
-    risk = "mid";
+  let lampClass = "is-off";
+  if (lampOn) {
+    if (riskRaw === "high" || state.includes("TRIGGER")) {
+      lampClass = "is-on-high";
+    } else {
+      lampClass = "is-on-mid";
+    }
   }
 
-  const entry = RISK_LEVEL_PALETTE[risk] || RISK_LEVEL_PALETTE.mid;
-  levelEl.textContent = state;
-  applyRiskStyle(levelEl, entry.color);
+  setLampClass(lampClass);
+  lampLabelEl.textContent = lampOn ? "LAMP ON" : "LAMP OFF";
+  modeEl.textContent = `MODE ${mode}`;
+  stateEl.textContent = `STATE ${state}`;
 
-  if (!descEl) return;
+  const stateColor = lampClass === "is-on-high"
+    ? "#ff8f8f"
+    : lampClass === "is-on-mid"
+      ? "#ffd27b"
+      : "#b7c6d8";
+  stateEl.style.color = stateColor;
+  stateEl.style.borderColor = `${stateColor}88`;
+  modeEl.style.color = "#c8d2de";
+  modeEl.style.borderColor = "rgba(255, 255, 255, 0.2)";
+
   const details = (data && typeof data.details === "object" && data.details) || {};
+  const history = (data && typeof data.history === "object" && data.history) || {};
   const highs = typeof details.new_highs === "number" ? details.new_highs : null;
   const lows = typeof details.new_lows === "number" ? details.new_lows : null;
   const threshold = typeof details.threshold_count === "number" ? details.threshold_count : null;
-  const parts = [];
+  const litTotal = typeof history.lit_count_total === "number" ? history.lit_count_total : null;
+  const lit30 = typeof history.lit_count_30d === "number" ? history.lit_count_30d : null;
+  const lit90 = typeof history.lit_count_90d === "number" ? history.lit_count_90d : null;
 
-  if (data.mode) parts.push(`Mode: ${String(data.mode).toUpperCase()}`);
-  if (highs !== null && lows !== null) parts.push(`H/L ${highs}/${lows}`);
-  if (threshold !== null) parts.push(`TH ${threshold}`);
-  descEl.textContent = parts.length ? parts.join(" / ") : "WSJ breadth check";
+  if (totalEl) totalEl.textContent = litTotal === null ? "--" : String(litTotal);
+  if (count30El) count30El.textContent = lit30 === null ? "--" : String(lit30);
+  if (count90El) count90El.textContent = lit90 === null ? "--" : String(lit90);
+
+  const descParts = [];
+  if (highs !== null && lows !== null) descParts.push(`H/L ${highs}/${lows}`);
+  if (threshold !== null) descParts.push(`TH ${threshold}`);
+  if (details.mcclellan != null && Number.isFinite(Number(details.mcclellan))) {
+    descParts.push(`McClellan ${Number(details.mcclellan).toFixed(2)}`);
+  }
+  if (descEl) descEl.textContent = descParts.length ? descParts.join(" / ") : "WSJ + NYSE breadth monitor";
+
+  const recent = Array.isArray(history.recent) ? history.recent.slice(0, 10) : [];
+  if (recent.length === 0) {
+    setNoHistory();
+    return;
+  }
+
+  historyListEl.innerHTML = "";
+  recent.forEach((row) => {
+    const isOn = !!(row && row.lamp_on);
+    const item = document.createElement("div");
+    item.className = `hindenburg-history-item ${isOn ? "is-on" : "is-off"}`;
+    const dateText = formatHindenburgDate(row && row.date);
+    const stateText = row && row.state ? String(row.state).toUpperCase() : (isOn ? "LAMP ON" : "NO SIGNAL");
+    item.innerHTML = `
+      <span class="hindenburg-history-date">${safeText(dateText)}</span>
+      <span class="hindenburg-history-state">${safeText(stateText)}</span>
+    `;
+    historyListEl.appendChild(item);
+  });
 }
 
 function updateCryptoFG(data) {

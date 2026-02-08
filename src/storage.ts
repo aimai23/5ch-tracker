@@ -81,7 +81,28 @@ export type RankingPayload = {
     risk?: string;
     timestamp?: string;
     source?: string;
+    lamp?: {
+      on?: boolean;
+      level?: string;
+      label?: string;
+      updated_day?: string;
+    };
+    history?: {
+      recorded_days?: number;
+      lit_count_total?: number;
+      lit_count_30d?: number;
+      lit_count_90d?: number;
+      recent?: Array<{
+        date: string;
+        lamp_on?: boolean;
+        state?: string;
+        mode?: string;
+        risk?: string;
+        triggered?: boolean;
+      }>;
+    };
     details?: {
+      as_of_date?: string;
       issues_traded?: number;
       new_highs?: number;
       new_lows?: number;

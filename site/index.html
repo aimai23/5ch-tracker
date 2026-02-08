@@ -12,7 +12,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20260202-6">
+  <link rel="stylesheet" href="./style.css?v=20260208-1">
 </head>
 
 <body>
@@ -387,31 +387,6 @@
             </div>
           </div>
 
-          <!-- HINDENBURG OMEN -->
-          <div class="status-card hindenburg-wrapper">
-            <div class="status-title"
-              style="font-size: 0.8rem; color: #888; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:6px;">
-              HINDENBURG OMEN
-              <div class="tooltip-container">
-                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
-                <div class="tooltip-text" style="width:240px; bottom: 120%;">
-                  NYSEの新高値/新安値の同時増加を監視する市場内部指標です。
-                </div>
-              </div>
-            </div>
-            <div id="hindenburg-level"
-              style="font-size: 2.2rem; font-weight: 800; color: #555; line-height: 1; text-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 5px 0;">
-              --</div>
-            <div id="hindenburg-desc"
-              style="font-size: 0.85rem; color: #aaa; margin-top: 0.5rem; font-family: 'JetBrains Mono'; font-weight:bold; height: 40px; display: flex; align-items: center; justify-content: center;">
-              LOADING...
-            </div>
-            <div style="font-size: 0.65rem; color: #444; margin-top: auto; padding-top: 10px;">
-              Source: <a href="https://www.wsj.com/market-data/stocks/marketsdiary" target="_blank"
-                style="color:#666; text-decoration:none;">WSJ Market Diary</a>
-            </div>
-          </div>
-
           <!-- DOUGHCON -->
           <div class="status-card doughcon-wrapper">
             <div class="status-title"
@@ -438,6 +413,64 @@
           </div>
 
         </div>
+
+        <section class="hindenburg-zone" aria-label="Hindenburg Omen Lamp Board">
+          <div class="hindenburg-zone-head">
+            <div class="hindenburg-zone-title">
+              HINDENBURG OMEN LAMP BOARD
+              <div class="tooltip-container">
+                <span class="tooltip-icon" style="font-size:0.7rem; width:14px; height:14px; line-height:14px;">?</span>
+                <div class="tooltip-text" style="width:260px; bottom: 120%;">
+                  点灯は WATCH/TRIGGER 状態を示します。点灯回数は履歴から集計されます。
+                </div>
+              </div>
+            </div>
+            <div class="hindenburg-zone-chips">
+              <span id="hindenburg-mode" class="hindenburg-chip">MODE --</span>
+              <span id="hindenburg-state" class="hindenburg-chip">STATE --</span>
+            </div>
+          </div>
+
+          <div class="hindenburg-zone-main">
+            <div class="hindenburg-lamp-stack">
+              <div id="hindenburg-lamp" class="hindenburg-lamp is-off" aria-hidden="true"></div>
+              <div id="hindenburg-lamp-label" class="hindenburg-lamp-label">LAMP OFF</div>
+            </div>
+
+            <div class="hindenburg-zone-metrics">
+              <div class="hindenburg-metric-item">
+                <span class="hindenburg-metric-label">点灯回数 TOTAL</span>
+                <strong id="hindenburg-count-total" class="hindenburg-metric-value">--</strong>
+              </div>
+              <div class="hindenburg-metric-item">
+                <span class="hindenburg-metric-label">点灯回数 30D</span>
+                <strong id="hindenburg-count-30d" class="hindenburg-metric-value">--</strong>
+              </div>
+              <div class="hindenburg-metric-item">
+                <span class="hindenburg-metric-label">点灯回数 90D</span>
+                <strong id="hindenburg-count-90d" class="hindenburg-metric-value">--</strong>
+              </div>
+              <div id="hindenburg-desc" class="hindenburg-zone-desc">Loading hindenburg signal...</div>
+            </div>
+          </div>
+
+          <div class="hindenburg-history-block">
+            <div class="hindenburg-history-title">Recent Lamp History</div>
+            <div id="hindenburg-history-list" class="hindenburg-history-list">
+              <div class="hindenburg-history-item is-off">
+                <span class="hindenburg-history-date">--</span>
+                <span class="hindenburg-history-state">NO HISTORY</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hindenburg-zone-source">
+            Source:
+            <a href="https://www.wsj.com/market-data/stocks/marketsdiary" target="_blank">WSJ Market Diary</a>
+            /
+            <a href="https://query1.finance.yahoo.com/v8/finance/chart/%5ENYA" target="_blank">Yahoo Finance (^NYA)</a>
+          </div>
+        </section>
 
       </section>
     </div>
@@ -684,7 +717,7 @@
     ↑
   </button>
 
-  <script src="./app.js?v=20260202-6"></script>
+  <script src="./app.js?v=20260208-1"></script>
 </body>
 
 </html>
